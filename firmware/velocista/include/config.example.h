@@ -12,4 +12,6 @@
 // Debe coincidir con DEVICE_TOKEN_VELOCISTA del .env de la API.
 #define DEVICE_TOKEN "dev-token-velocista"
 
-#define FIRMWARE_VERSION "0.1.0"
+#define ROBOT_ID "v001"
+#define FIRMWARE_VERSION "0.2.0"
+#define CONTRATO_VERSION "1.0"

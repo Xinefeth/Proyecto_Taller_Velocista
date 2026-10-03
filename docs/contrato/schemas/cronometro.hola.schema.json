@@ -1,0 +1,34 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "pattern": "^[a-z][a-z0-9_]{0,31}$",
+      "title": "Id",
+      "type": "string"
+    },
+    "firmware": {
+      "maxLength": 20,
+      "title": "Firmware",
+      "type": "string"
+    },
+    "contrato": {
+      "pattern": "^\\d+\\.\\d+$",
+      "title": "Contrato",
+      "type": "string"
+    },
+    "antirrebote_ms": {
+      "minimum": 0,
+      "title": "Antirrebote Ms",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "id",
+    "firmware",
+    "contrato",
+    "antirrebote_ms"
+  ],
+  "title": "Hola",
+  "type": "object",
+  "$comment": "Frecuencia: al conectar. Ack: True"
+}

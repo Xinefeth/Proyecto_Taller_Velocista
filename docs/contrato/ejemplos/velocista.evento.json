@@ -1,0 +1,13 @@
+{
+  "tipo": "evento",
+  "seq": 955,
+  "ts": 51002,
+  "datos": {
+    "codigo": "linea_perdida",
+    "nivel": "aviso",
+    "mensaje": "Línea perdida durante 120 ms",
+    "datos": {
+      "duracion_ms": 120
+    }
+  }
+}

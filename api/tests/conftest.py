@@ -19,3 +19,14 @@ def requiere_db():
     """Omite la prueba si PostgreSQL no está levantado (docker compose up -d)."""
     if not db_disponible():
         pytest.skip("PostgreSQL no está disponible")
+
+
+@pytest.fixture()
+def ejemplo():
+    """Carga un ejemplo del contrato (docs/contrato/ejemplos) por nombre de archivo."""
+    import json
+
+    from app.core.config import RAIZ_REPO
+
+    carpeta = RAIZ_REPO / "docs" / "contrato" / "ejemplos"
+    return lambda nombre: json.loads((carpeta / nombre).read_text(encoding="utf-8"))

@@ -11,8 +11,11 @@ class CalculadorVueltas {
   // Si es válido, `vueltaMs` queda en -1 para la salida o en el tiempo desde el corte anterior.
   bool registrar(int64_t marcaUs, int64_t& vueltaMs);
 
-  // Nueva sesión: el próximo corte vuelve a ser una salida.
-  void rearmar() { ultimo_ = -1; }
+  // Nueva sesión: el próximo corte vuelve a ser una salida y la cuenta empieza en 1.
+  void rearmar() {
+    ultimo_ = -1;
+    cortes_ = 0;
+  }
 
   uint32_t cortes() const { return cortes_; }
 

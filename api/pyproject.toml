@@ -19,6 +19,7 @@ dev = [
   "httpx>=0.27",
   "ruff>=0.6",
   "pytest-cov>=5.0",
+  "websockets>=13",  # herramientas/robot_falso.py
 ]
 # Se agregan cuando llegue su historia:
 #   optimizacion -> "optuna>=4.0"            (HU-27, HU-28)

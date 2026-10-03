@@ -1,0 +1,10 @@
+{
+  "tipo": "estado",
+  "seq": 6,
+  "ts": 75000,
+  "datos": {
+    "barrera": "ok",
+    "rssi_dbm": -61,
+    "pendientes": 0
+  }
+}

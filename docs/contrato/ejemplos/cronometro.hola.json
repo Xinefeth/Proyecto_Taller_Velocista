@@ -1,0 +1,11 @@
+{
+  "tipo": "hola",
+  "seq": 1,
+  "ts": 600,
+  "datos": {
+    "id": "meta_01",
+    "firmware": "0.2.0",
+    "contrato": "1.0",
+    "antirrebote_ms": 2000
+  }
+}

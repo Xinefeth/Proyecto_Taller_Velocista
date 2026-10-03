@@ -1,0 +1,34 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "barrera": {
+      "enum": [
+        "ok",
+        "bloqueada",
+        "sin_senal"
+      ],
+      "title": "Barrera",
+      "type": "string"
+    },
+    "rssi_dbm": {
+      "maximum": 0,
+      "minimum": -120,
+      "title": "Rssi Dbm",
+      "type": "integer"
+    },
+    "pendientes": {
+      "description": "Cortes guardados sin ack",
+      "minimum": 0,
+      "title": "Pendientes",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "barrera",
+    "rssi_dbm",
+    "pendientes"
+  ],
+  "title": "EstadoCronometro",
+  "type": "object",
+  "$comment": "Frecuencia: cada 5 s. Ack: False"
+}

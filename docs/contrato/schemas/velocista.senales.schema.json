@@ -1,0 +1,49 @@
+{
+  "additionalProperties": false,
+  "description": "Cada 1/senales_hz segundos (20 Hz por defecto), solo mientras corre.",
+  "properties": {
+    "t_ms": {
+      "description": "Instante de la muestra en el reloj del robot",
+      "minimum": 0,
+      "title": "T Ms",
+      "type": "integer"
+    },
+    "canales": {
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "integer"
+          },
+          {
+            "type": "boolean"
+          },
+          {
+            "items": {
+              "type": "number"
+            },
+            "type": "array"
+          },
+          {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array"
+          }
+        ]
+      },
+      "description": "Canales del grupo senales",
+      "title": "Canales",
+      "type": "object"
+    }
+  },
+  "required": [
+    "t_ms",
+    "canales"
+  ],
+  "title": "Senales",
+  "type": "object",
+  "$comment": "Frecuencia: senales_hz (20 Hz) mientras corre. Ack: False"
+}

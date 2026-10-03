@@ -1,0 +1,38 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "controlador": {
+      "pattern": "^[a-z][a-z0-9_]{0,31}$",
+      "title": "Controlador",
+      "type": "string"
+    },
+    "parametros": {
+      "additionalProperties": {
+        "type": "number"
+      },
+      "minProperties": 1,
+      "title": "Parametros",
+      "type": "object"
+    },
+    "id_setup": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Id del setup guardado en la API",
+      "title": "Id Setup"
+    }
+  },
+  "required": [
+    "controlador",
+    "parametros"
+  ],
+  "title": "Setup",
+  "type": "object",
+  "$comment": "Frecuencia: a pedido. Ack: True"
+}

@@ -1,6 +1,6 @@
 # Firmware
 
-Dos proyectos PlatformIO independientes. Cada uno separa la **lógica pura** (`lib/`, sin Arduino, probada en PC) de la parte que depende del hardware (`src/`).
+Dos proyectos PlatformIO independientes. Ambos hablan el contrato de mensajes v1.0 (`docs/contrato/`). Cada uno separa la **lógica pura** (`lib/`, sin Arduino, probada en PC) de la parte que depende del hardware (`src/`).
 
 | Carpeta | Placa | Qué hace |
 | --- | --- | --- |
@@ -38,7 +38,7 @@ La primera compilación descarga la plataforma ESP32 (una vez, con internet).
 
 | Ítem | Qué falta |
 | --- | --- |
-| EN-02 / EN-12 | Mensajes del contrato: manifiesto, estado, señales, comandos |
+| EN-12 | Guardar vueltas sin enlace y enviarlas con `sync` al reconectar |
 | EN-09 | Lectura de batería |
 | EN-10 | Lectura de la regleta por el multiplexor y controlador |
-| EN-13 / EN-15 | Calibrar la barrera y enviar los cortes |
+| EN-13 / EN-15 | Calibrar la barrera y validar la precisión de ± 5 ms |

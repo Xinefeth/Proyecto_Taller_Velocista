@@ -1,0 +1,12 @@
+{
+  "tipo": "vuelta",
+  "seq": 910,
+  "ts": 63500,
+  "datos": {
+    "id_vuelta": 3,
+    "tiempo_interno_ms": 18420,
+    "error_acumulado": 2.87,
+    "lineas_perdidas": 0,
+    "bateria_v": 7.96
+  }
+}

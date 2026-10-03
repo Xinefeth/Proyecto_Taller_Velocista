@@ -1,0 +1,244 @@
+{
+  "tipo": "manifiesto",
+  "seq": 1,
+  "ts": 850,
+  "datos": {
+    "contrato": "1.0",
+    "id": "v001",
+    "tipo_robot": "velocista",
+    "firmware": "0.2.0",
+    "sensores": [
+      {
+        "nombre": "regleta",
+        "modelo": "2 x QTR-8A",
+        "canales": [
+          "regleta",
+          "error"
+        ],
+        "detalles": {
+          "canales_fisicos": 16,
+          "multiplexor": true
+        }
+      },
+      {
+        "nombre": "bateria",
+        "modelo": "divisor resistivo",
+        "canales": [
+          "bateria_v"
+        ],
+        "detalles": {
+          "celdas": 2
+        }
+      }
+    ],
+    "actuadores": [
+      {
+        "nombre": "motor_izq",
+        "tipo": "motor_dc",
+        "modelo": "",
+        "canales": [
+          "pwm_izq"
+        ],
+        "detalles": {}
+      },
+      {
+        "nombre": "motor_der",
+        "tipo": "motor_dc",
+        "modelo": "",
+        "canales": [
+          "pwm_der"
+        ],
+        "detalles": {}
+      }
+    ],
+    "canales": [
+      {
+        "nombre": "bateria_v",
+        "descripcion": "Voltaje de la batería",
+        "tipo": "float",
+        "unidad": "V",
+        "min": 0,
+        "max": 9,
+        "grupo": "estado"
+      },
+      {
+        "nombre": "error",
+        "descripcion": "Posición de la línea respecto al centro, normalizada",
+        "tipo": "float",
+        "unidad": "",
+        "min": -1,
+        "max": 1,
+        "grupo": "senales"
+      },
+      {
+        "nombre": "regleta",
+        "descripcion": "Lecturas calibradas de los 16 sensores",
+        "tipo": "int[]",
+        "longitud": 16,
+        "unidad": "",
+        "min": 0,
+        "max": 1000,
+        "grupo": "senales"
+      },
+      {
+        "nombre": "pwm_izq",
+        "descripcion": "PWM aplicado al motor izquierdo",
+        "tipo": "int",
+        "unidad": "pwm",
+        "min": -255,
+        "max": 255,
+        "grupo": "senales"
+      },
+      {
+        "nombre": "pwm_der",
+        "descripcion": "PWM aplicado al motor derecho",
+        "tipo": "int",
+        "unidad": "pwm",
+        "min": -255,
+        "max": 255,
+        "grupo": "senales"
+      }
+    ],
+    "controladores": [
+      {
+        "nombre": "pid",
+        "descripcion": "PID clásico con velocidad base fija",
+        "parametros": [
+          {
+            "nombre": "kp",
+            "etiqueta": "Kp",
+            "tipo": "float",
+            "min": 0,
+            "max": 2,
+            "paso": 0.01,
+            "valor": 0.35,
+            "unidad": "",
+            "optimizable": true
+          },
+          {
+            "nombre": "ki",
+            "etiqueta": "Ki",
+            "tipo": "float",
+            "min": 0,
+            "max": 0.5,
+            "paso": 0.001,
+            "valor": 0,
+            "unidad": "",
+            "optimizable": true
+          },
+          {
+            "nombre": "kd",
+            "etiqueta": "Kd",
+            "tipo": "float",
+            "min": 0,
+            "max": 20,
+            "paso": 0.1,
+            "valor": 6,
+            "unidad": "",
+            "optimizable": true
+          },
+          {
+            "nombre": "vel_base",
+            "etiqueta": "Velocidad base",
+            "tipo": "int",
+            "min": 0,
+            "max": 255,
+            "paso": 1,
+            "valor": 160,
+            "unidad": "pwm",
+            "optimizable": true
+          }
+        ]
+      },
+      {
+        "nombre": "pid_adaptativo",
+        "descripcion": "PID con velocidad y Kp distintos en recta y curva",
+        "parametros": [
+          {
+            "nombre": "kp_recta",
+            "etiqueta": "Kp recta",
+            "tipo": "float",
+            "min": 0,
+            "max": 2,
+            "paso": 0.01,
+            "valor": 0.25,
+            "unidad": "",
+            "optimizable": true
+          },
+          {
+            "nombre": "kp_curva",
+            "etiqueta": "Kp curva",
+            "tipo": "float",
+            "min": 0,
+            "max": 2,
+            "paso": 0.01,
+            "valor": 0.5,
+            "unidad": "",
+            "optimizable": true
+          },
+          {
+            "nombre": "kd",
+            "etiqueta": "Kd",
+            "tipo": "float",
+            "min": 0,
+            "max": 20,
+            "paso": 0.1,
+            "valor": 6,
+            "unidad": "",
+            "optimizable": true
+          },
+          {
+            "nombre": "vel_recta",
+            "etiqueta": "Velocidad en recta",
+            "tipo": "int",
+            "min": 0,
+            "max": 255,
+            "paso": 1,
+            "valor": 200,
+            "unidad": "pwm",
+            "optimizable": true
+          },
+          {
+            "nombre": "vel_curva",
+            "etiqueta": "Velocidad en curva",
+            "tipo": "int",
+            "min": 0,
+            "max": 255,
+            "paso": 1,
+            "valor": 130,
+            "unidad": "pwm",
+            "optimizable": true
+          },
+          {
+            "nombre": "umbral_curva",
+            "etiqueta": "Umbral de curva",
+            "tipo": "float",
+            "min": 0,
+            "max": 1,
+            "paso": 0.01,
+            "valor": 0.3,
+            "unidad": "",
+            "optimizable": false
+          }
+        ]
+      }
+    ],
+    "controlador_activo": "pid",
+    "comandos": [
+      "calibrar",
+      "arrancar",
+      "detener",
+      "setup",
+      "modo",
+      "linea",
+      "cierre_vuelta"
+    ],
+    "frecuencias": {
+      "lazo_hz": 1000,
+      "estado_hz": 1,
+      "senales_hz": 20
+    },
+    "arranque": "comando",
+    "compensa_bateria": true
+  }
+}

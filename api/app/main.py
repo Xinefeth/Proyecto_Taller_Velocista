@@ -8,7 +8,7 @@ from app.core.config import RAIZ_REPO, settings
 from app.core.db import db_disponible
 from app.core.errores import registrar_manejadores
 from app.core.registro import configurar_logging, registrar_middleware
-from app.gateway import ws
+from app.gateway import comandos, ws
 from app.modulos.armador.router import router as armador
 from app.modulos.auth.router import router as auth
 from app.modulos.catalogo.router import router as catalogo
@@ -49,6 +49,7 @@ def create_app() -> FastAPI:
 
     # Canales de entrada
     app.include_router(ws.router)
+    app.include_router(comandos.router)
     # Módulos del monolito modular
     for router in ROUTERS_MODULOS:
         app.include_router(router)

@@ -1,0 +1,48 @@
+{
+  "additionalProperties": false,
+  "description": "Confirma el mensaje cuyo seq viaja en el sobre. ok=false rechaza un comando.",
+  "properties": {
+    "ok": {
+      "default": true,
+      "title": "Ok",
+      "type": "boolean"
+    },
+    "motivo": {
+      "anyOf": [
+        {
+          "enum": [
+            "bloqueado_competencia",
+            "no_calibrado",
+            "fuera_de_rango",
+            "parametro_desconocido",
+            "controlador_no_disponible",
+            "comando_desconocido",
+            "ocupado"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Motivo"
+    },
+    "detalle": {
+      "anyOf": [
+        {
+          "maxLength": 120,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Detalle"
+    }
+  },
+  "title": "Ack",
+  "type": "object",
+  "$comment": "Frecuencia: por cada mensaje que lo requiere. Ack: False"
+}

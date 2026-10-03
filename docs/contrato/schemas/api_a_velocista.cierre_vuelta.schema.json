@@ -1,0 +1,16 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "id_vuelta": {
+      "minimum": 1,
+      "title": "Id Vuelta",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "id_vuelta"
+  ],
+  "title": "CierreVuelta",
+  "type": "object",
+  "$comment": "Frecuencia: al recibir un corte. Ack: True"
+}

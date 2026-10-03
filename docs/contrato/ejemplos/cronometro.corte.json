@@ -1,0 +1,10 @@
+{
+  "tipo": "corte",
+  "seq": 5,
+  "ts": 73121,
+  "datos": {
+    "n_corte": 4,
+    "tiempo_vuelta_ms": 18342,
+    "marca_us": 73120450
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "codigo": {
+      "description": "Ver catálogo de eventos en la especificación",
+      "pattern": "^[a-z][a-z0-9_]{0,31}$",
+      "title": "Codigo",
+      "type": "string"
+    },
+    "nivel": {
+      "enum": [
+        "info",
+        "aviso",
+        "error"
+      ],
+      "title": "Nivel",
+      "type": "string"
+    },
+    "mensaje": {
+      "maxLength": 120,
+      "title": "Mensaje",
+      "type": "string"
+    },
+    "datos": {
+      "additionalProperties": true,
+      "title": "Datos",
+      "type": "object"
+    }
+  },
+  "required": [
+    "codigo",
+    "nivel",
+    "mensaje"
+  ],
+  "title": "Evento",
+  "type": "object",
+  "$comment": "Frecuencia: cuando ocurre. Ack: True"
+}
