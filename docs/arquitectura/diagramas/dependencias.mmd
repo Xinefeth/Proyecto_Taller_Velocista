@@ -1,0 +1,22 @@
+flowchart TB
+  subgraph E["Canales de entrada"]
+    REST["API REST · Controllers"]
+    GW["Gateway WebSocket"]
+  end
+  CT["Validación de mensajes · contrato EN-02"]
+  subgraph M["Módulos"]
+    SV["Services (interfaz pública)"]
+    MD["Models y Schemas"]
+  end
+  INF["Infraestructura transversal<br/>configuración · base de datos · seguridad · errores"]
+  DA["Acceso a datos · SQLAlchemy"]
+  DB[("PostgreSQL")]
+  REST --> SV
+  GW --> CT
+  GW --> SV
+  SV --> MD
+  SV --> DA
+  DA --> DB
+  REST -.-> INF
+  GW -.-> INF
+  SV -.-> INF

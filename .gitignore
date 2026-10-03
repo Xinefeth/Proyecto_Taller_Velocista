@@ -1,0 +1,31 @@
+# Entorno y secretos
+.env
+*.env.local
+firmware/*/include/config.h
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.egg-info/
+
+# Node
+node_modules/
+consola/dist/
+*.tsbuildinfo
+
+# PlatformIO
+.pio/
+
+# Sistema y editores
+.DS_Store
+Thumbs.db
+.idea/
+
+# Datos locales
+respaldos/
+*.log

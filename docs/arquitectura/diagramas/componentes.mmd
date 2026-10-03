@@ -1,0 +1,25 @@
+%%{init: {"flowchart": {"wrappingWidth": 260}}}%%
+flowchart TB
+  U(["Usuario<br/>piloto / integrante"])
+  subgraph NAV["Navegador"]
+    C["Consola web<br/>React + TypeScript + Vite"]
+  end
+  subgraph API["Backend · FastAPI + Uvicorn · proceso único · 0.0.0.0:8000"]
+    REST["API REST<br/>/api/*"]
+    GW["Gateway WebSocket<br/>/ws/robot · /ws/cronometro · /ws/consola"]
+    MOD["Módulos del monolito modular<br/>catalogo · armador · reglamento · corridas<br/>optimizacion · eventos · auth<br/><i>cada uno: router · service · models · schemas</i>"]
+    DA["Acceso a datos<br/>SQLAlchemy 2 · Alembic"]
+  end
+  DB[("PostgreSQL 16<br/>127.0.0.1:5432")]
+  R["Robot Velocista 001<br/>ESP32-S3"]
+  T["Cronómetro de meta<br/>ESP32 + barrera IR"]
+
+  U -- "HTTP · :8000" --> C
+  C -- "HTTP/REST · JSON · /api/*" --> REST
+  GW -- "WebSocket · JSON · /ws/consola" --> C
+  R <-- "WebSocket · JSON (EN-02) · /ws/robot · Wi-Fi 2.4 GHz" --> GW
+  T <-- "WebSocket · JSON (EN-02) · /ws/cronometro · Wi-Fi 2.4 GHz" --> GW
+  REST --> MOD
+  GW --> MOD
+  MOD --> DA
+  DA -- "SQL · TCP loopback · psycopg 3" --> DB

@@ -1,0 +1,11 @@
+{
+  "recommendations": [
+    "ms-python.python",
+    "charliermarsh.ruff",
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "platformio.platformio-ide",
+    "editorconfig.editorconfig",
+    "bierner.markdown-mermaid"
+  ]
+}

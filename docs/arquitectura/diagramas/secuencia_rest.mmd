@@ -1,0 +1,21 @@
+sequenceDiagram
+  autonumber
+  participant C as Consola web
+  participant R as router.py (Controller)
+  participant S as schemas.py (Pydantic)
+  participant V as service.py
+  participant O as SQLAlchemy Session
+  participant D as PostgreSQL
+  C->>R: GET /api/corridas?robot=v001&orden=j
+  R->>S: valida parámetros (tipos, rangos)
+  alt parámetros inválidos
+    S-->>C: 422 · detalle de validación
+  end
+  R->>V: listar_corridas(filtros, sesión)
+  V->>O: select(Corrida).where(...).order_by(...)
+  O->>D: SQL parametrizado
+  D-->>O: filas
+  O-->>V: objetos Corrida
+  V-->>R: lista de entidades + reglas aplicadas
+  R->>S: CorridaSalida.model_validate(...)
+  S-->>C: 200 · JSON

@@ -1,0 +1,25 @@
+sequenceDiagram
+  autonumber
+  participant P as Consola
+  participant A as API (REST + Gateway)
+  participant RB as Robot ESP32-S3
+  participant CR as Cronómetro ESP32
+  participant DB as PostgreSQL
+  RB->>A: Se conecta y envía su manifiesto
+  A-->>RB: Confirmación
+  P->>A: POST /api/dispositivos/velocista/comandos (setup)
+  A->>A: Valida rangos del manifiesto y reglas
+  A->>RB: Comando de setup
+  RB-->>A: Confirmación
+  A-->>P: Resultado del comando (/ws/consola)
+  loop Mientras el robot corre
+    RB->>A: Telemetría
+    A-->>P: Telemetría en vivo (/ws/consola)
+  end
+  CR->>A: Corte de meta con tiempo de vuelta
+  A-->>CR: Confirmación
+  A->>RB: Solicitud de cierre de vuelta
+  RB->>A: Resumen de la vuelta (error acumulado)
+  A->>A: Módulo Corridas: calcula J
+  A->>DB: Guarda corrida y telemetría (una transacción)
+  A-->>P: Corrida registrada (/ws/consola)

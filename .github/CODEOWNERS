@@ -1,0 +1,14 @@
+# Revisores automáticos por carpeta (EN-03, sección de responsables).
+# Reemplaza cada @usuario-xxx por el usuario real de GitHub del integrante.
+*                                   @usuario-ctr
+/firmware/                          @usuario-ale
+/api/app/core/                      @usuario-bda
+/api/migrations/                    @usuario-bda
+/api/app/modulos/catalogo/          @usuario-bda
+/api/app/modulos/armador/           @usuario-bda
+/api/app/modulos/reglamento/        @usuario-bda
+/api/app/modulos/corridas/          @usuario-bda
+/api/app/modulos/optimizacion/      @usuario-alg
+/api/app/gateway/                   @usuario-ctr @usuario-ale
+/consola/                           @usuario-ctr
+/docs/                              @usuario-ale @usuario-bda @usuario-ctr @usuario-alg
