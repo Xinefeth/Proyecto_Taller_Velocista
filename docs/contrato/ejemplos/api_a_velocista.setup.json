@@ -1,0 +1,14 @@
+{
+  "tipo": "setup",
+  "seq": 42,
+  "ts": 70000,
+  "datos": {
+    "controlador": "pid",
+    "parametros": {
+      "kp": 0.4,
+      "kd": 7.5,
+      "vel_base": 170
+    },
+    "id_setup": 12
+  }
+}

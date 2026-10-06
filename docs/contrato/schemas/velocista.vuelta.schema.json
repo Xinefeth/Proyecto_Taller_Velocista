@@ -1,0 +1,43 @@
+{
+  "additionalProperties": false,
+  "description": "Resumen de una vuelta; respuesta a cierre_vuelta.",
+  "properties": {
+    "id_vuelta": {
+      "minimum": 1,
+      "title": "Id Vuelta",
+      "type": "integer"
+    },
+    "tiempo_interno_ms": {
+      "description": "Medido por el robot; el oficial es el del cronómetro",
+      "minimum": 0,
+      "title": "Tiempo Interno Ms",
+      "type": "integer"
+    },
+    "error_acumulado": {
+      "description": "Integral del |error| en la vuelta (IAE)",
+      "minimum": 0,
+      "title": "Error Acumulado",
+      "type": "number"
+    },
+    "lineas_perdidas": {
+      "minimum": 0,
+      "title": "Lineas Perdidas",
+      "type": "integer"
+    },
+    "bateria_v": {
+      "minimum": 0,
+      "title": "Bateria V",
+      "type": "number"
+    }
+  },
+  "required": [
+    "id_vuelta",
+    "tiempo_interno_ms",
+    "error_acumulado",
+    "lineas_perdidas",
+    "bateria_v"
+  ],
+  "title": "Vuelta",
+  "type": "object",
+  "$comment": "Frecuencia: tras cierre_vuelta. Ack: True"
+}

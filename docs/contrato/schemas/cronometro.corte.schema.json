@@ -1,0 +1,38 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "n_corte": {
+      "description": "Correlativo de cortes desde el último rearmar",
+      "minimum": 1,
+      "title": "N Corte",
+      "type": "integer"
+    },
+    "tiempo_vuelta_ms": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "Resta con el corte anterior en el reloj del cronómetro; null si es la salida",
+      "title": "Tiempo Vuelta Ms"
+    },
+    "marca_us": {
+      "description": "Instante del corte en microsegundos",
+      "minimum": 0,
+      "title": "Marca Us",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "n_corte",
+    "tiempo_vuelta_ms",
+    "marca_us"
+  ],
+  "title": "Corte",
+  "type": "object",
+  "$comment": "Frecuencia: cada paso por la meta. Ack: True"
+}

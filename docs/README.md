@@ -3,8 +3,8 @@
 | Documento | Ubicación | Estado |
 | --- | --- | --- |
 | DO-02 · Arquitectura general | [`arquitectura/`](arquitectura/) | Para aprobación |
-| EN-02 · Contrato de mensajes y manifiesto | `contrato/` | En elaboración |
-| EN-03 · Repositorio y entorno | [`repositorio/`](repositorio/) | En elaboración |
+| EN-02 · Contrato de mensajes y manifiesto | [`contrato/`](contrato/) | Para revisión |
+| EN-03 · Repositorio y entorno | [`repositorio/`](repositorio/) | Para revisión |
 | DO-03 · Modelo de datos | `datos/` | Pendiente |
 | Despliegue en pista | [`despliegue-pista.md`](despliegue-pista.md) | Vigente |
 | PostgreSQL sin Docker | [`postgres-sin-docker.md`](postgres-sin-docker.md) | Vigente |

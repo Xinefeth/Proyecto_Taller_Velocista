@@ -1,0 +1,16 @@
+{
+  "tipo": "sync",
+  "seq": 1204,
+  "ts": 90400,
+  "datos": {
+    "vueltas": [
+      {
+        "id_vuelta": 4,
+        "tiempo_interno_ms": 18110,
+        "error_acumulado": 2.61,
+        "lineas_perdidas": 1,
+        "bateria_v": 7.91
+      }
+    ]
+  }
+}

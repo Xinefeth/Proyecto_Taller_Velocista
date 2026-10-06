@@ -35,6 +35,7 @@ void test_rearmar_inicia_una_salida_nueva() {
   c.rearmar();
   TEST_ASSERT_TRUE(c.registrar(1100000, v));
   TEST_ASSERT_EQUAL_INT64(-1, v);
+  TEST_ASSERT_EQUAL_UINT32(1, c.cortes());
 }
 
 int main() {

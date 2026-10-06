@@ -59,7 +59,7 @@ La franja superior de la consola muestra **API**, **Base de datos** y **Tiempo r
 
 | Dónde | Comando | Qué cubre |
 | --- | --- | --- |
-| `api/` | `pytest` | Unitarias, integración (PostgreSQL), WebSocket y reglas de arquitectura de DO-02 |
+| `api/` | `pytest` | Unitarias, contrato de mensajes, integración (PostgreSQL), WebSocket y reglas de arquitectura de DO-02 |
 | `consola/` | `npm test` | Servicios y navegación |
 | `consola/` | `npm run lint && npm run typecheck` | Estilo, tipos y que solo `services/` llame a la red |
 | `firmware/<proyecto>/` | `pio test -e native` | Lógica pura en PC |

@@ -5,6 +5,11 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). V
 ## [Sin publicar]
 
 ### Agregado
+- Contrato de mensajes v1.0 (EN-02): sobre común, manifiesto, telemetría, comandos y eventos del robot y del cronómetro, con versión.
+- Gateway: validación de cada mensaje, ack de mensajes críticos, descarte de duplicados y de señales fuera de orden, avisos de canales.
+- API: `GET /api/dispositivos/velocista/manifiesto` y `POST /api/dispositivos/{d}/comandos` validados contra el manifiesto y las reglas de competencia.
+- Ejemplos JSON y JSON Schema del contrato; pruebas de contrato, de comandos y del gateway; herramienta `robot_falso.py`.
+- Firmware del robot y del cronómetro según el contrato.
 - Monorepo con `api/`, `consola/`, `firmware/` y `docs/` (EN-03).
 - API: estructura de 7 módulos (router, service, models, schemas), gateway WebSocket, formato estándar de errores, registro de peticiones, migración inicial y pruebas por tipo.
 - Consola: estructura por páginas con el sistema visual del prototipo y verificación del entorno.

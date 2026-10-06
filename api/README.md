@@ -27,8 +27,10 @@ app/
 │   ├── errores.py     ErrorDeNegocio y formato estándar de errores
 │   ├── registro.py    Logs y registro de cada petición
 │   └── seguridad.py   Tokens de dispositivo (usuarios: módulo auth)
+├── contrato/          Contrato de mensajes v1.0 (EN-02): sobre, manifiesto, mensajes, validación
 ├── gateway/
-│   └── ws.py          /ws/robot · /ws/cronometro · /ws/consola
+│   ├── ws.py          /ws/robot · /ws/cronometro · /ws/consola (valida con el contrato)
+│   └── comandos.py    Manifiesto del robot y comandos hacia los dispositivos
 └── modulos/           catalogo · armador · reglamento · corridas · optimizacion · eventos · auth
     └── <modulo>/
         ├── router.py      Controller: endpoints; sin reglas de negocio
@@ -36,8 +38,10 @@ app/
         ├── models.py      Tablas SQLAlchemy del módulo
         └── schemas.py     DTO Pydantic de entrada y salida
 migrations/            Alembic (0001_base crea la tabla evento)
+herramientas/          robot_falso.py: robot simulado para desarrollo (no es parte del sistema)
 tests/
-├── unit/              Lógica pura y reglas de arquitectura
+├── contract/          Ejemplos y reglas del contrato de mensajes
+├── unit/              Lógica pura, comandos y reglas de arquitectura
 ├── integration/       Endpoints y base de datos real (se omiten si no hay PostgreSQL)
 └── websocket/         Gateway
 ```
@@ -67,3 +71,15 @@ tests/
 2. Regla de negocio en `service.py` (lanza `ErrorDeNegocio` si no se cumple).
 3. Endpoint en `router.py`, que solo valida y delega.
 4. Prueba unitaria del service y, si toca la base, de integración.
+
+## Contrato de mensajes (EN-02)
+
+- Documento y ejemplos: [`docs/contrato/`](../docs/contrato/).
+- Modelos: `app/contrato/`. Regenerar los JSON Schema: `python -m app.contrato.exportar`.
+- Probar sin el robot (solo desarrollo; no guarda corridas):
+
+```bash
+python herramientas/robot_falso.py            # con la API levantada
+```
+
+Luego envía comandos desde http://localhost:8000/docs → `POST /api/dispositivos/velocista/comandos`, por ejemplo `{"tipo": "calibrar"}` y `{"tipo": "arrancar"}`.

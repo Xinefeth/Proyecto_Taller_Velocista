@@ -1,0 +1,19 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "color": {
+      "enum": [
+        "negra",
+        "blanca"
+      ],
+      "title": "Color",
+      "type": "string"
+    }
+  },
+  "required": [
+    "color"
+  ],
+  "title": "Linea",
+  "type": "object",
+  "$comment": "Frecuencia: a pedido. Ack: True"
+}

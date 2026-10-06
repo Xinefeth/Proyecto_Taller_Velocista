@@ -1,0 +1,19 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "modo": {
+      "enum": [
+        "prueba",
+        "competencia"
+      ],
+      "title": "Modo",
+      "type": "string"
+    }
+  },
+  "required": [
+    "modo"
+  ],
+  "title": "Modo",
+  "type": "object",
+  "$comment": "Frecuencia: a pedido. Ack: True"
+}

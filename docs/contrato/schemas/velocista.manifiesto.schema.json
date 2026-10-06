@@ -1,0 +1,404 @@
+{
+  "$defs": {
+    "Actuador": {
+      "additionalProperties": false,
+      "properties": {
+        "nombre": {
+          "pattern": "^[a-z][a-z0-9_]{0,31}$",
+          "title": "Nombre",
+          "type": "string"
+        },
+        "tipo": {
+          "enum": [
+            "motor_dc",
+            "servo",
+            "turbina",
+            "led",
+            "otro"
+          ],
+          "title": "Tipo",
+          "type": "string"
+        },
+        "modelo": {
+          "default": "",
+          "maxLength": 40,
+          "title": "Modelo",
+          "type": "string"
+        },
+        "canales": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Canales",
+          "type": "array"
+        },
+        "detalles": {
+          "additionalProperties": true,
+          "title": "Detalles",
+          "type": "object"
+        }
+      },
+      "required": [
+        "nombre",
+        "tipo"
+      ],
+      "title": "Actuador",
+      "type": "object"
+    },
+    "Canal": {
+      "additionalProperties": false,
+      "properties": {
+        "nombre": {
+          "pattern": "^[a-z][a-z0-9_]{0,31}$",
+          "title": "Nombre",
+          "type": "string"
+        },
+        "descripcion": {
+          "default": "",
+          "maxLength": 120,
+          "title": "Descripcion",
+          "type": "string"
+        },
+        "tipo": {
+          "enum": [
+            "float",
+            "int",
+            "bool",
+            "float[]",
+            "int[]"
+          ],
+          "title": "Tipo",
+          "type": "string"
+        },
+        "longitud": {
+          "anyOf": [
+            {
+              "maximum": 64,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Solo para arreglos",
+          "title": "Longitud"
+        },
+        "unidad": {
+          "default": "",
+          "maxLength": 12,
+          "title": "Unidad",
+          "type": "string"
+        },
+        "min": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Min"
+        },
+        "max": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max"
+        },
+        "grupo": {
+          "description": "estado viaja a la frecuencia de estado; senales, a la de señales",
+          "enum": [
+            "estado",
+            "senales"
+          ],
+          "title": "Grupo",
+          "type": "string"
+        }
+      },
+      "required": [
+        "nombre",
+        "tipo",
+        "grupo"
+      ],
+      "title": "Canal",
+      "type": "object"
+    },
+    "Controlador": {
+      "additionalProperties": false,
+      "properties": {
+        "nombre": {
+          "pattern": "^[a-z][a-z0-9_]{0,31}$",
+          "title": "Nombre",
+          "type": "string"
+        },
+        "descripcion": {
+          "default": "",
+          "maxLength": 120,
+          "title": "Descripcion",
+          "type": "string"
+        },
+        "parametros": {
+          "items": {
+            "$ref": "#/$defs/Parametro"
+          },
+          "maxItems": 16,
+          "minItems": 1,
+          "title": "Parametros",
+          "type": "array"
+        }
+      },
+      "required": [
+        "nombre",
+        "parametros"
+      ],
+      "title": "Controlador",
+      "type": "object"
+    },
+    "Frecuencias": {
+      "additionalProperties": false,
+      "properties": {
+        "lazo_hz": {
+          "maximum": 10000,
+          "minimum": 1,
+          "title": "Lazo Hz",
+          "type": "integer"
+        },
+        "estado_hz": {
+          "exclusiveMinimum": 0,
+          "maximum": 10,
+          "title": "Estado Hz",
+          "type": "number"
+        },
+        "senales_hz": {
+          "exclusiveMinimum": 0,
+          "maximum": 50,
+          "title": "Senales Hz",
+          "type": "number"
+        }
+      },
+      "required": [
+        "lazo_hz",
+        "estado_hz",
+        "senales_hz"
+      ],
+      "title": "Frecuencias",
+      "type": "object"
+    },
+    "Parametro": {
+      "additionalProperties": false,
+      "properties": {
+        "nombre": {
+          "pattern": "^[a-z][a-z0-9_]{0,31}$",
+          "title": "Nombre",
+          "type": "string"
+        },
+        "etiqueta": {
+          "maxLength": 40,
+          "title": "Etiqueta",
+          "type": "string"
+        },
+        "tipo": {
+          "enum": [
+            "float",
+            "int"
+          ],
+          "title": "Tipo",
+          "type": "string"
+        },
+        "min": {
+          "title": "Min",
+          "type": "number"
+        },
+        "max": {
+          "title": "Max",
+          "type": "number"
+        },
+        "paso": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Paso"
+        },
+        "valor": {
+          "description": "Valor cargado ahora en el robot",
+          "title": "Valor",
+          "type": "number"
+        },
+        "unidad": {
+          "default": "",
+          "maxLength": 12,
+          "title": "Unidad",
+          "type": "string"
+        },
+        "optimizable": {
+          "default": true,
+          "description": "Si Twiddle y la bayesiana pueden moverlo",
+          "title": "Optimizable",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "nombre",
+        "etiqueta",
+        "tipo",
+        "min",
+        "max",
+        "valor"
+      ],
+      "title": "Parametro",
+      "type": "object"
+    },
+    "Sensor": {
+      "additionalProperties": false,
+      "properties": {
+        "nombre": {
+          "pattern": "^[a-z][a-z0-9_]{0,31}$",
+          "title": "Nombre",
+          "type": "string"
+        },
+        "modelo": {
+          "maxLength": 40,
+          "title": "Modelo",
+          "type": "string"
+        },
+        "canales": {
+          "description": "Canales que produce este sensor",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Canales",
+          "type": "array"
+        },
+        "detalles": {
+          "additionalProperties": true,
+          "title": "Detalles",
+          "type": "object"
+        }
+      },
+      "required": [
+        "nombre",
+        "modelo",
+        "canales"
+      ],
+      "title": "Sensor",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "contrato": {
+      "pattern": "^\\d+\\.\\d+$",
+      "title": "Contrato",
+      "type": "string"
+    },
+    "id": {
+      "pattern": "^[a-z][a-z0-9_]{0,31}$",
+      "title": "Id",
+      "type": "string"
+    },
+    "tipo_robot": {
+      "description": "velocista, minisumo…",
+      "pattern": "^[a-z][a-z0-9_]{0,31}$",
+      "title": "Tipo Robot",
+      "type": "string"
+    },
+    "firmware": {
+      "maxLength": 20,
+      "title": "Firmware",
+      "type": "string"
+    },
+    "sensores": {
+      "items": {
+        "$ref": "#/$defs/Sensor"
+      },
+      "title": "Sensores",
+      "type": "array"
+    },
+    "actuadores": {
+      "items": {
+        "$ref": "#/$defs/Actuador"
+      },
+      "title": "Actuadores",
+      "type": "array"
+    },
+    "canales": {
+      "items": {
+        "$ref": "#/$defs/Canal"
+      },
+      "maxItems": 64,
+      "minItems": 1,
+      "title": "Canales",
+      "type": "array"
+    },
+    "controladores": {
+      "items": {
+        "$ref": "#/$defs/Controlador"
+      },
+      "minItems": 1,
+      "title": "Controladores",
+      "type": "array"
+    },
+    "controlador_activo": {
+      "title": "Controlador Activo",
+      "type": "string"
+    },
+    "comandos": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Comandos",
+      "type": "array"
+    },
+    "frecuencias": {
+      "$ref": "#/$defs/Frecuencias"
+    },
+    "arranque": {
+      "enum": [
+        "comando",
+        "modulo_arranque"
+      ],
+      "title": "Arranque",
+      "type": "string"
+    },
+    "compensa_bateria": {
+      "title": "Compensa Bateria",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "contrato",
+    "id",
+    "tipo_robot",
+    "firmware",
+    "sensores",
+    "actuadores",
+    "canales",
+    "controladores",
+    "controlador_activo",
+    "comandos",
+    "frecuencias",
+    "arranque",
+    "compensa_bateria"
+  ],
+  "title": "Manifiesto",
+  "type": "object",
+  "$comment": "Frecuencia: al conectar, primer mensaje. Ack: True"
+}

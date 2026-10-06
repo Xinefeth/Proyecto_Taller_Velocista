@@ -1,0 +1,97 @@
+{
+  "additionalProperties": false,
+  "description": "Cada 1/estado_hz segundos (1 Hz por defecto).",
+  "properties": {
+    "estado": {
+      "enum": [
+        "listo",
+        "calibrando",
+        "corriendo",
+        "detenido",
+        "error"
+      ],
+      "title": "Estado",
+      "type": "string"
+    },
+    "calibrado": {
+      "title": "Calibrado",
+      "type": "boolean"
+    },
+    "modo": {
+      "enum": [
+        "prueba",
+        "competencia"
+      ],
+      "title": "Modo",
+      "type": "string"
+    },
+    "linea": {
+      "enum": [
+        "negra",
+        "blanca"
+      ],
+      "title": "Linea",
+      "type": "string"
+    },
+    "controlador": {
+      "pattern": "^[a-z][a-z0-9_]{0,31}$",
+      "title": "Controlador",
+      "type": "string"
+    },
+    "lazo_hz": {
+      "description": "Frecuencia real medida del lazo de control",
+      "minimum": 0,
+      "title": "Lazo Hz",
+      "type": "integer"
+    },
+    "rssi_dbm": {
+      "maximum": 0,
+      "minimum": -120,
+      "title": "Rssi Dbm",
+      "type": "integer"
+    },
+    "canales": {
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "integer"
+          },
+          {
+            "type": "boolean"
+          },
+          {
+            "items": {
+              "type": "number"
+            },
+            "type": "array"
+          },
+          {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array"
+          }
+        ]
+      },
+      "description": "Canales del grupo estado",
+      "title": "Canales",
+      "type": "object"
+    }
+  },
+  "required": [
+    "estado",
+    "calibrado",
+    "modo",
+    "linea",
+    "controlador",
+    "lazo_hz",
+    "rssi_dbm",
+    "canales"
+  ],
+  "title": "Estado",
+  "type": "object",
+  "$comment": "Frecuencia: estado_hz (1 Hz). Ack: False"
+}

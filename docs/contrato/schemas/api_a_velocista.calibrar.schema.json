@@ -1,0 +1,8 @@
+{
+  "additionalProperties": false,
+  "description": "calibrar, arrancar, detener.",
+  "properties": {},
+  "title": "SinDatos",
+  "type": "object",
+  "$comment": "Frecuencia: a pedido. Ack: True"
+}

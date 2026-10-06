@@ -1,0 +1,17 @@
+{
+  "tipo": "estado",
+  "seq": 2,
+  "ts": 1850,
+  "datos": {
+    "estado": "listo",
+    "calibrado": true,
+    "modo": "prueba",
+    "linea": "negra",
+    "controlador": "pid",
+    "lazo_hz": 998,
+    "rssi_dbm": -54,
+    "canales": {
+      "bateria_v": 8.12
+    }
+  }
+}

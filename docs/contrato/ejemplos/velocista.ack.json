@@ -1,0 +1,10 @@
+{
+  "tipo": "ack",
+  "seq": 42,
+  "ts": 70000,
+  "datos": {
+    "ok": false,
+    "motivo": "bloqueado_competencia",
+    "detalle": "Solo se acepta detener mientras corre en competencia"
+  }
+}
