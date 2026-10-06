@@ -9,12 +9,12 @@ import "@fontsource/geist-mono/500.css";
 import "./styles/prototipo.css";
 import "./styles/app.css";
 import App from "./App";
-import { ProveedorConexion } from "./stores/ConexionContext";
+import { ProveedorConsola } from "./stores/ConsolaContext";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <ProveedorConexion>
+    <ProveedorConsola>
       <App />
-    </ProveedorConexion>
+    </ProveedorConsola>
   </StrictMode>,
 );
