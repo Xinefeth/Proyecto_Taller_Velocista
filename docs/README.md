@@ -6,6 +6,7 @@
 | EN-02 · Contrato de mensajes y manifiesto | [`contrato/`](contrato/) | Para revisión |
 | EN-03 · Repositorio y entorno | [`repositorio/`](repositorio/) | Para revisión |
 | EN-06 · Componentes comunes de gestión | [`componentes-gestion.md`](componentes-gestion.md) | Para revisión |
+| HU-01 a HU-07 · Catálogo y armador de robots | [`catalogo-y-armador.md`](catalogo-y-armador.md) | Para revisión |
 | DO-03 · Modelo de datos | `datos/` | Pendiente |
 | Despliegue en pista | [`despliegue-pista.md`](despliegue-pista.md) | Vigente |
 | PostgreSQL sin Docker | [`postgres-sin-docker.md`](postgres-sin-docker.md) | Vigente |

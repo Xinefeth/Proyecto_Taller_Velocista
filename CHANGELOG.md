@@ -5,6 +5,8 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). V
 ## [Sin publicar]
 
 ### Agregado
+- Consola: lo que se registra a mano (componentes y robots) se conserva en el navegador y se puede restablecer a los datos de ejemplo (HU-02, HU-06); no se pueden registrar componentes repetidos.
+- Consola: 52 pruebas del resumen del robot (costo, masa y consumo), la compatibilidad, el reglamento, la ficha, el inventario y el armador (HU-03, HU-04, HU-06, HU-07).
 - Consola: componentes comunes de gestión (EN-06) — tabla, buscador, chips, pestañas y formularios con validación — usados en el Catálogo y en el registro manual de componentes (HU-02); la búsqueda ya no distingue tildes.
 - Contrato de mensajes v1.0 (EN-02): sobre común, manifiesto, telemetría, comandos y eventos del robot y del cronómetro, con versión.
 - Gateway: validación de cada mensaje, ack de mensajes críticos, descarte de duplicados y de señales fuera de orden, avisos de canales.
@@ -16,3 +18,6 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). V
 - Consola: estructura por páginas con el sistema visual del prototipo y verificación del entorno.
 - Firmware: estructura base del robot y del cronómetro con lógica pura probada en PC.
 - Entorno: Docker Compose para PostgreSQL, scripts de arranque, CI y convenciones de trabajo.
+
+### Corregido
+- Consola: un robot nuevo queda con su versión 1 y su lista de piezas; antes el primer guardado creaba una v2 y dejaba la v1 vacía (HU-06).
