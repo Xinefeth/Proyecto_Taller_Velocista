@@ -38,7 +38,7 @@ La primera compilación descarga la plataforma ESP32 (una vez, con internet).
 
 | Ítem | Qué falta |
 | --- | --- |
-| EN-12 | Guardar vueltas sin enlace y enviarlas con `sync` al reconectar |
+| EN-12 | La cola de vueltas sin enlace está lista y probada en PC (`velocista/lib/vueltas_guardadas`). Falta conectarla en `main.cpp`: guardar en `cerrarVuelta` si no hay enlace, enviar `sync` al reconectar y borrarlas cuando la API confirma; y medir que la consola conecta en menos de 5 s |
 | EN-09 | Lectura de batería |
 | EN-10 | Lectura de la regleta por el multiplexor y controlador |
 | EN-13 / EN-15 | Calibrar la barrera y validar la precisión de ± 5 ms |
