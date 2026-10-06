@@ -30,6 +30,14 @@ class VueltasGuardadas {
   // Quita las `n` más antiguas, las que la API confirmó. Si n > cantidad(), quita todas.
   void confirmar(size_t n);
 
+  // Arma en `destino` el mensaje `sync` del contrato (docs/contrato) con las vueltas más antiguas,
+  // hasta `maximo` (nunca más de CAPACIDAD). Devuelve cuántos bytes escribió y deja en `enviadas`
+  // cuántas vueltas incluyó; esas son las que se pasan a confirmar() cuando llega el ack.
+  // Si no hay vueltas o el texto no cabe en `capacidad`, devuelve 0 y no escribe un mensaje a
+  // medias.
+  size_t aSync(char* destino, size_t capacidad, uint32_t seq, uint32_t ts, size_t& enviadas,
+               size_t maximo = CAPACIDAD) const;
+
  private:
   VueltaGuardada datos_[CAPACIDAD];
   size_t inicio_ = 0;
