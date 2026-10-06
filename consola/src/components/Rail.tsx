@@ -1,49 +1,56 @@
-// Barra lateral de navegación, igual a la del prototipo.
-import { SECCIONES, type IdSeccion } from "../secciones";
+// Barra lateral de navegación, igual a la del prototipo (Protoripo.html): grupos Robot y Gestión,
+// más el botón de la capa del backlog.
+import { useConsola, type Tab } from "../stores/ConsolaContext";
 import { iconos, Marca } from "./Iconos";
 
-interface Props {
-  actual: IdSeccion;
-  alElegir: (id: IdSeccion) => void;
-}
+const ROBOT: [Tab, string][] = [
+  ["control", "Control"],
+  ["telemetria", "Telemetría"],
+  ["tiempos", "Corridas y optimización"],
+  ["mapa", "Mapa de pista"],
+];
+const GESTION: [Tab, string][] = [
+  ["catalogo", "Catálogo de componentes"],
+  ["armador", "Armador de robots"],
+  ["reglamento", "Perfiles de reglamento"],
+];
 
-export function Rail({ actual, alElegir }: Props) {
-  const grupo = (g: "Robot" | "Gestión") =>
-    SECCIONES.filter((s) => s.grupo === g).map((s) => (
-      <button
-        key={s.id}
-        type="button"
-        className="nb"
-        aria-label={s.titulo}
-        aria-current={actual === s.id ? "page" : undefined}
-        onClick={() => alElegir(s.id)}
-      >
-        {iconos[s.id]}
-        <span className="tip">{s.titulo}</span>
-      </button>
-    ));
-
+export function Rail() {
+  const { tab, goTab, blOpen, setBlOpen } = useConsola();
+  const boton = ([id, titulo]: [Tab, string]) => (
+    <button
+      key={id}
+      type="button"
+      className="nb"
+      aria-label={titulo}
+      aria-current={tab === id ? "page" : undefined}
+      onClick={() => goTab(id)}
+    >
+      {iconos[id]}
+      <span className="tip">{titulo}</span>
+    </button>
+  );
   return (
     <nav className="rail" aria-label="Secciones">
-      <div className="mark">
+      <div className="mark" aria-hidden="true">
         <Marca />
       </div>
       <span className="gl">Robot</span>
-      {grupo("Robot")}
+      {ROBOT.map(boton)}
       <span className="sep" />
       <span className="gl">Gestión</span>
-      {grupo("Gestión")}
+      {GESTION.map(boton)}
       <div className="grow" />
       <button
         type="button"
-        className="sysbtn"
-        aria-label="Estado del sistema"
-        aria-current={actual === "sistema" ? "page" : undefined}
-        onClick={() => alElegir("sistema")}
+        className="blbtn"
+        aria-pressed={blOpen}
+        title="Capa del backlog: IDs y alcance por sprint"
+        onClick={() => setBlOpen(!blOpen)}
       >
-        SIS
+        BACK
         <br />
-        TEMA
+        LOG
       </button>
     </nav>
   );

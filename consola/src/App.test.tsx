@@ -1,21 +1,13 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
-import { ProveedorConexion } from "./stores/ConexionContext";
-
-class WebSocketFalso {
-  onopen: (() => void) | null = null;
-  onclose: (() => void) | null = null;
-  onmessage: ((e: { data: string }) => void) | null = null;
-  close() {}
-}
+import { ProveedorConsola } from "./stores/ConsolaContext";
 
 beforeEach(() => {
-  vi.stubGlobal("WebSocket", WebSocketFalso);
-  vi.stubGlobal(
-    "fetch",
-    vi.fn().mockResolvedValue({ ok: false, status: 503, json: async () => null }),
-  );
+  // El store arranca un bucle con requestAnimationFrame; en pruebas lo dejamos inerte.
+  vi.stubGlobal("requestAnimationFrame", () => 0);
+  vi.stubGlobal("cancelAnimationFrame", () => {});
+  vi.stubGlobal("scrollTo", () => {});
 });
 afterEach(() => {
   cleanup();
@@ -24,32 +16,35 @@ afterEach(() => {
 
 const montar = () =>
   render(
-    <ProveedorConexion>
+    <ProveedorConsola>
       <App />
-    </ProveedorConexion>,
+    </ProveedorConsola>,
   );
 
 describe("App", () => {
-  it("muestra las siete secciones del prototipo y el estado del sistema", () => {
+  it("muestra el selector de robot y las secciones del riel", () => {
     montar();
+    expect(screen.getByText("Velocista 001")).toBeTruthy();
+    // Nombres únicos del riel (la nav móvil usa nombres cortos).
     for (const nombre of [
-      "Control",
-      "Telemetría",
-      "Corridas y optimización",
-      "Mapa de pista",
       "Catálogo de componentes",
       "Armador de robots",
       "Perfiles de reglamento",
     ]) {
       expect(screen.getByRole("button", { name: nombre })).toBeTruthy();
     }
-    expect(screen.getByLabelText("Estado del sistema", { selector: "div" })).toBeTruthy();
   });
 
-  it("navega entre secciones", () => {
+  it("navega a la gestión de catálogo", () => {
     montar();
     fireEvent.click(screen.getByRole("button", { name: "Catálogo de componentes" }));
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Catálogo de componentes");
-    expect(screen.getByText("HU-01")).toBeTruthy();
+    expect(screen.getByPlaceholderText("Buscar por nombre, tipo o especificación")).toBeTruthy();
+  });
+
+  it("navega al reglamento", () => {
+    montar();
+    fireEvent.click(screen.getByRole("button", { name: "Perfiles de reglamento" }));
+    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Perfiles de reglamento");
   });
 });
