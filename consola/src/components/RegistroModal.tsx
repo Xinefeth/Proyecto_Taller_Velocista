@@ -1,47 +1,153 @@
 // Modal para registrar un componente, manual (HU-02) o desde enlace (HU-05). Del prototipo.
-import { useEffect, useState } from "react";
+// Los campos se dibujan con los componentes comunes de gestión (EN-06) y se validan con validarCampos.
+import { useEffect, useMemo, useState } from "react";
 import { useConsola } from "../stores/ConsolaContext";
 import { Cerrar, ICO } from "./IconosUI";
 import { TIPOS } from "../datos/tipos";
 import type { Specs } from "../types/dominio";
 import { PbiChip } from "./Card";
+import {
+  FormularioDinamico,
+  Pestanas,
+  parsearNumero,
+  validarCampos,
+  type DefCampo,
+  type Valores,
+} from "./gestion";
+
+const CAMPOS_BASICOS: DefCampo[] = [
+  {
+    nombre: "tipo",
+    etiqueta: "Tipo",
+    tipo: "seleccion",
+    opciones: Object.entries(TIPOS).map(([k, v]) => ({ valor: k, etiqueta: v.nm })),
+  },
+  {
+    nombre: "nombre",
+    etiqueta: "Nombre",
+    tipo: "texto",
+    requerido: true,
+    marcador: "Ej. Pololu QTR-8A",
+    mensajes: { obligatorio: "Escribe el nombre del componente." },
+  },
+];
+
+const CAMPOS_NUMEROS: DefCampo[] = [
+  {
+    nombre: "precio",
+    etiqueta: "Precio (S/)",
+    tipo: "numero",
+    requerido: true,
+    minExclusivo: 0,
+    marcador: "0.00",
+    mensajes: {
+      obligatorio: "El precio debe ser mayor que 0.",
+      minimo: "El precio debe ser mayor que 0.",
+    },
+  },
+  {
+    nombre: "masa",
+    etiqueta: "Masa (g)",
+    tipo: "numero",
+    requerido: true,
+    min: 0,
+    marcador: "0",
+    mensajes: { obligatorio: "Escribe la masa en gramos." },
+  },
+  { nombre: "stock", etiqueta: "En el club", tipo: "numero", entero: true, min: 0 },
+];
+
+const CAMPO_TIENDA: DefCampo[] = [
+  { nombre: "tienda", etiqueta: "Tienda", tipo: "texto", marcador: "Proveedor local (Trujillo)" },
+];
+
+const INICIAL: Valores = {
+  tipo: "linea",
+  nombre: "",
+  precio: "",
+  masa: "",
+  stock: "0",
+  tienda: "",
+};
+
+const PESTANAS_REGISTRO = [
+  {
+    id: "manual",
+    etiqueta: (
+      <>
+        Manual <PbiChip pbi="HU-02" sprint="1" inl />
+      </>
+    ),
+  },
+  {
+    id: "link",
+    sprint: "2",
+    etiqueta: (
+      <>
+        Desde enlace <PbiChip pbi="HU-05" sprint="2" inl />
+      </>
+    ),
+  },
+];
 
 export function RegistroModal() {
   const c = useConsola();
-  const [rt, setRt] = useState<"manual" | "link">("manual");
-  const [tipo, setTipo] = useState("linea");
-  const [nombre, setNombre] = useState("");
-  const [precio, setPrecio] = useState("");
-  const [masa, setMasa] = useState("");
-  const [stock, setStock] = useState("0");
-  const [tienda, setTienda] = useState("");
+  const [rt, setRt] = useState("manual");
+  const [valores, setValores] = useState<Valores>(INICIAL);
   const [link, setLink] = useState("");
-  const [specs, setSpecs] = useState<Record<string, string>>({});
-  const [err, setErr] = useState("");
+  const [errores, setErrores] = useState<Record<string, string>>({});
+  const [aviso, setAviso] = useState("");
   const [fetching, setFetching] = useState(false);
 
   useEffect(() => {
     if (c.regOpen) {
       setRt("manual");
-      setTipo("linea");
-      setNombre("");
-      setPrecio("");
-      setMasa("");
-      setStock("0");
-      setTienda("");
+      setValores(INICIAL);
       setLink("");
-      setSpecs({});
-      setErr("");
+      setErrores({});
+      setAviso("");
     }
   }, [c.regOpen]);
 
-  const T = TIPOS[tipo];
+  const T = TIPOS[valores.tipo];
+  // Los campos de especificaciones cambian según el tipo (HU-02). Son opcionales; si se llenan
+  // las cifras, deben ser números válidos (unidades en la etiqueta).
+  const camposSpecs = useMemo<DefCampo[]>(
+    () =>
+      T.f.map(([k, etiqueta, ty]) => ({
+        nombre: `spec_${k}`,
+        etiqueta,
+        tipo: ty === "n" ? "numero" : "texto",
+        min: ty === "n" ? 0 : undefined,
+      })),
+    [T],
+  );
+
+  const cambiar = (nombre: string, valor: string) => {
+    if (nombre === "tipo") {
+      // Al cambiar de tipo se limpian las especificaciones del tipo anterior.
+      setValores((v) => {
+        const resto = Object.fromEntries(Object.entries(v).filter(([k]) => !k.startsWith("spec_")));
+        return { ...resto, tipo: valor };
+      });
+      setErrores((e) =>
+        Object.fromEntries(Object.entries(e).filter(([k]) => !k.startsWith("spec_"))),
+      );
+      return;
+    }
+    setValores((v) => ({ ...v, [nombre]: valor }));
+    setErrores((e) => {
+      if (!e[nombre]) return e;
+      return Object.fromEntries(Object.entries(e).filter(([k]) => k !== nombre));
+    });
+  };
+
   const specVals = (): Specs => {
     const o: Specs = {};
     T.f.forEach(([k, , ty]) => {
-      const raw = specs[k] ?? "";
-      o[k] =
-        ty === "n" && raw !== "" && !isNaN(+raw.replace(",", ".")) ? +raw.replace(",", ".") : raw;
+      const raw = valores[`spec_${k}`] ?? "";
+      const n = ty === "n" ? parsearNumero(raw) : null;
+      o[k] = n !== null ? n : raw;
     });
     return o;
   };
@@ -64,36 +170,46 @@ export function RegistroModal() {
     setLink((l) => l || "https://tienda.ejemplo/producto/qtr-hd-15a");
     setTimeout(() => {
       setFetching(false);
-      setTipo("linea");
-      setNombre("Pololu QTR-HD-15A");
-      setPrecio("71.50");
-      setMasa("2");
-      setTienda("Importación");
-      setSpecs({ canales: "15", salida: "Analógica", paso: "4", i: "0.1" });
+      setValores({
+        tipo: "linea",
+        nombre: "Pololu QTR-HD-15A",
+        precio: "71.50",
+        masa: "2",
+        stock: "0",
+        tienda: "Importación",
+        spec_canales: "15",
+        spec_salida: "Analógica",
+        spec_paso: "4",
+        spec_i: "0.1",
+      });
+      setErrores({});
       c.mostrarToast("Datos extraídos: revísalos antes de guardar.");
     }, 900);
   };
 
   const guardar = () => {
-    const nm = nombre.trim();
-    const pr = parseFloat(precio.replace(",", "."));
-    const ms = parseFloat(masa.replace(",", "."));
-    const st = parseInt(stock, 10) || 0;
-    if (!nm) return setErr("Escribe el nombre del componente.");
-    if (!(pr > 0)) return setErr("El precio debe ser mayor que 0.");
-    if (!(ms >= 0)) return setErr("Escribe la masa en gramos.");
+    const nuevos = validarCampos(
+      [...CAMPOS_BASICOS, ...CAMPOS_NUMEROS, ...CAMPO_TIENDA, ...camposSpecs],
+      valores,
+    );
+    setErrores(nuevos);
+    if (Object.keys(nuevos).length > 0) {
+      setAviso("Revisa los campos marcados antes de guardar.");
+      return;
+    }
     const s = specVals();
     const id = "c" + String(c.catalog.length + 2).padStart(2, "0");
+    const nm = valores.nombre.trim();
     c.setCatalog((list) => [
       ...list,
       {
         id,
-        t: tipo,
+        t: valores.tipo,
         nm,
-        precio: pr,
-        masa: ms,
-        tienda: tienda.trim() || "—",
-        stock: st,
+        precio: parsearNumero(valores.precio) ?? 0,
+        masa: parsearNumero(valores.masa) ?? 0,
+        tienda: valores.tienda.trim() || "—",
+        stock: parsearNumero(valores.stock) ?? 0,
         s,
         i: Number(s.i) || 0,
       },
@@ -120,25 +236,13 @@ export function RegistroModal() {
         </button>
       </div>
       <div className="mb">
-        <div className="tabs" role="tablist" style={{ margin: 0 }}>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={rt === "manual"}
-            onClick={() => setRt("manual")}
-          >
-            Manual <PbiChip pbi="HU-02" sprint="1" inl />
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={rt === "link"}
-            onClick={() => setRt("link")}
-            data-sprint="2"
-          >
-            Desde enlace <PbiChip pbi="HU-05" sprint="2" inl />
-          </button>
-        </div>
+        <Pestanas
+          pestanas={PESTANAS_REGISTRO}
+          activa={rt}
+          alCambiar={setRt}
+          etiqueta="Forma de registro"
+          style={{ margin: 0 }}
+        />
         {rt === "link" && (
           <div>
             <div className="fld">
@@ -147,6 +251,7 @@ export function RegistroModal() {
                 <input
                   className="inp"
                   placeholder="https://…/producto/qtr-8a"
+                  aria-label="Enlace de la tienda"
                   value={link}
                   onChange={(e) => setLink(e.target.value)}
                 />
@@ -160,90 +265,39 @@ export function RegistroModal() {
             </p>
           </div>
         )}
-        <div className="g2">
-          <label className="fld">
-            <span className="lbl">Tipo</span>
-            <select
-              className="inp"
-              value={tipo}
-              onChange={(e) => {
-                setTipo(e.target.value);
-                setSpecs({});
-              }}
-            >
-              {Object.entries(TIPOS).map(([k, v]) => (
-                <option key={k} value={k}>
-                  {v.nm}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="fld">
-            <span className="lbl">Nombre</span>
-            <input
-              className="inp"
-              placeholder="Ej. Pololu QTR-8A"
-              value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
-            />
-          </label>
-        </div>
-        <div className="g3">
-          <label className="fld">
-            <span className="lbl">Precio (S/)</span>
-            <input
-              className="inp m"
-              inputMode="decimal"
-              placeholder="0.00"
-              value={precio}
-              onChange={(e) => setPrecio(e.target.value)}
-            />
-          </label>
-          <label className="fld">
-            <span className="lbl">Masa (g)</span>
-            <input
-              className="inp m"
-              inputMode="decimal"
-              placeholder="0"
-              value={masa}
-              onChange={(e) => setMasa(e.target.value)}
-            />
-          </label>
-          <label className="fld">
-            <span className="lbl">En el club</span>
-            <input
-              className="inp m"
-              inputMode="numeric"
-              value={stock}
-              onChange={(e) => setStock(e.target.value)}
-            />
-          </label>
-        </div>
-        <label className="fld">
-          <span className="lbl">Tienda</span>
-          <input
-            className="inp"
-            placeholder="Proveedor local (Trujillo)"
-            value={tienda}
-            onChange={(e) => setTienda(e.target.value)}
-          />
-        </label>
+        <FormularioDinamico
+          campos={CAMPOS_BASICOS}
+          valores={valores}
+          errores={errores}
+          alCambiar={cambiar}
+          columnas={2}
+        />
+        <FormularioDinamico
+          campos={CAMPOS_NUMEROS}
+          valores={valores}
+          errores={errores}
+          alCambiar={cambiar}
+          columnas={3}
+        />
+        <FormularioDinamico
+          campos={CAMPO_TIENDA}
+          valores={valores}
+          errores={errores}
+          alCambiar={cambiar}
+          columnas={1}
+        />
         <div className="sub">Especificaciones del tipo</div>
-        <div className="g2">
-          {T.f.map(([k, l, ty]) => (
-            <label className="fld" key={k}>
-              <span className="lbl">{l}</span>
-              <input
-                className={`inp${ty === "n" ? " m" : ""}`}
-                inputMode={ty === "n" ? "decimal" : undefined}
-                value={specs[k] ?? ""}
-                onChange={(e) => setSpecs((o) => ({ ...o, [k]: e.target.value }))}
-              />
-            </label>
-          ))}
-        </div>
+        <FormularioDinamico
+          campos={camposSpecs}
+          valores={valores}
+          errores={errores}
+          alCambiar={cambiar}
+          columnas={2}
+        />
         <div className="cap">{cap}</div>
-        <p className="hint warn">{err}</p>
+        <p className="hint warn" role="status">
+          {aviso}
+        </p>
       </div>
       <div className="mf">
         <button type="button" className="sb ghost" onClick={c.cerrarRegistro}>
