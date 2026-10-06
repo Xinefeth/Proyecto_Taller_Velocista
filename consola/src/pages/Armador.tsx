@@ -6,7 +6,7 @@ import { useConsola, RANURAS } from "../stores/ConsolaContext";
 import { Card } from "../components/Card";
 import { ICO, Chispa, Mas } from "../components/IconosUI";
 import { TIPO } from "../datos/robots";
-import { byId, checks, compat, curVer, facts } from "../logica/dominio";
+import { byId, checks, compat, curVer, facts, guardarPiezas } from "../logica/dominio";
 import { clamp, clone, fmt, money } from "../logica/formato";
 import type { Piezas, RobotDef } from "../types/dominio";
 
@@ -51,24 +51,12 @@ export function Armador() {
         ? `${sl.nm} ×${d[sl.k]!.q}`
         : `${sl.nm}: ${b ? b.nm : "sin pieza"}`;
     });
-    const nvNum = parseInt(v.v.slice(1), 10) + 1;
-    const estado = r.fw ? "Actual" : v.estado === "Borrador" ? "Borrador" : "Concepto";
-    const nv = {
-      v: "v" + nvNum,
-      fecha: "hoy",
-      nota: diff.join("; ") || "Cambio de piezas",
-      estado,
-      parts: d,
-    };
-    c.setRobots((list) =>
-      list.map((x) => {
-        if (x.id !== r.id) return x;
-        const ver = x.ver.map((vv, i) =>
-          i === x.ver.length - 1 && vv.estado === "Actual" ? { ...vv, estado: "Anterior" } : vv,
-        );
-        return { ...x, ver: [...ver, nv] };
-      }),
+    const { robot: actualizado, version: nv } = guardarPiezas(
+      r,
+      d,
+      diff.join("; ") || "Cambio de piezas",
     );
+    c.setRobots((list) => list.map((x) => (x.id === r.id ? actualizado : x)));
     setAbDraft(null);
     setAbView(null);
     c.registrar("Armador", `${r.nm} ${nv.v}: ${nv.nota}`, "good");
