@@ -16,6 +16,11 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 Documentación interactiva: http://localhost:8000/docs · Salud: http://localhost:8000/api/salud
 
+El contrato de diseño completo está en [EN-01](../docs/api/README.md), con ejemplos
+y estado de implementación por operación. El [modelo DO-03](../docs/datos/README.md)
+define las tablas y relaciones pendientes de migrar. `/docs` describe solamente
+los endpoints que el backend tiene implementados.
+
 ## Estructura
 
 ```

@@ -1,0 +1,194 @@
+erDiagram
+    TIPO_COMPONENTE ||--o{ COMPONENTE : clasifica
+    TIPO_COMPONENTE ||--o{ RANURA : admite
+    COMPONENTE ||--|| INVENTARIO : existencias
+    ROBOT ||--o{ VERSION : historial
+    VERSION o|--o| ROBOT : ultima_version
+    VERSION ||--o{ VERSION_COMPONENTE : piezas
+    COMPONENTE ||--o{ VERSION_COMPONENTE : referencia
+    RANURA ||--o{ VERSION_COMPONENTE : posicion
+    VERSION ||--o{ SETUP : configuraciones
+    CONTROLADOR ||--o{ SETUP : parametros
+    VERSION ||--o{ CORRIDA : armado_usado
+    SETUP ||--o{ CORRIDA : aplicado
+    PERFIL_REGLAMENTO ||--o{ CORRIDA : reglas
+    CORRIDA ||--o{ VUELTA : intentos
+    VUELTA ||--o{ SECTOR_VUELTA : parciales
+    VUELTA ||--o{ SEGMENTO_VUELTA : clasificacion
+    ROBOT o|--o{ EVENTO : contexto_robot
+    CORRIDA o|--o{ EVENTO : contexto_corrida
+    VUELTA o|--o{ EVENTO : contexto_vuelta
+    VUELTA o|--o{ MAPA_ANALISIS : origen
+    VERSION ||--o{ ESTUDIO_OPTIMIZACION : hardware
+    CONTROLADOR ||--o{ ESTUDIO_OPTIMIZACION : algoritmo
+    PERFIL_REGLAMENTO ||--o{ ESTUDIO_OPTIMIZACION : restricciones
+    ESTUDIO_OPTIMIZACION ||--o{ ENSAYO_OPTIMIZACION : propuestas
+    SETUP ||--o{ ENSAYO_OPTIMIZACION : candidato
+    CORRIDA o|--o{ ENSAYO_OPTIMIZACION : resultado
+
+    TIPO_COMPONENTE {
+        varchar id PK
+        varchar nombre
+        varchar color
+        jsonb campos
+        jsonb capacidades
+    }
+    COMPONENTE {
+        varchar id PK
+        varchar tipo_id FK
+        varchar nombre
+        numeric precio
+        numeric masa_g
+        varchar tienda
+        numeric consumo_a
+        jsonb especificaciones
+        boolean archivado
+    }
+    INVENTARIO {
+        varchar componente_id PK,FK
+        integer stock
+        integer revision
+    }
+    RANURA {
+        varchar id PK
+        varchar tipo_id FK
+        varchar nombre
+        boolean obligatoria
+        boolean cantidad_editable
+        boolean depende_reglamento
+    }
+    ROBOT {
+        varchar id PK
+        varchar nombre
+        varchar codigo_corto UK
+        varchar tipo
+        varchar firmware
+        bigint version_actual_id FK
+        boolean archivado
+    }
+    VERSION {
+        bigint id PK
+        varchar robot_id FK
+        integer ordinal
+        timestamptz fecha
+        text nota
+        varchar estado
+    }
+    VERSION_COMPONENTE {
+        bigint version_id PK,FK
+        varchar ranura_id PK,FK
+        varchar componente_id FK
+        integer cantidad
+        jsonb componente_snapshot
+    }
+    CONTROLADOR {
+        varchar id PK
+        varchar nombre
+        varchar nombre_corto
+        text descripcion
+        jsonb parametros
+        jsonb presets
+    }
+    PERFIL_REGLAMENTO {
+        varchar id PK
+        varchar competencia
+        varchar etiqueta
+        varchar categoria
+        jsonb reglas
+    }
+    SETUP {
+        bigint id PK
+        bigint version_id FK
+        varchar controlador_id FK
+        varchar nombre
+        jsonb parametros
+        jsonb controlador_snapshot
+        timestamptz creado_en
+        boolean archivado
+    }
+    CORRIDA {
+        bigint id PK
+        integer numero
+        bigint version_id FK
+        bigint setup_id FK
+        varchar perfil_id FK
+        timestamptz fecha
+        timestamptz cerrada_en
+        varchar fuente
+        varchar modo
+        varchar linea
+        boolean compensa_bateria
+        numeric potencia_turbina_pct
+        jsonb contexto_snapshot
+        text nota
+    }
+    VUELTA {
+        bigint id PK
+        bigint corrida_id FK
+        integer numero
+        numeric tiempo_s
+        numeric duracion_s
+        bigint tiempo_interno_ms
+        numeric error_acumulado
+        integer lineas_perdidas
+        numeric bateria_v
+        boolean termino
+        varchar fuente_tiempo
+        text motivo
+    }
+    SECTOR_VUELTA {
+        bigint vuelta_id PK,FK
+        integer numero PK
+        numeric tiempo_s
+    }
+    SEGMENTO_VUELTA {
+        bigint vuelta_id PK,FK
+        integer numero PK
+        varchar tipo
+        numeric duracion_s
+        numeric angulo_grados
+        numeric error_acumulado
+    }
+    EVENTO {
+        bigint id PK
+        timestamptz fecha
+        varchar sistema
+        varchar nivel
+        text mensaje
+        varchar codigo
+        jsonb datos
+        varchar robot_id FK
+        bigint corrida_id FK
+        bigint vuelta_id FK
+    }
+    MAPA_ANALISIS {
+        bigint id PK
+        bigint vuelta_id FK
+        varchar fuente
+        jsonb puntos_crudos
+        jsonb puntos_corregidos
+        numeric longitud_m
+        numeric error_cierre_m
+        numeric error_rumbo_rad
+        jsonb foto_config
+        timestamptz creado_en
+    }
+    ESTUDIO_OPTIMIZACION {
+        bigint id PK
+        bigint version_id FK
+        varchar controlador_id FK
+        varchar perfil_id FK
+        varchar metodo
+        varchar fuente
+        varchar estado
+        jsonb configuracion
+        jsonb estado_algoritmo
+    }
+    ENSAYO_OPTIMIZACION {
+        bigint estudio_id PK,FK
+        integer numero PK
+        bigint setup_id FK
+        bigint corrida_id FK
+        varchar estado
+        numeric j
+    }

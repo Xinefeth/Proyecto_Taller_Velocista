@@ -4,6 +4,10 @@ Plataforma local del club para registrar componentes, armar robots, operar el **
 
 Todo funciona en una laptop y una red Wi-Fi propia, **sin internet**. La arquitectura está en [`docs/arquitectura`](docs/arquitectura) (DO-02).
 
+El [modelo de datos DO-03](docs/datos/README.md) incluye el diagrama entidad-relación,
+el diccionario y la cobertura de campos del prototipo. El [contrato REST EN-01](docs/api/README.md)
+define OpenAPI y ejemplos por operación, distinguiendo rutas existentes de propuestas.
+
 ## Estructura
 
 ```
