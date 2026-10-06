@@ -9,6 +9,7 @@ from app.core.config import settings
 from app.core.db import Base
 
 # Importa aquí los models.py de cada módulo para que autogenerate los vea.
+from app.modulos.catalogo import models as _catalogo  # noqa: F401, E402
 from app.modulos.eventos import models as _eventos  # noqa: F401, E402
 
 config = context.config

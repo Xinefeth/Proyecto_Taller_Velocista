@@ -2,7 +2,7 @@
 # Rutas propuestas: consultar x-estado en openapi.json antes de ejecutar.
 @base = http://localhost:8000
 
-### listarTipos · propuesto
+### listarTipos · implementado
 GET {{base}}/api/tipos-componentes
 
 # Respuesta: 200
@@ -602,7 +602,7 @@ GET {{base}}/api/ranuras
 #   }
 # ]
 
-### listarComponentes · propuesto
+### listarComponentes · implementado
 GET {{base}}/api/componentes?limite=50&offset=0&q=QTR&tipo_id=linea
 
 # Respuesta: 200
@@ -631,7 +631,7 @@ GET {{base}}/api/componentes?limite=50&offset=0&q=QTR&tipo_id=linea
 #   "offset": 0
 # }
 
-### crearComponente · propuesto
+### crearComponente · implementado
 POST {{base}}/api/componentes
 Content-Type: application/json
 
@@ -670,7 +670,7 @@ Content-Type: application/json
 #   "archivado": false
 # }
 
-### obtenerComponente · propuesto
+### obtenerComponente · implementado
 GET {{base}}/api/componentes/c05
 
 # Respuesta: 200
@@ -692,7 +692,7 @@ GET {{base}}/api/componentes/c05
 #   "archivado": false
 # }
 
-### editarComponente · propuesto
+### editarComponente · implementado
 PATCH {{base}}/api/componentes/c05
 Content-Type: application/json
 

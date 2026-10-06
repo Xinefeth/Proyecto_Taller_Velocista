@@ -85,7 +85,7 @@ def ejecutar():
 
     # Compara las declaraciones reales por AST sin importar FastAPI ni acceder a BD.
     existentes = set()
-    for ruta in [RAIZ / "api/app/main.py", RAIZ / "api/app/gateway/comandos.py", RAIZ / "api/app/modulos/eventos/router.py"]:
+    for ruta in [RAIZ / "api/app/main.py", RAIZ / "api/app/gateway/comandos.py", *sorted((RAIZ / "api/app/modulos").glob("*/router.py"))]:
         arbol = ast.parse(ruta.read_text(encoding="utf-8"))
         prefijo = ""
         for nodo in ast.walk(arbol):

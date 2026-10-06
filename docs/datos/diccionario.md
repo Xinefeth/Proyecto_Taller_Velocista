@@ -1,6 +1,6 @@
 # DO-03 · Diccionario de datos
 
-Todas las entidades salvo `evento` están propuestas. Tipos físicos previstos para PostgreSQL; `?` significa nullable, el resto es NOT NULL. IDs `bigint` se generan por identidad y se exponen hasta `9007199254740991`. Fechas en `timestamptz`, JSON REST en ISO 8601 con zona; la consola presenta la zona del usuario. Los JSONB solo contienen datos, nunca funciones ejecutables.
+`evento` está definido en `0001_base`; `tipo_componente`, `componente` e `inventario` están implementados en los modelos y la migración `0002_catalogo`. Las demás entidades siguen propuestas. Tipos físicos para PostgreSQL; `?` significa nullable, el resto es NOT NULL. IDs `bigint` se generan por identidad y se exponen hasta `9007199254740991`. Fechas en `timestamptz`, JSON REST en ISO 8601 con zona; la consola presenta la zona del usuario. Los JSONB solo contienen datos, nunca funciones ejecutables.
 
 ## Catálogo
 

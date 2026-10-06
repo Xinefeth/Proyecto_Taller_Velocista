@@ -20,11 +20,11 @@
       "get": {
         "operationId": "listarTipos",
         "summary": "Tipos, campos y capacidades",
-        "description": "Tipos, campos y capacidades",
+        "description": "Catálogo completo ordenado por ID, consultado en PostgreSQL. Sin semillas devuelve un arreglo vacío; base no disponible devuelve 503.",
         "tags": [
           "tipos-componentes"
         ],
-        "x-estado": "propuesto",
+        "x-estado": "implementado",
         "x-ejemplo-peticion": {
           "metodo": "GET",
           "url": "/api/tipos-componentes"
@@ -834,11 +834,11 @@
       "get": {
         "operationId": "listarComponentes",
         "summary": "Buscar componentes del catálogo",
-        "description": "Orden por nombre e id; búsqueda sin distinguir mayúsculas ni tildes. Excluye archivados. total es el conteo después de filtros y antes de paginar.",
+        "description": "Orden por nombre e id; búsqueda sin distinguir mayúsculas ni tildes españolas en nombre, tipo, tienda y especificaciones. % y _ se buscan como texto literal. Excluye archivados. total es el conteo después de filtros y antes de paginar. Sin resultados responde una página con items vacíos.",
         "tags": [
           "componentes"
         ],
-        "x-estado": "propuesto",
+        "x-estado": "implementado",
         "x-ejemplo-peticion": {
           "metodo": "GET",
           "url": "/api/componentes?limite=50&offset=0&q=QTR&tipo_id=linea"
@@ -1026,11 +1026,11 @@
       "post": {
         "operationId": "crearComponente",
         "summary": "Registrar componente e inventario inicial",
-        "description": "Crea componente e inventario en una transacción. La unidad de stock coincide con la unidad del catálogo: un par de ruedas cuenta como una unidad.",
+        "description": "Genera un ID único y valida las especificaciones contra los campos del tipo. Precio admite hasta 2 decimales, masa 3 y consumo 4 (12 dígitos totales); stock admite hasta 2147483647. Crea componente e inventario en una transacción. La unidad de stock coincide con la unidad del catálogo: un par de ruedas cuenta como una unidad.",
         "tags": [
           "componentes"
         ],
-        "x-estado": "propuesto",
+        "x-estado": "implementado",
         "x-ejemplo-peticion": {
           "metodo": "POST",
           "url": "/api/componentes",
@@ -1212,11 +1212,11 @@
       "get": {
         "operationId": "obtenerComponente",
         "summary": "Consultar ficha de componente",
-        "description": "Consultar ficha de componente",
+        "description": "Devuelve ficha y stock actual por ID, incluidos archivados. Un ID inexistente responde 404.",
         "tags": [
           "componentes"
         ],
-        "x-estado": "propuesto",
+        "x-estado": "implementado",
         "x-ejemplo-peticion": {
           "metodo": "GET",
           "url": "/api/componentes/c05"
@@ -1370,11 +1370,11 @@
       "patch": {
         "operationId": "editarComponente",
         "summary": "Editar ficha sin alterar versiones históricas",
-        "description": "Editar ficha sin alterar versiones históricas",
+        "description": "PATCH parcial: conserva campos omitidos. especificaciones reemplaza el objeto completo y se valida contra el tipo existente. Solo consumo_a admite null. Tipo, ID, archivado y stock no se editan aquí. Archivado responde 409; inexistente 404. Bloquea la ficha durante la edición y no modifica inventario. Las versiones históricas siguen pendientes de implementación.",
         "tags": [
           "componentes"
         ],
-        "x-estado": "propuesto",
+        "x-estado": "implementado",
         "x-ejemplo-peticion": {
           "metodo": "PATCH",
           "url": "/api/componentes/c05",

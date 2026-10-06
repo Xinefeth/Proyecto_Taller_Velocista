@@ -4,7 +4,7 @@ Versión 1.0 · 6 de octubre de 2026 · Diseño para revisión.
 
 Este documento define el modelo del sistema a partir de la consola que está en el repositorio. Incluye catálogo, inventario, armado, control, corridas, vueltas, eventos y los datos de análisis del prototipo. El motor previsto sigue siendo PostgreSQL 16.
 
-**Estado de implementación:** la migración `0001_base` solo crea `evento`. Las demás entidades de este documento son el diseño para las siguientes migraciones e historias. Este entregable no instala PostgreSQL, no ejecuta migraciones ni conecta la maqueta con la base de datos.
+**Estado de implementación:** `0001_base` crea `evento`; `0002_catalogo` agrega `tipo_componente`, `componente` e `inventario`, con modelos SQLAlchemy y pruebas de restricciones. Las otras entidades siguen como diseño para las siguientes migraciones e historias. Tener la migración en el repositorio no la aplica a una base existente: ejecutar `alembic upgrade head`. El catálogo publica `GET /api/tipos-componentes` , `GET /api/componentes` , `POST /api/componentes` , `GET /api/componentes/{componente_id}` y `PATCH /api/componentes/{componente_id}`; los demás endpoints y la integración con la consola todavía están pendientes.
 
 ## Entregables y fuentes
 
@@ -78,8 +78,8 @@ Las especificaciones siguen siendo opcionales, como el formulario. Un campo ause
 
 ## Implementación posterior
 
-1. Convertir este diccionario en modelos SQLAlchemy por módulo y una migración posterior a `0001_base`, conservando los eventos existentes. Agregar los modelos a `migrations/env.py`.
-2. Cargar tipos, ranuras, controladores y perfiles del prototipo como datos iniciales; importar fechas reales (no «hoy» ni «—») e IDs sin romper referencias.
+1. Continuar los modelos SQLAlchemy por módulo y sus migraciones después de `0002_catalogo`, conservando los datos existentes. El catálogo ya está registrado en `migrations/env.py`.
+2. Completar las semillas de robots, ranuras, controladores y perfiles del prototipo; importar fechas reales (no «hoy» ni «—») e IDs sin romper referencias. Los 14 tipos y los 25 componentes con su stock inicial ya se pueden cargar con `python -m app.semillas` desde `api/`, sin sobrescribir datos existentes.
 3. Implementar los endpoints marcados como propuestos en EN-01 y los casos transaccionales de versiones/inventario.
 4. Incorporar adaptadores DTO en `consola/src/services/` y mantener separado el modo simulado. La consola actual continúa usando sus datos de maqueta hasta esa integración.
 
