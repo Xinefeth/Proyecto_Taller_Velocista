@@ -6,9 +6,11 @@ import { Cerrar, ICO } from "./IconosUI";
 import { TIPOS } from "../datos/tipos";
 import type { Specs } from "../types/dominio";
 import { PbiChip } from "./Card";
+import { siguienteIdComponente } from "../logica/dominio";
 import {
   FormularioDinamico,
   Pestanas,
+  normalizar,
   parsearNumero,
   validarCampos,
   type DefCampo,
@@ -197,9 +199,15 @@ export function RegistroModal() {
       setAviso("Revisa los campos marcados antes de guardar.");
       return;
     }
-    const s = specVals();
-    const id = "c" + String(c.catalog.length + 2).padStart(2, "0");
     const nm = valores.nombre.trim();
+    // Un mismo componente no se registra dos veces: evita duplicar el catálogo y el inventario.
+    if (c.catalog.some((x) => x.t === valores.tipo && normalizar(x.nm) === normalizar(nm))) {
+      setErrores({ nombre: "Ya existe un componente con ese nombre en este tipo." });
+      setAviso("Revisa los campos marcados antes de guardar.");
+      return;
+    }
+    const s = specVals();
+    const id = siguienteIdComponente(c.catalog);
     c.setCatalog((list) => [
       ...list,
       {

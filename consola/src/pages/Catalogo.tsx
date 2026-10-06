@@ -210,7 +210,31 @@ export function Catalogo() {
           alHacerClic={(x) => c.abrirFicha(x.id)}
           vacio={`Nada coincide con “${filtro.consulta}”.`}
         />
-        <p className="note">{`${lista.length} de ${c.catalog.length} componentes · precios en soles, por unidad`}</p>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: 10,
+          }}
+        >
+          <p className="note">{`${lista.length} de ${c.catalog.length} componentes · precios en soles, por unidad`}</p>
+          <button
+            type="button"
+            className="sb ghost"
+            title="Borra lo que registraste a mano y vuelve a los datos de ejemplo"
+            onClick={() => {
+              if (
+                window.confirm(
+                  "Se borrarán los componentes y robots que registraste y se volverá a los datos de ejemplo. ¿Continuar?",
+                )
+              )
+                c.restablecerDatos();
+            }}
+          >
+            Restablecer datos de ejemplo
+          </button>
+        </div>
       </Card>
 
       <Card

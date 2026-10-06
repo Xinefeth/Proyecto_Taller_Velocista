@@ -12,7 +12,7 @@ import type {
   Version,
 } from "../types/dominio";
 import { CTRL, PDEF } from "../datos/controladores";
-import { fmt, num } from "./formato";
+import { clone, fmt, num } from "./formato";
 
 export const byId = (cat: Componente[], id: string): Componente | undefined =>
   cat.find((c) => c.id === id);
@@ -37,6 +37,44 @@ export const usedIn = (robots: RobotDef[], id: string): { r: RobotDef; q: number
 
 export const usedQty = (robots: RobotDef[], id: string): number =>
   usedIn(robots, id).reduce((a, x) => a + x.q, 0);
+
+/** Siguiente id libre del catálogo ("c26"): el mayor número usado más uno. */
+export function siguienteIdComponente(cat: Componente[]): string {
+  const mayor = cat.reduce((m, c) => {
+    const n = /^c(\d+)$/.exec(c.id);
+    return n ? Math.max(m, Number(n[1])) : m;
+  }, 0);
+  return "c" + String(mayor + 1).padStart(2, "0");
+}
+
+/**
+ * Guarda las piezas elegidas de un robot (HU-06). Si la versión actual no tiene piezas (robot recién
+ * creado) la completa, así el robot queda con su versión 1 y su lista de piezas; si ya las tiene,
+ * crea la versión siguiente y deja la actual como anterior.
+ */
+export function guardarPiezas(
+  r: RobotDef,
+  piezas: Piezas,
+  nota: string,
+): { robot: RobotDef; version: Version } {
+  const actual = curVer(r);
+  const estado = r.fw ? "Actual" : actual.estado === "Borrador" ? "Borrador" : "Concepto";
+  if (Object.keys(actual.parts).length === 0) {
+    const version: Version = { ...actual, nota, estado, parts: clone(piezas) };
+    return { robot: { ...r, ver: [...r.ver.slice(0, -1), version] }, version };
+  }
+  const version: Version = {
+    v: "v" + (parseInt(actual.v.slice(1), 10) + 1),
+    fecha: "hoy",
+    nota,
+    estado,
+    parts: clone(piezas),
+  };
+  const anteriores = r.ver.map((vv, i) =>
+    i === r.ver.length - 1 && vv.estado === "Actual" ? { ...vv, estado: "Anterior" } : vv,
+  );
+  return { robot: { ...r, ver: [...anteriores, version] }, version };
+}
 
 /** Datos derivados de las piezas de una versión. */
 export function facts(parts: Piezas, cat: Componente[]): Hechos {

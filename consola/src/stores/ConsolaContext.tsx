@@ -19,6 +19,13 @@ import { PERFILES } from "../datos/reglamento";
 import { CTRL, PDEF, psum } from "../datos/controladores";
 import { curVer, facts, profById, robotById } from "../logica/dominio";
 import { clamp, clone, fmt } from "../logica/formato";
+import {
+  borrarRegistrados,
+  cargarComponentes,
+  cargarRobots,
+  guardarComponentes,
+  guardarRobots,
+} from "../logica/persistencia";
 import { Ingeniero, type MetodoIngeniero } from "../logica/ingeniero";
 import {
   construirMapa,
@@ -175,6 +182,8 @@ export interface Consola {
   regOpen: boolean;
   abrirRegistro: () => void;
   cerrarRegistro: () => void;
+  /** Borra lo registrado a mano y vuelve al catálogo y los robots de ejemplo. */
+  restablecerDatos: () => void;
   manifiestoId: string | null;
   abrirManifiesto: (id: string) => void;
   cerrarManifiesto: () => void;
@@ -207,8 +216,11 @@ export function ProveedorConsola({ children }: { children: ReactNode }) {
   const bump = useCallback(() => setTick((t) => (t + 1) % 1_000_000), []);
 
   const [tab, setTab] = useState<Tab>("control");
-  const [catalog, setCatalogState] = useState<Componente[]>(() => clone(CAT));
-  const [robots, setRobotsState] = useState<RobotDef[]>(() => clone(ROBOTS));
+  // Lo registrado a mano se conserva en el navegador hasta que exista la API (HU-02, HU-06).
+  const [catalog, setCatalogState] = useState<Componente[]>(() => cargarComponentes(CAT));
+  const [robots, setRobotsState] = useState<RobotDef[]>(() => cargarRobots(ROBOTS));
+  useEffect(() => guardarComponentes(catalog, CAT), [catalog]);
+  useEffect(() => guardarRobots(robots, ROBOTS), [robots]);
   const [perfiles] = useState<Perfil[]>(() => clone(PERFILES));
 
   const [robotId, setRobotId] = useState("v001");
@@ -919,6 +931,14 @@ export function ProveedorConsola({ children }: { children: ReactNode }) {
   const cerrarFicha = useCallback(() => setFichaId(null), []);
   const abrirRegistro = useCallback(() => setRegOpen(true), []);
   const cerrarRegistro = useCallback(() => setRegOpen(false), []);
+  const restablecerDatos = useCallback(() => {
+    borrarRegistrados();
+    setCatalogState(clone(CAT));
+    setRobotsState(clone(ROBOTS));
+    setRobotId("v001");
+    setFichaId(null);
+    mostrarToast("Datos de ejemplo restablecidos.");
+  }, [mostrarToast]);
   const abrirManifiesto = useCallback((id: string) => setManifiestoId(id), []);
   const cerrarManifiesto = useCallback(() => setManifiestoId(null), []);
   const abrirEnArmador = useCallback(
@@ -1020,6 +1040,7 @@ export function ProveedorConsola({ children }: { children: ReactNode }) {
     regOpen,
     abrirRegistro,
     cerrarRegistro,
+    restablecerDatos,
     manifiestoId,
     abrirManifiesto,
     cerrarManifiesto,
