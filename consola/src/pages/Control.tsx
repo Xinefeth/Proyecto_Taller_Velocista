@@ -11,7 +11,11 @@ import { drawChart, drawHealth, drawMap, type DatosMapa } from "../logica/lienzo
 import { useCanvas } from "../hooks/useCanvas";
 
 // Alcance de cada controlador: en Sprint 1 solo PID; adaptativo (EN-21) es S2 y difuso (HU-31) es Could.
-const CTRL_SPRINT: Record<string, "2" | "C" | undefined> = { pid: undefined, adapt: "2", fuzzy: "C" };
+const CTRL_SPRINT: Record<string, "2" | "C" | undefined> = {
+  pid: undefined,
+  adapt: "2",
+  fuzzy: "C",
+};
 
 function Salida() {
   const c = useConsola();
@@ -21,9 +25,14 @@ function Salida() {
       ? ["Calibrado", "tag good"]
       : ["Sin calibrar", "tag warn"];
   let hint: [string, string];
-  if (c.running) hint = [c.mode === "competencia" ? "Intento en curso: una vuelta." : "En pista, modo prueba.", "hint"];
+  if (c.running)
+    hint = [
+      c.mode === "competencia" ? "Intento en curso: una vuelta." : "En pista, modo prueba.",
+      "hint",
+    ];
   else if (!c.calibrated) hint = ["Calibra los sensores antes de arrancar.", "hint warn"];
-  else if (differs(c.draft, c.applied)) hint = ["Saldrá con el setup enviado, no con los cambios pendientes.", "hint warn"];
+  else if (differs(c.draft, c.applied))
+    hint = ["Saldrá con el setup enviado, no con los cambios pendientes.", "hint warn"];
   else hint = ["Listo para salir.", "hint"];
   const modeNote =
     c.mode === "prueba"
@@ -52,14 +61,24 @@ function Salida() {
       <div className="rows">
         <div className="row">
           <span className="lbl">Sensores</span>
-          <button type="button" className="sb" disabled={c.running || c.calibrating} onClick={c.calibrar}>
+          <button
+            type="button"
+            className="sb"
+            disabled={c.running || c.calibrating}
+            onClick={c.calibrar}
+          >
             {c.calibrating ? "Desliza…" : c.calibrated ? "Recalibrar" : "Calibrar"}
           </button>
         </div>
         <div className="row">
           <span className="lbl">Modo</span>
           <div className="seg" role="group" aria-label="Modo">
-            <button type="button" aria-pressed={c.mode === "prueba"} disabled={c.running} onClick={() => c.setMode("prueba")}>
+            <button
+              type="button"
+              aria-pressed={c.mode === "prueba"}
+              disabled={c.running}
+              onClick={() => c.setMode("prueba")}
+            >
               Prueba
             </button>
             <button
@@ -75,10 +94,20 @@ function Salida() {
         <div className="row">
           <span className="lbl">Línea</span>
           <div className="seg" role="group" aria-label="Color de la línea">
-            <button type="button" aria-pressed={c.line === "negra"} disabled={c.running} onClick={() => c.setLine("negra")}>
+            <button
+              type="button"
+              aria-pressed={c.line === "negra"}
+              disabled={c.running}
+              onClick={() => c.setLine("negra")}
+            >
               Negra
             </button>
-            <button type="button" aria-pressed={c.line === "blanca"} disabled={c.running} onClick={() => c.setLine("blanca")}>
+            <button
+              type="button"
+              aria-pressed={c.line === "blanca"}
+              disabled={c.running}
+              onClick={() => c.setLine("blanca")}
+            >
               Blanca
             </button>
           </div>
@@ -86,8 +115,8 @@ function Salida() {
       </div>
       <p className="note">{modeNote}</p>
       <div className="lock" role="status">
-        Modo competencia: mientras corre solo responde a Detener y el setup queda bloqueado. El juez verifica que no haya
-        control durante el recorrido.
+        Modo competencia: mientras corre solo responde a Detener y el setup queda bloqueado. El juez
+        verifica que no haya control durante el recorrido.
       </div>
     </Card>
   );
@@ -114,7 +143,11 @@ function Parametro({ id }: { id: string }) {
         onChange={(e) => c.setParam(id, +e.target.value)}
       />
       <div className="ctl">
-        <button type="button" aria-label={`Bajar ${d.nm}`} onClick={() => c.setParam(id, c.draft.p[id] - d.step)}>
+        <button
+          type="button"
+          aria-label={`Bajar ${d.nm}`}
+          onClick={() => c.setParam(id, c.draft.p[id] - d.step)}
+        >
           −
         </button>
         <input
@@ -127,7 +160,11 @@ function Parametro({ id }: { id: string }) {
             if (!isNaN(v)) c.setParam(id, v);
           }}
         />
-        <button type="button" aria-label={`Subir ${d.nm}`} onClick={() => c.setParam(id, c.draft.p[id] + d.step)}>
+        <button
+          type="button"
+          aria-label={`Subir ${d.nm}`}
+          onClick={() => c.setParam(id, c.draft.p[id] + d.step)}
+        >
           +
         </button>
       </div>
@@ -177,7 +214,13 @@ function Setup() {
       </div>
       <div className="presets" role="group" aria-label="Ajustes rápidos">
         {Object.keys(ctrl.pre).map((k) => (
-          <button key={k} type="button" aria-pressed={c.preset === k} disabled={c.locked} onClick={() => c.setPreset(k)}>
+          <button
+            key={k}
+            type="button"
+            aria-pressed={c.preset === k}
+            disabled={c.locked}
+            onClick={() => c.setPreset(k)}
+          >
             {k}
           </button>
         ))}
@@ -188,7 +231,12 @@ function Setup() {
         ))}
       </div>
       <div className="acts">
-        <button type="button" className="sb red" disabled={!pend || c.locked} onClick={c.enviarSetup}>
+        <button
+          type="button"
+          className="sb red"
+          disabled={!pend || c.locked}
+          onClick={c.enviarSetup}
+        >
           Enviar
         </button>
         <button type="button" className="sb ghost" disabled={c.locked} onClick={c.guardarSetup}>
@@ -205,7 +253,13 @@ function Setup() {
       <div className="opts">
         <div className="row">
           <span className="l">Compensar batería</span>
-          <button type="button" className="sw" role="switch" aria-checked={c.comp} onClick={c.toggleComp}>
+          <button
+            type="button"
+            className="sw"
+            role="switch"
+            aria-checked={c.comp}
+            onClick={c.toggleComp}
+          >
             <i />
           </button>
         </div>
@@ -222,7 +276,12 @@ function Setup() {
       </div>
       <div className="eng" data-sprint="2">
         <p dangerouslySetInnerHTML={{ __html: eng.mini }} />
-        <button type="button" className="sb" disabled={!eng.hasProp || c.locked} onClick={c.cargarPropuesta}>
+        <button
+          type="button"
+          className="sb"
+          disabled={!eng.hasProp || c.locked}
+          onClick={c.cargarPropuesta}
+        >
           Cargar
         </button>
       </div>
@@ -250,11 +309,12 @@ function PistaEnVivo() {
   };
   const ref = useCanvas((cv) => drawMap(cv, datos));
   const lostNow = Math.abs(sim.es) > 1.1;
-  const tMean = c.running && sim.lapT > 0.2
-    ? fmt(sim.iae / sim.lapT, 2)
-    : c.lastLap
-      ? fmt(c.lastLap.iae / Math.max(0.01, c.lastLap.t), 2)
-      : "—";
+  const tMean =
+    c.running && sim.lapT > 0.2
+      ? fmt(sim.iae / sim.lapT, 2)
+      : c.lastLap
+        ? fmt(c.lastLap.iae / Math.max(0.01, c.lastLap.t), 2)
+        : "—";
   return (
     <Card className="a-map" aria-label="Pista en vivo" pbi="HU-22 · HU-24" sprint="2">
       <div className="hd">
@@ -262,10 +322,18 @@ function PistaEnVivo() {
           Pista en vivo <small>{m.recording ? "mapeando vuelta 1" : m.source || "sin mapa"}</small>
         </h2>
         <div className="seg" role="group" aria-label="Qué mostrar en el mapa">
-          <button type="button" aria-pressed={c.mapMode === "error"} onClick={() => c.setMapMode("error")}>
+          <button
+            type="button"
+            aria-pressed={c.mapMode === "error"}
+            onClick={() => c.setMapMode("error")}
+          >
             Error
           </button>
-          <button type="button" aria-pressed={c.mapMode === "sectores"} onClick={() => c.setMapMode("sectores")}>
+          <button
+            type="button"
+            aria-pressed={c.mapMode === "sectores"}
+            onClick={() => c.setMapMode("sectores")}
+          >
             Sectores
           </button>
         </div>
@@ -276,8 +344,8 @@ function PistaEnVivo() {
           <div className="mapmsg">
             <div>
               <p>
-                El mapa se construye durante la primera vuelta y sirve solo para analizar: el robot se guía únicamente por la
-                línea.
+                El mapa se construye durante la primera vuelta y sirve solo para analizar: el robot
+                se guía únicamente por la línea.
               </p>
               <div className="b">
                 <button type="button" className="sb" onClick={() => c.goTab("mapa")}>
@@ -310,12 +378,14 @@ function PistaEnVivo() {
         </div>
         <div>
           <div className="lbl">Líneas perdidas</div>
-          <div className={`v ${lostNow ? "bad" : ""}`}>{c.running ? sim.lost : c.lastLap ? c.lastLap.lost : 0}</div>
+          <div className={`v ${lostNow ? "bad" : ""}`}>
+            {c.running ? sim.lost : c.lastLap ? c.lastLap.lost : 0}
+          </div>
         </div>
       </div>
       <div className="offline" role="status">
-        Sin enlace: la telemetría está en pausa. Si el robot sigue corriendo, las vueltas se graban en su memoria y se
-        sincronizan al reconectar.
+        Sin enlace: la telemetría está en pausa. Si el robot sigue corriendo, las vueltas se graban
+        en su memoria y se sincronizan al reconectar.
       </div>
     </Card>
   );
@@ -351,9 +421,18 @@ function Cronometraje() {
     <Card className="a-time" aria-label="Cronometraje" pbi="HU-19 · EN-15" sprint="2">
       <div className="hd">
         <h2>Cronometraje</h2>
-        <span className="tag">{c.laps.length ? `${c.laps.length} vuelta${c.laps.length === 1 ? "" : "s"}` : "Sin vueltas"}</span>
+        <span className="tag">
+          {c.laps.length
+            ? `${c.laps.length} vuelta${c.laps.length === 1 ? "" : "s"}`
+            : "Sin vueltas"}
+        </span>
       </div>
-      <button type="button" className={`gate ${c.gate ? "" : "off"}`} title="Cronómetro de meta: toca para simular una desconexión" onClick={c.toggleGate}>
+      <button
+        type="button"
+        className={`gate ${c.gate ? "" : "off"}`}
+        title="Cronómetro de meta: toca para simular una desconexión"
+        onClick={c.toggleGate}
+      >
         <span className="l">
           <Gate />
           <span>{c.gate ? "Meta · barrera OK" : "Meta desconectada"}</span>
@@ -393,7 +472,9 @@ function Cronometraje() {
       <div className="pair">
         <div>
           <div className="lbl">Última</div>
-          <div className="v">{c.lastLap ? (c.lastLap.fin ? fmt(c.lastLap.t, 3) : "No terminó") : "—"}</div>
+          <div className="v">
+            {c.lastLap ? (c.lastLap.fin ? fmt(c.lastLap.t, 3) : "No terminó") : "—"}
+          </div>
         </div>
         <div>
           <div className="lbl">Mejor</div>
@@ -413,9 +494,19 @@ function Cronometraje() {
       </div>
       <div className="hist" aria-label="Historial de vueltas">
         {last16.map((l, i) => {
-          if (!l.fin) return <i key={i} className="dnf" style={{ height: "100%" }} title={`V${l.n}: no terminó`} />;
+          if (!l.fin)
+            return (
+              <i key={i} className="dnf" style={{ height: "100%" }} title={`V${l.n}: no terminó`} />
+            );
           const h = 30 + (1 - (l.t - tmin) / Math.max(0.01, tmax - tmin)) * 70;
-          return <i key={i} className={l.t === best ? "best" : ""} style={{ height: `${h}%` }} title={`V${l.n}: ${fmt(l.t, 3)} s`} />;
+          return (
+            <i
+              key={i}
+              className={l.t === best ? "best" : ""}
+              style={{ height: `${h}%` }}
+              title={`V${l.n}: ${fmt(l.t, 3)} s`}
+            />
+          );
         })}
       </div>
       <div className="quick">
@@ -485,7 +576,9 @@ function Regleta() {
       <div className="sread">
         <div>
           <div className="lbl">Posición</div>
-          <div className={`v ${vis ? "" : "bad"}`}>{vis ? `${pos > 0 ? "+" : ""}${fmt(pos * 72, 1)} mm` : "Perdida"}</div>
+          <div className={`v ${vis ? "" : "bad"}`}>
+            {vis ? `${pos > 0 ? "+" : ""}${fmt(pos * 72, 1)} mm` : "Perdida"}
+          </div>
         </div>
         <div>
           <div className="lbl">Error</div>
@@ -565,7 +658,16 @@ function Registro() {
 function ErrorPista() {
   const c = useConsola();
   const sim = c.simRef.current;
-  const ref = useCanvas((cv) => drawHealth(cv, c.running, sim.s, c.curBinsRef.current, c.curCntRef.current, c.lastBinsRef.current));
+  const ref = useCanvas((cv) =>
+    drawHealth(
+      cv,
+      c.running,
+      sim.s,
+      c.curBinsRef.current,
+      c.curCntRef.current,
+      c.lastBinsRef.current,
+    ),
+  );
   return (
     <Card className="a-health" pbi="HU-30" sprint="C">
       <div className="hd">
@@ -581,7 +683,11 @@ function ErrorPista() {
         </div>
       </div>
       <div className="hbox">
-        <canvas ref={ref} role="img" aria-label="Error del robot a lo largo de la distancia de la pista" />
+        <canvas
+          ref={ref}
+          role="img"
+          aria-label="Error del robot a lo largo de la distancia de la pista"
+        />
       </div>
     </Card>
   );

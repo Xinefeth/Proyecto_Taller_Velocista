@@ -20,7 +20,13 @@ export function BacklogLayer() {
       </h4>
       <div className="row">
         <span style={{ fontSize: 12.5 }}>Mostrar IDs en cada panel</span>
-        <button type="button" className="sw" role="switch" aria-checked={showPbi} onClick={() => setShowPbi(!showPbi)}>
+        <button
+          type="button"
+          className="sw"
+          role="switch"
+          aria-checked={showPbi}
+          onClick={() => setShowPbi(!showPbi)}
+        >
           <i />
         </button>
       </div>
@@ -41,8 +47,8 @@ export function BacklogLayer() {
         <i style={{ background: "var(--panel4)", color: "var(--dim)" }}>Won&apos;t</i>
       </div>
       <p>
-        IDs del Product Backlog v5. “Sprint 1” atenúa lo que llega después; “Fin del curso” atenúa solo lo que queda fuera
-        (Won&apos;t).
+        IDs del Product Backlog v5. “Sprint 1” atenúa lo que llega después; “Fin del curso” atenúa
+        solo lo que queda fuera (Won&apos;t).
       </p>
     </aside>
   );

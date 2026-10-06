@@ -10,7 +10,9 @@ import { checks, curVer, facts } from "../logica/dominio";
 export function Reglamento() {
   const c = useConsola();
   const velos = c.robots.filter((x) => x.tipo === "velocista");
-  const [rgRobot, setRgRobot] = useState(velos.find((x) => x.id === c.robotId) ? c.robotId : velos[0]?.id);
+  const [rgRobot, setRgRobot] = useState(
+    velos.find((x) => x.id === c.robotId) ? c.robotId : velos[0]?.id,
+  );
   const rb = c.robots.find((x) => x.id === rgRobot) ?? velos[0];
   const pr = c.perfil;
   const ck = checks(facts(curVer(rb).parts, c.catalog), pr);
@@ -18,13 +20,46 @@ export function Reglamento() {
   const r = pr.r;
 
   const locks: [string, ReactElement, string, string][] = [
-    [r.mapaVel ? "ok" : "bad", r.mapaVel ? ICO.ok : ICO.lock, "Velocidad por mapa", r.mapaVel ? "Permitida por el perfil (función fuera de este curso)." : "Bloqueada: movimientos pre-programados."],
-    [r.enc ? "ok" : "bad", r.enc ? ICO.ok : ICO.lock, "Panel de encoders", r.enc ? "Visible si el robot los tiene." : "Bloqueado aunque el robot los tenga."],
-    [r.turbina ? "ok" : "bad", r.turbina ? ICO.ok : ICO.lock, "Panel de turbina", r.turbina ? "Visible si el robot la tiene." : `No permitida en ${pr.cat}.`],
-    [r.inal ? "warn" : "ok", r.inal ? ICO.warn : ICO.ok, "Arranque", r.inal ? "Inalámbrico obligatorio: ARRANCAR desde la consola." : "Libre."],
-    ["warn", ICO.warn, "Modo competencia", "Solo Arrancar y Detener; el setup se bloquea durante el recorrido."],
+    [
+      r.mapaVel ? "ok" : "bad",
+      r.mapaVel ? ICO.ok : ICO.lock,
+      "Velocidad por mapa",
+      r.mapaVel
+        ? "Permitida por el perfil (función fuera de este curso)."
+        : "Bloqueada: movimientos pre-programados.",
+    ],
+    [
+      r.enc ? "ok" : "bad",
+      r.enc ? ICO.ok : ICO.lock,
+      "Panel de encoders",
+      r.enc ? "Visible si el robot los tiene." : "Bloqueado aunque el robot los tenga.",
+    ],
+    [
+      r.turbina ? "ok" : "bad",
+      r.turbina ? ICO.ok : ICO.lock,
+      "Panel de turbina",
+      r.turbina ? "Visible si el robot la tiene." : `No permitida en ${pr.cat}.`,
+    ],
+    [
+      r.inal ? "warn" : "ok",
+      r.inal ? ICO.warn : ICO.ok,
+      "Arranque",
+      r.inal ? "Inalámbrico obligatorio: ARRANCAR desde la consola." : "Libre.",
+    ],
+    [
+      "warn",
+      ICO.warn,
+      "Modo competencia",
+      "Solo Arrancar y Detener; el setup se bloquea durante el recorrido.",
+    ],
   ];
-  if (r.mr4) locks.push(["warn", ICO.warn, "Intento", "Una vuelta y se detiene; pasados 120 s cuenta como no terminada."]);
+  if (r.mr4)
+    locks.push([
+      "warn",
+      ICO.warn,
+      "Intento",
+      "Una vuelta y se detiene; pasados 120 s cuenta como no terminada.",
+    ]);
 
   return (
     <section className="view on rg" aria-label="Reglamento">
@@ -35,18 +70,34 @@ export function Reglamento() {
           </div>
           <div className="plist">
             {c.perfiles.map((p) => (
-              <button key={p.id} type="button" className="pli" aria-current={p.id === c.perfil.id} onClick={() => c.setProfile(p.id)}>
+              <button
+                key={p.id}
+                type="button"
+                className="pli"
+                aria-current={p.id === c.perfil.id}
+                onClick={() => c.setProfile(p.id)}
+              >
                 <b>
                   {p.comp} · {p.cat}
                 </b>
-                <small>{p.r.mr4 ? "Seguidor de línea velocista" : "Sin restricciones, para experimentar"}</small>
+                <small>
+                  {p.r.mr4 ? "Seguidor de línea velocista" : "Sin restricciones, para experimentar"}
+                </small>
               </button>
             ))}
           </div>
-          <button type="button" className="sb ghost" disabled style={{ width: "100%", marginTop: 10 }} title="Fuera del backlog actual">
+          <button
+            type="button"
+            className="sb ghost"
+            disabled
+            style={{ width: "100%", marginTop: 10 }}
+            title="Fuera del backlog actual"
+          >
             Nuevo perfil
           </button>
-          <p className="note">Las reglas se guardan como datos: agregar una competencia no requiere programar.</p>
+          <p className="note">
+            Las reglas se guardan como datos: agregar una competencia no requiere programar.
+          </p>
         </Card>
       </div>
 
@@ -77,7 +128,10 @@ export function Reglamento() {
                       const val = fn(p.r);
                       const no = /^(No permitida|Prohibid)/.test(val);
                       return (
-                        <td key={p.id} className={`${p.id === c.perfil.id ? "on" : ""} ${no ? "no" : ""}`.trim()}>
+                        <td
+                          key={p.id}
+                          className={`${p.id === c.perfil.id ? "on" : ""} ${no ? "no" : ""}`.trim()}
+                        >
                           {val}
                         </td>
                       );
@@ -113,7 +167,12 @@ export function Reglamento() {
           </div>
           <div className="seg wide" style={{ marginBottom: 10 }}>
             {velos.map((x) => (
-              <button key={x.id} type="button" aria-pressed={x.id === rgRobot} onClick={() => setRgRobot(x.id)}>
+              <button
+                key={x.id}
+                type="button"
+                aria-pressed={x.id === rgRobot}
+                onClick={() => setRgRobot(x.id)}
+              >
                 {x.nm}
               </button>
             ))}

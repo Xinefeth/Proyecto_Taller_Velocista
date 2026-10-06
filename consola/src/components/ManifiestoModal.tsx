@@ -17,7 +17,13 @@ export function ManifiestoModal() {
     }
   };
   return (
-    <div className={`modal ${abierto ? "on" : ""}`} role="dialog" aria-modal={abierto} aria-label="Manifiesto del robot" aria-hidden={!abierto}>
+    <div
+      className={`modal ${abierto ? "on" : ""}`}
+      role="dialog"
+      aria-modal={abierto}
+      aria-label="Manifiesto del robot"
+      aria-hidden={!abierto}
+    >
       {r && (
         <>
           <div className="dh">
@@ -31,7 +37,8 @@ export function ManifiestoModal() {
           </div>
           <div className="mb">
             <p className="note" style={{ margin: 0 }}>
-              El robot lo envía al conectarse. La consola arma sus paneles y el panel Setup a partir de este mensaje.
+              El robot lo envía al conectarse. La consola arma sus paneles y el panel Setup a partir
+              de este mensaje.
             </p>
             <pre className="json">{json}</pre>
           </div>

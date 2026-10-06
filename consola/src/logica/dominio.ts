@@ -92,7 +92,9 @@ const C = (s: Severidad, t: string, d: string): Chequeo => [s, t, d];
 export function compat(f: Hechos): Chequeo[] {
   const L: Chequeo[] = [];
   if (!f.mcu)
-    L.push(C("bad", "Falta el microcontrolador", "Sin él no hay firmware ni conexión con la consola."));
+    L.push(
+      C("bad", "Falta el microcontrolador", "Sin él no hay firmware ni conexión con la consola."),
+    );
   if (f.line && f.mcu) {
     const need = f.line.s.salida === "Analógica" ? f.sensores : 0;
     if (need) {
@@ -146,8 +148,16 @@ export function compat(f: Hechos): Chequeo[] {
     const v = num(f.bat.s.vmax);
     L.push(
       v >= num(f.driver.s.vmin) && v <= num(f.driver.s.vmax)
-        ? C("ok", "Batería dentro del rango del driver", `${v} V en ${f.driver.s.vmin}–${f.driver.s.vmax} V.`)
-        : C("bad", "Batería fuera del rango del driver", `${v} V fuera de ${f.driver.s.vmin}–${f.driver.s.vmax} V.`),
+        ? C(
+            "ok",
+            "Batería dentro del rango del driver",
+            `${v} V en ${f.driver.s.vmin}–${f.driver.s.vmax} V.`,
+          )
+        : C(
+            "bad",
+            "Batería fuera del rango del driver",
+            `${v} V fuera de ${f.driver.s.vmin}–${f.driver.s.vmax} V.`,
+          ),
     );
   }
   if (f.bat && f.motor) {
@@ -165,7 +175,7 @@ export function compat(f: Hechos): Chequeo[] {
   }
   if (f.reg && f.mcu) {
     const logic =
-      (f.mcu.i || 0) + (f.line ? num(f.line.s.i) * f.sensMods : 0) + (f.imu ? (f.imu.i || 0) : 0);
+      (f.mcu.i || 0) + (f.line ? num(f.line.s.i) * f.sensMods : 0) + (f.imu ? f.imu.i || 0 : 0);
     L.push(
       logic <= num(f.reg.s.imax)
         ? C("ok", "El regulador cubre la lógica", `${fmt(logic, 2)} A de ${f.reg.s.imax} A.`)
@@ -177,12 +187,22 @@ export function compat(f: Hechos): Chequeo[] {
       can = (num(f.bat.s.mah) / 1000) * num(f.bat.s.c);
     L.push(
       need <= can
-        ? C("ok", "La batería soporta turbina y motores", `${fmt(need, 1)} A de ${fmt(can, 1)} A de descarga.`)
+        ? C(
+            "ok",
+            "La batería soporta turbina y motores",
+            `${fmt(need, 1)} A de ${fmt(can, 1)} A de descarga.`,
+          )
         : C("bad", "La batería no soporta la turbina", `${fmt(need, 1)} A > ${fmt(can, 1)} A.`),
     );
   }
   if (f.enc && f.motor && f.motor.s.familia === "TT amarillo")
-    L.push(C("warn", "Encoders con motores TT", "Los encoders del catálogo son para motores N20 o Micro Metal."));
+    L.push(
+      C(
+        "warn",
+        "Encoders con motores TT",
+        "Los encoders del catálogo son para motores N20 o Micro Metal.",
+      ),
+    );
   return L;
 }
 
@@ -199,7 +219,11 @@ export function checks(f: Hechos, prof: Perfil): Chequeo[] {
   L.push(
     r.sensMax && f.sensores > r.sensMax
       ? C("bad", "Sensores", `${f.sensores} sensores; máximo ${r.sensMax} en ${prof.cat}`)
-      : C("ok", "Sensores", `${f.sensores} canales${r.sensMax ? ` (máx. ${r.sensMax})` : " · libre"}`),
+      : C(
+          "ok",
+          "Sensores",
+          `${f.sensores} canales${r.sensMax ? ` (máx. ${r.sensMax})` : " · libre"}`,
+        ),
   );
   if (r.motores)
     L.push(
@@ -215,7 +239,8 @@ export function checks(f: Hechos, prof: Perfil): Chequeo[] {
     );
   if (r.mcu)
     L.push(
-      f.mcu && r.mcu.some((m) => f.mcu!.nm.includes(m.split(" ").pop() ?? m) || f.mcu!.nm.includes(m))
+      f.mcu &&
+        r.mcu.some((m) => f.mcu!.nm.includes(m.split(" ").pop() ?? m) || f.mcu!.nm.includes(m))
         ? C("ok", "Microcontrolador", f.mcu.nm)
         : C("bad", "Microcontrolador", `Permitidos: ${r.mcu.join(", ")}`),
     );
@@ -289,7 +314,10 @@ export function manifest(
       activo: ctrlActivo,
       disponibles: Object.keys(CTRL),
       parametros: Object.fromEntries(
-        CTRL[ctrlActivo].keys.map((k) => [k, { min: PDEF[k].min, max: PDEF[k].max, paso: PDEF[k].step }]),
+        CTRL[ctrlActivo].keys.map((k) => [
+          k,
+          { min: PDEF[k].min, max: PDEF[k].max, paso: PDEF[k].step },
+        ]),
       ),
     },
     telemetria: { estado_hz: 1, senales_hz: 20, lazo_hz: 1000 },
@@ -297,12 +325,20 @@ export function manifest(
     compensacion_bateria: compensacionBateria,
   };
   if (f.sensores)
-    m.sensores.push({ id: "regleta", tipo: "linea", canales: f.sensores, modulos: f.sensMods, via: f.mux ? "multiplexor" : "directo" });
+    m.sensores.push({
+      id: "regleta",
+      tipo: "linea",
+      canales: f.sensores,
+      modulos: f.sensMods,
+      via: f.mux ? "multiplexor" : "directo",
+    });
   m.sensores.push({ id: "bateria", tipo: "voltaje", unidad: "V" });
   if (f.enc) m.sensores.push({ id: "encoders", tipo: "encoder", cpr: f.enc.s.cpr, ruedas: 2 });
   if (f.imu) m.sensores.push({ id: "imu", tipo: "imu", ejes: f.imu.s.ejes });
   if (f.motores)
-    ["motor_izq", "motor_der"].slice(0, f.motores).forEach((id) => m.actuadores.push({ id, tipo: "motor", pwm: [-100, 100] }));
+    ["motor_izq", "motor_der"]
+      .slice(0, f.motores)
+      .forEach((id) => m.actuadores.push({ id, tipo: "motor", pwm: [-100, 100] }));
   if (f.turb) m.actuadores.push({ id: "turbina", tipo: "turbina", pwm: [0, 100] });
   return m;
 }

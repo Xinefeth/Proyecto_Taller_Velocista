@@ -40,7 +40,8 @@ export function RegistroModal() {
     const o: Specs = {};
     T.f.forEach(([k, , ty]) => {
       const raw = specs[k] ?? "";
-      o[k] = ty === "n" && raw !== "" && !isNaN(+raw.replace(",", ".")) ? +raw.replace(",", ".") : raw;
+      o[k] =
+        ty === "n" && raw !== "" && !isNaN(+raw.replace(",", ".")) ? +raw.replace(",", ".") : raw;
     });
     return o;
   };
@@ -83,13 +84,29 @@ export function RegistroModal() {
     if (!(ms >= 0)) return setErr("Escribe la masa en gramos.");
     const s = specVals();
     const id = "c" + String(c.catalog.length + 2).padStart(2, "0");
-    c.setCatalog((list) => [...list, { id, t: tipo, nm, precio: pr, masa: ms, tienda: tienda.trim() || "—", stock: st, s, i: Number(s.i) || 0 }]);
+    c.setCatalog((list) => [
+      ...list,
+      {
+        id,
+        t: tipo,
+        nm,
+        precio: pr,
+        masa: ms,
+        tienda: tienda.trim() || "—",
+        stock: st,
+        s,
+        i: Number(s.i) || 0,
+      },
+    ]);
     c.cerrarRegistro();
     c.registrar("Catálogo", `Registrado: ${nm}`, "good");
     c.mostrarToast(`${nm} quedó en el catálogo.`);
   };
 
-  if (!c.regOpen) return <div className="modal" role="dialog" aria-hidden="true" aria-label="Registrar componente" />;
+  if (!c.regOpen)
+    return (
+      <div className="modal" role="dialog" aria-hidden="true" aria-label="Registrar componente" />
+    );
 
   return (
     <div className="modal on" role="dialog" aria-modal="true" aria-label="Registrar componente">
@@ -104,10 +121,21 @@ export function RegistroModal() {
       </div>
       <div className="mb">
         <div className="tabs" role="tablist" style={{ margin: 0 }}>
-          <button type="button" role="tab" aria-selected={rt === "manual"} onClick={() => setRt("manual")}>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={rt === "manual"}
+            onClick={() => setRt("manual")}
+          >
             Manual <PbiChip pbi="HU-02" sprint="1" inl />
           </button>
-          <button type="button" role="tab" aria-selected={rt === "link"} onClick={() => setRt("link")} data-sprint="2">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={rt === "link"}
+            onClick={() => setRt("link")}
+            data-sprint="2"
+          >
             Desde enlace <PbiChip pbi="HU-05" sprint="2" inl />
           </button>
         </div>
@@ -116,19 +144,33 @@ export function RegistroModal() {
             <div className="fld">
               <span className="lbl">Enlace de la tienda</span>
               <div style={{ display: "flex", gap: 6 }}>
-                <input className="inp" placeholder="https://…/producto/qtr-8a" value={link} onChange={(e) => setLink(e.target.value)} />
+                <input
+                  className="inp"
+                  placeholder="https://…/producto/qtr-8a"
+                  value={link}
+                  onChange={(e) => setLink(e.target.value)}
+                />
                 <button type="button" className="sb" onClick={extraer}>
                   {fetching ? "Extrayendo…" : "Extraer datos"}
                 </button>
               </div>
             </div>
-            <p className="note">Se extraen nombre, precio y especificaciones; revisa los datos antes de guardar.</p>
+            <p className="note">
+              Se extraen nombre, precio y especificaciones; revisa los datos antes de guardar.
+            </p>
           </div>
         )}
         <div className="g2">
           <label className="fld">
             <span className="lbl">Tipo</span>
-            <select className="inp" value={tipo} onChange={(e) => { setTipo(e.target.value); setSpecs({}); }}>
+            <select
+              className="inp"
+              value={tipo}
+              onChange={(e) => {
+                setTipo(e.target.value);
+                setSpecs({});
+              }}
+            >
               {Object.entries(TIPOS).map(([k, v]) => (
                 <option key={k} value={k}>
                   {v.nm}
@@ -138,26 +180,53 @@ export function RegistroModal() {
           </label>
           <label className="fld">
             <span className="lbl">Nombre</span>
-            <input className="inp" placeholder="Ej. Pololu QTR-8A" value={nombre} onChange={(e) => setNombre(e.target.value)} />
+            <input
+              className="inp"
+              placeholder="Ej. Pololu QTR-8A"
+              value={nombre}
+              onChange={(e) => setNombre(e.target.value)}
+            />
           </label>
         </div>
         <div className="g3">
           <label className="fld">
             <span className="lbl">Precio (S/)</span>
-            <input className="inp m" inputMode="decimal" placeholder="0.00" value={precio} onChange={(e) => setPrecio(e.target.value)} />
+            <input
+              className="inp m"
+              inputMode="decimal"
+              placeholder="0.00"
+              value={precio}
+              onChange={(e) => setPrecio(e.target.value)}
+            />
           </label>
           <label className="fld">
             <span className="lbl">Masa (g)</span>
-            <input className="inp m" inputMode="decimal" placeholder="0" value={masa} onChange={(e) => setMasa(e.target.value)} />
+            <input
+              className="inp m"
+              inputMode="decimal"
+              placeholder="0"
+              value={masa}
+              onChange={(e) => setMasa(e.target.value)}
+            />
           </label>
           <label className="fld">
             <span className="lbl">En el club</span>
-            <input className="inp m" inputMode="numeric" value={stock} onChange={(e) => setStock(e.target.value)} />
+            <input
+              className="inp m"
+              inputMode="numeric"
+              value={stock}
+              onChange={(e) => setStock(e.target.value)}
+            />
           </label>
         </div>
         <label className="fld">
           <span className="lbl">Tienda</span>
-          <input className="inp" placeholder="Proveedor local (Trujillo)" value={tienda} onChange={(e) => setTienda(e.target.value)} />
+          <input
+            className="inp"
+            placeholder="Proveedor local (Trujillo)"
+            value={tienda}
+            onChange={(e) => setTienda(e.target.value)}
+          />
         </label>
         <div className="sub">Especificaciones del tipo</div>
         <div className="g2">

@@ -222,7 +222,10 @@ function DesdeFoto() {
     const cv = pcv.current!,
       r = cv.getBoundingClientRect(),
       k = src.current.width / r.width;
-    corners.current = [...corners.current, { x: (e.clientX - r.left) * k, y: (e.clientY - r.top) * k }];
+    corners.current = [
+      ...corners.current,
+      { x: (e.clientX - r.left) * k, y: (e.clientY - r.top) * k },
+    ];
     drawPhoto();
     if (corners.current.length === 4) {
       setStep(2);
@@ -272,18 +275,48 @@ function DesdeFoto() {
       <div className="pctl" style={{ display: fase !== "drop" ? "grid" : "none" }}>
         <label className="fld">
           <span className="lbl">Ancho (m)</span>
-          <input className="inp" inputMode="decimal" value={pw} onChange={(e) => { setPw(e.target.value); if (corners.current.length === 4) warp(); }} />
+          <input
+            className="inp"
+            inputMode="decimal"
+            value={pw}
+            onChange={(e) => {
+              setPw(e.target.value);
+              if (corners.current.length === 4) warp();
+            }}
+          />
         </label>
         <label className="fld">
           <span className="lbl">Largo (m)</span>
-          <input className="inp" inputMode="decimal" value={ph} onChange={(e) => { setPh(e.target.value); if (corners.current.length === 4) warp(); }} />
+          <input
+            className="inp"
+            inputMode="decimal"
+            value={ph}
+            onChange={(e) => {
+              setPh(e.target.value);
+              if (corners.current.length === 4) warp();
+            }}
+          />
         </label>
         <label className="fld thr">
           <span className="lbl">Umbral {thr}</span>
-          <input type="range" min={20} max={220} value={thr} onChange={(e) => { setThr(+e.target.value); if (corners.current.length === 4) warp(); }} />
+          <input
+            type="range"
+            min={20}
+            max={220}
+            value={thr}
+            onChange={(e) => {
+              setThr(+e.target.value);
+              if (corners.current.length === 4) warp();
+            }}
+          />
         </label>
       </div>
-      <canvas ref={wcv} className="wcv" aria-label="Pista corregida y binarizada" style={{ display: "none" }} />
+      <canvas
+        ref={wcv}
+        className="wcv"
+        aria-label="Pista corregida y binarizada"
+        style={{ display: "none" }}
+      />
       <div className="acts" style={{ display: fase !== "drop" ? "grid" : "none" }}>
         <button
           type="button"
@@ -318,10 +351,13 @@ export function Mapa() {
       <Card className="s6" pbi="HU-33" sprint="W">
         <div className="hd">
           <h2>Perfil de velocidad por mapa</h2>
-          <span className={`tag ${c.perfil.r.mapaVel ? "" : "warn"}`}>{c.perfil.r.mapaVel ? "Fuera del curso" : "Bloqueado"}</span>
+          <span className={`tag ${c.perfil.r.mapaVel ? "" : "warn"}`}>
+            {c.perfil.r.mapaVel ? "Fuera del curso" : "Bloqueado"}
+          </span>
         </div>
         <p className="muted" style={{ margin: "0 0 10px", fontSize: 13 }}>
-          Frenar antes de cada curva usando el mapa. Solo se habilita si el perfil de reglamento lo permite.
+          Frenar antes de cada curva usando el mapa. Solo se habilita si el perfil de reglamento lo
+          permite.
         </p>
         <div>
           <div className="lockrow">
@@ -335,8 +371,9 @@ export function Mapa() {
           <h2>Para qué sirve el mapa</h2>
         </div>
         <p className="rule" style={{ border: 0, padding: 0, background: "none" }}>
-          <b>Solo para analizar en la laptop.</b> Muchik Rumble 4 exige que el robot base su movimiento únicamente en el
-          sensado de la línea, sin movimientos pre-programados. Además, cada intento es de una sola vuelta.
+          <b>Solo para analizar en la laptop.</b> Muchik Rumble 4 exige que el robot base su
+          movimiento únicamente en el sensado de la línea, sin movimientos pre-programados. Además,
+          cada intento es de una sola vuelta.
         </p>
       </Card>
     </section>

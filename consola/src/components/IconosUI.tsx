@@ -81,4 +81,5 @@ export const Buscar = (): ReactElement => (
 );
 export const Mas = (): ReactElement => s("M12 5v14M5 12h14", 2.2);
 export const Cerrar = (): ReactElement => s("M6 6l12 12M18 6L6 18");
-export const Chispa = (): ReactElement => s("M12 3l2.5 5.5L20 11l-5.5 2.5L12 19l-2.5-5.5L4 11l5.5-2.5z", 1.8);
+export const Chispa = (): ReactElement =>
+  s("M12 3l2.5 5.5L20 11l-5.5 2.5L12 19l-2.5-5.5L4 11l5.5-2.5z", 1.8);

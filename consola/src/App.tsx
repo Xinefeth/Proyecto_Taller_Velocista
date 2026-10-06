@@ -36,8 +36,8 @@ export default function App() {
         <div className="main">
           <Strip />
           <p className="simline only-v note" style={{ margin: "-6px 4px 10px" }}>
-            Maqueta con datos simulados. Toca el enlace WiFi para simular una caída, la batería para cambiarla o el
-            cronómetro de meta para desconectarlo.
+            Maqueta con datos simulados. Toca el enlace WiFi para simular una caída, la batería para
+            cambiarla o el cronómetro de meta para desconectarlo.
           </p>
           <Pagina />
         </div>

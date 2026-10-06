@@ -32,7 +32,14 @@ import {
 } from "../logica/simulador";
 import { HIST, NB, RATE, resetEncuadre, robotOn } from "../logica/lienzos";
 
-export type Tab = "control" | "telemetria" | "tiempos" | "mapa" | "catalogo" | "armador" | "reglamento";
+export type Tab =
+  | "control"
+  | "telemetria"
+  | "tiempos"
+  | "mapa"
+  | "catalogo"
+  | "armador"
+  | "reglamento";
 export type Fuente = "sim" | "robot";
 export type Modo = "prueba" | "competencia";
 export type ColorLinea = "negra" | "blanca";
@@ -222,7 +229,10 @@ export function ProveedorConsola({ children }: { children: ReactNode }) {
   const [turb, setTurbState] = useState(0);
 
   const [draft, setDraft] = useState<Setup>(() => ({ ctrl: "pid", p: { ...CTRL.pid.pre.Base } }));
-  const [applied, setApplied] = useState<Setup>(() => ({ ctrl: "pid", p: { ...CTRL.pid.pre.Base } }));
+  const [applied, setApplied] = useState<Setup>(() => ({
+    ctrl: "pid",
+    p: { ...CTRL.pid.pre.Base },
+  }));
   const [saved, setSaved] = useState<Setup>(() => ({ ctrl: "pid", p: { ...CTRL.pid.pre.Base } }));
   const [preset, setPresetState] = useState<string | null>("Base");
 
@@ -294,7 +304,19 @@ export function ProveedorConsola({ children }: { children: ReactNode }) {
     engMethod,
     source,
   });
-  live.current = { running, connected, mode, comp, turb, gate, robotId, tab, applied, engMethod, source };
+  live.current = {
+    running,
+    connected,
+    mode,
+    comp,
+    turb,
+    gate,
+    robotId,
+    tab,
+    applied,
+    engMethod,
+    source,
+  };
 
   const robot = useMemo(() => robotById(robots, robotId) ?? robots[0], [robots, robotId]);
   const perfil = useMemo(() => profById(perfiles, profileId) ?? perfiles[0], [perfiles, profileId]);
@@ -302,7 +324,9 @@ export function ProveedorConsola({ children }: { children: ReactNode }) {
 
   const registrar = useCallback((sys: string, msg: string, lv: EventoLog["lv"] = "") => {
     const d = new Date();
-    const t = [d.getHours(), d.getMinutes(), d.getSeconds()].map((x) => String(x).padStart(2, "0")).join(":");
+    const t = [d.getHours(), d.getMinutes(), d.getSeconds()]
+      .map((x) => String(x).padStart(2, "0"))
+      .join(":");
     logRef.current = [{ t, sys, msg, lv }, ...logRef.current].slice(0, 80);
   }, []);
 
@@ -328,34 +352,35 @@ export function ProveedorConsola({ children }: { children: ReactNode }) {
       r.J = r.fin ? r.t! + 2 * r.iae : 120;
       runsRef.current = [...runsRef.current, r];
       lastRunRef.current = r;
-      if (L.robot === live.current.robotId) engRef.current.feed(r, runsRef.current.filter((x) => x.robot === L.robot));
+      if (L.robot === live.current.robotId)
+        engRef.current.feed(
+          r,
+          runsRef.current.filter((x) => x.robot === L.robot),
+        );
       registrar("Corridas", `#${r.n} registrada · ${CTRL[r.ctrl].short} · J ${fmt(r.J, 2)}`);
     },
     [robots, registrar],
   );
 
-  const mkLap = useCallback(
-    (fin: boolean, why?: string): Vuelta => {
-      const sim = simRef.current;
-      return {
-        n: lapCountRef.current,
-        t: sim.lapT,
-        iae: sim.iae,
-        ctrl: live.current.applied.ctrl,
-        p: { ...live.current.applied.p },
-        vbat: vbatRef.current,
-        segs: sim.closeLap(),
-        sec: fin ? sim.secT.slice(0, 3) : [],
-        col: [],
-        fin,
-        lost: sim.lost,
-        src: live.current.gate ? "Meta" : "Telemetría",
-        why: why || "",
-        robot: live.current.robotId,
-      };
-    },
-    [],
-  );
+  const mkLap = useCallback((fin: boolean, why?: string): Vuelta => {
+    const sim = simRef.current;
+    return {
+      n: lapCountRef.current,
+      t: sim.lapT,
+      iae: sim.iae,
+      ctrl: live.current.applied.ctrl,
+      p: { ...live.current.applied.p },
+      vbat: vbatRef.current,
+      segs: sim.closeLap(),
+      sec: fin ? sim.secT.slice(0, 3) : [],
+      col: [],
+      fin,
+      lost: sim.lost,
+      src: live.current.gate ? "Meta" : "Telemetría",
+      why: why || "",
+      robot: live.current.robotId,
+    };
+  }, []);
 
   const onLap = useCallback(() => {
     const sim = simRef.current,
@@ -371,13 +396,19 @@ export function ProveedorConsola({ children }: { children: ReactNode }) {
         m.recording = false;
         m.stats = res.stats;
         resetEncuadre();
-        registrar("Mapa", `Construido: ${fmt(res.stats.len, 2)} m, cierre corregido ${Math.round(res.stats.closeErr * 100)} cm`, "good");
+        registrar(
+          "Mapa",
+          `Construido: ${fmt(res.stats.len, 2)} m, cierre corregido ${Math.round(res.stats.closeErr * 100)} cm`,
+          "good",
+        );
       }
     }
     const L = mkLap(true);
     const prev = lapsRef.current.filter((l) => l.fin).slice(-1)[0];
     const bs = bestSecRef.current;
-    L.col = L.sec.map((t, i) => (t < bs[i] ? "purple" : prev && prev.sec[i] != null && t < prev.sec[i] ? "green" : "yellow"));
+    L.col = L.sec.map((t, i) =>
+      t < bs[i] ? "purple" : prev && prev.sec[i] != null && t < prev.sec[i] ? "green" : "yellow",
+    );
     L.sec.forEach((t, i) => {
       if (t < bs[i]) bs[i] = t;
     });
@@ -385,12 +416,16 @@ export function ProveedorConsola({ children }: { children: ReactNode }) {
     const prevBest = fins.length ? Math.min(...fins.map((l) => l.t)) : Infinity;
     lastLapRef.current = L;
     lapsRef.current = [...lapsRef.current, L];
-    lastBinsRef.current = Array.from(curBinsRef.current, (v, i) => (curCntRef.current[i] ? v / curCntRef.current[i] : 0));
+    lastBinsRef.current = Array.from(curBinsRef.current, (v, i) =>
+      curCntRef.current[i] ? v / curCntRef.current[i] : 0,
+    );
     curBinsRef.current.fill(0);
     curCntRef.current.fill(0);
     trailRef.current = [];
-    if (L.t < prevBest) registrar("Vuelta", `V${lapCountRef.current} ${fmt(L.t, 3)} s, mejor vuelta`, "best");
-    else registrar("Vuelta", `V${lapCountRef.current} ${fmt(L.t, 3)} s (+${fmt(L.t - prevBest, 3)})`);
+    if (L.t < prevBest)
+      registrar("Vuelta", `V${lapCountRef.current} ${fmt(L.t, 3)} s, mejor vuelta`, "best");
+    else
+      registrar("Vuelta", `V${lapCountRef.current} ${fmt(L.t, 3)} s (+${fmt(L.t - prevBest, 3)})`);
     if (live.current.connected) registrarCorrida(L);
     else pendingSyncRef.current.push(L);
     Object.assign(sim, { lapT: 0, iae: 0, lost: 0, sec: 0, secT: [], secStart: 0 });
@@ -417,7 +452,9 @@ export function ProveedorConsola({ children }: { children: ReactNode }) {
       else pendingSyncRef.current.push(L);
       registrar(
         "Robot",
-        why === "Tiempo máximo" ? "Tiempo máximo de 120 s: ronda nula" : `Salió de la pista en S${simRef.current.sec + 1}`,
+        why === "Tiempo máximo"
+          ? "Tiempo máximo de 120 s: ronda nula"
+          : `Salió de la pista en S${simRef.current.sec + 1}`,
         "bad",
       );
       mostrarToast(
@@ -448,7 +485,10 @@ export function ProveedorConsola({ children }: { children: ReactNode }) {
           if (m.recording && m.est && m.raw) {
             const k = m.bias;
             const v = ((sim.pl + sim.pr) / 2 / 100) * VMAX * k,
-              yaw = (((sim.pl - sim.pr) / 100) * VMAX) / 0.13 * k * (1 + (Math.random() - 0.5) * 0.02);
+              yaw =
+                ((((sim.pl - sim.pr) / 100) * VMAX) / 0.13) *
+                k *
+                (1 + (Math.random() - 0.5) * 0.02);
             m.est.h += yaw * DT;
             const ds = Math.max(0, v) * DT;
             m.est.x += Math.cos(m.est.h) * ds;
@@ -509,11 +549,18 @@ export function ProveedorConsola({ children }: { children: ReactNode }) {
         a.jit += dt;
         if (a.jit > 0.8) {
           a.jit = 0;
-          linkRef.current = { dbm: 55 + Math.round(Math.random() * 8), ms: 9 + Math.round(Math.random() * 9) };
+          linkRef.current = {
+            dbm: 55 + Math.round(Math.random() * 8),
+            ms: 9 + Math.round(Math.random() * 9),
+          };
           setLinkTick((x) => (x + 1) % 1000);
         }
       }
-      if (L.running || (L.connected && (L.tab === "control" || L.tab === "telemetria")) || (L.tab === "mapa" && m.recording))
+      if (
+        L.running ||
+        (L.connected && (L.tab === "control" || L.tab === "telemetria")) ||
+        (L.tab === "mapa" && m.recording)
+      )
         bump();
       raf = requestAnimationFrame(loop);
     };
@@ -573,12 +620,29 @@ export function ProveedorConsola({ children }: { children: ReactNode }) {
         if (live.current.running && live.current.mode === "prueba") {
           setRunning(false);
           registrar("Enlace", "Perdido: robot detenido (modo prueba)", "bad");
-        } else registrar("Enlace", live.current.running ? "Perdido: el robot sigue y graba las vueltas en su memoria" : "Perdido", "bad");
+        } else
+          registrar(
+            "Enlace",
+            live.current.running
+              ? "Perdido: el robot sigue y graba las vueltas en su memoria"
+              : "Perdido",
+            "bad",
+          );
       } else {
         const n = pendingSyncRef.current.length;
-        while (pendingSyncRef.current.length) registrarCorrida(pendingSyncRef.current.shift()!, "Sincronizada");
-        registrar("Enlace", n ? `Restablecido: ${n} vuelta${n > 1 ? "s" : ""} sincronizada${n > 1 ? "s" : ""} desde la memoria del robot` : "Restablecido", "good");
-        if (n) mostrarToast(`${n} vuelta${n > 1 ? "s" : ""} recuperada${n > 1 ? "s" : ""} de la memoria del robot.`);
+        while (pendingSyncRef.current.length)
+          registrarCorrida(pendingSyncRef.current.shift()!, "Sincronizada");
+        registrar(
+          "Enlace",
+          n
+            ? `Restablecido: ${n} vuelta${n > 1 ? "s" : ""} sincronizada${n > 1 ? "s" : ""} desde la memoria del robot`
+            : "Restablecido",
+          "good",
+        );
+        if (n)
+          mostrarToast(
+            `${n} vuelta${n > 1 ? "s" : ""} recuperada${n > 1 ? "s" : ""} de la memoria del robot.`,
+          );
       }
       return next;
     });
@@ -596,7 +660,9 @@ export function ProveedorConsola({ children }: { children: ReactNode }) {
       const next = !g;
       registrar(
         "Cronómetro",
-        next ? "Conectado: la barrera marca las vueltas" : "Desconectado: las vueltas se toman de la telemetría del robot",
+        next
+          ? "Conectado: la barrera marca las vueltas"
+          : "Desconectado: las vueltas se toman de la telemetría del robot",
         next ? "good" : "warn",
       );
       return next;
@@ -606,8 +672,16 @@ export function ProveedorConsola({ children }: { children: ReactNode }) {
   const toggleComp = useCallback(() => {
     setComp((v) => {
       const next = !v;
-      registrar("Firmware", next ? "Compensación de batería activada" : "Compensación de batería desactivada", next ? "good" : "warn");
-      mostrarToast(next ? "El PWM se escala con el voltaje: tiempos comparables entre cargas." : "Sin compensación: los tiempos cambian con la batería.");
+      registrar(
+        "Firmware",
+        next ? "Compensación de batería activada" : "Compensación de batería desactivada",
+        next ? "good" : "warn",
+      );
+      mostrarToast(
+        next
+          ? "El PWM se escala con el voltaje: tiempos comparables entre cargas."
+          : "Sin compensación: los tiempos cambian con la batería.",
+      );
       return next;
     });
   }, [registrar, mostrarToast]);
@@ -615,14 +689,22 @@ export function ProveedorConsola({ children }: { children: ReactNode }) {
   const setMode = useCallback(
     (v: Modo) => {
       setModeState(v);
-      registrar("Modo", v === "prueba" ? "Prueba: vueltas continuas" : "Competencia: una vuelta y solo responde a Detener");
+      registrar(
+        "Modo",
+        v === "prueba"
+          ? "Prueba: vueltas continuas"
+          : "Competencia: una vuelta y solo responde a Detener",
+      );
     },
     [registrar],
   );
   const setLine = useCallback(
     (v: ColorLinea) => {
       setLineState(v);
-      registrar("Sensores", v === "negra" ? "Línea negra sobre blanco" : "Línea blanca sobre negro");
+      registrar(
+        "Sensores",
+        v === "negra" ? "Línea negra sobre blanco" : "Línea blanca sobre negro",
+      );
     },
     [registrar],
   );
@@ -662,7 +744,8 @@ export function ProveedorConsola({ children }: { children: ReactNode }) {
       registrar("Robot", "Detenido por el piloto");
       return;
     }
-    if (!live.current.connected) return mostrarToast("Sin enlace: el arranque inalámbrico necesita conexión.");
+    if (!live.current.connected)
+      return mostrarToast("Sin enlace: el arranque inalámbrico necesita conexión.");
     if (!calibrated) return mostrarToast("Calibra los sensores antes de arrancar.");
     simRef.current.reset();
     trailRef.current = [];
@@ -677,7 +760,11 @@ export function ProveedorConsola({ children }: { children: ReactNode }) {
       m.bias = 1 + (Math.random() * 0.08 - 0.04);
       registrar("Mapa", "Mapeando durante la vuelta 1");
     }
-    registrar("Robot", `Arranque inalámbrico · ${CTRL[live.current.applied.ctrl].nm} · ${psum(live.current.applied.ctrl, live.current.applied.p)}`, "good");
+    registrar(
+      "Robot",
+      `Arranque inalámbrico · ${CTRL[live.current.applied.ctrl].nm} · ${psum(live.current.applied.ctrl, live.current.applied.p)}`,
+      "good",
+    );
     setRunning(true);
   }, [calibrated, registrar, mostrarToast]);
 
@@ -715,7 +802,9 @@ export function ProveedorConsola({ children }: { children: ReactNode }) {
     setApplied(clone(draft));
     if (chg) registrar("Controlador", `Cambiado a ${CTRL[draft.ctrl].nm}`, "good");
     registrar("Setup", `Enviado: ${psum(draft.ctrl, draft.p)}`);
-    mostrarToast(chg ? `Controlador ${CTRL[draft.ctrl].nm} enviado al robot.` : "Setup enviado al robot.");
+    mostrarToast(
+      chg ? `Controlador ${CTRL[draft.ctrl].nm} enviado al robot.` : "Setup enviado al robot.",
+    );
   }, [connected, draft, applied.ctrl, registrar, mostrarToast]);
   const guardarSetup = useCallback(() => {
     if (!connected) return mostrarToast("Sin enlace: no se pudo guardar.");
@@ -730,7 +819,10 @@ export function ProveedorConsola({ children }: { children: ReactNode }) {
   const setEngMethod = useCallback(
     (v: MetodoIngeniero) => {
       engRef.current.method = v;
-      engRef.current.restart(runsRef.current.filter((r) => r.robot === live.current.robotId), live.current.applied.ctrl);
+      engRef.current.restart(
+        runsRef.current.filter((r) => r.robot === live.current.robotId),
+        live.current.applied.ctrl,
+      );
       setEngMethodState(v);
       registrar("Ingeniero", v === "bayes" ? "Método: optimización bayesiana" : "Método: Twiddle");
     },
@@ -777,7 +869,10 @@ export function ProveedorConsola({ children }: { children: ReactNode }) {
     bump();
   }, [mostrarToast, bump]);
 
-  const toggleSenal = useCallback((s: "err" | "pl" | "pr") => setShow((o) => ({ ...o, [s]: !o[s] })), []);
+  const toggleSenal = useCallback(
+    (s: "err" | "pl" | "pr") => setShow((o) => ({ ...o, [s]: !o[s] })),
+    [],
+  );
 
   // Robot / perfil
   const selectRobot = useCallback(
@@ -794,7 +889,11 @@ export function ProveedorConsola({ children }: { children: ReactNode }) {
       const r = robotById(robots, id)!;
       if (!r.fw && live.current.source === "robot") setSourceState("sim");
       engRef.current.reset(live.current.applied.ctrl);
-      registrar("Consola", `Robot seleccionado: ${r.nm} ${curVer(r).v}. Paneles armados desde su manifiesto`, "good");
+      registrar(
+        "Consola",
+        `Robot seleccionado: ${r.nm} ${curVer(r).v}. Paneles armados desde su manifiesto`,
+        "good",
+      );
       mostrarToast(`${r.nm}: la consola muestra solo lo que este robot tiene.`);
     },
     [robots, registrar, mostrarToast],

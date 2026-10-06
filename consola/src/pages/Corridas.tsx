@@ -44,11 +44,15 @@ function RunChart() {
         <div key={r.n} className={`rc ${r === best ? "best" : ""}`} data-c={r.ctrl}>
           {r.fin ? (
             <div className="st2" title={`#${r.n} · ${CTRL[r.ctrl].nm} · J ${fmt(r.J, 2)}`}>
-              <div className="e" style={{ height: `${Math.min(H, (2 * r.iae) / maxJ * H)}px` }} />
+              <div className="e" style={{ height: `${Math.min(H, ((2 * r.iae) / maxJ) * H)}px` }} />
               <div className="t" style={{ height: `${Math.min(H, (r.t! / maxJ) * H)}px` }} />
             </div>
           ) : (
-            <div className="st2 dnf" style={{ height: `${H * 0.9}px` }} title={`#${r.n} · no terminó`} />
+            <div
+              className="st2 dnf"
+              style={{ height: `${H * 0.9}px` }}
+              title={`#${r.n} · no terminó`}
+            />
           )}
           <span className="rx">#{r.n}</span>
         </div>
@@ -65,10 +69,18 @@ function Ingeniero() {
       <div className="hd">
         <h2>Ingeniero de pista</h2>
         <div className="seg" role="group" aria-label="Método">
-          <button type="button" aria-pressed={c.engMethod === "twiddle"} onClick={() => c.setEngMethod("twiddle")}>
+          <button
+            type="button"
+            aria-pressed={c.engMethod === "twiddle"}
+            onClick={() => c.setEngMethod("twiddle")}
+          >
             Twiddle
           </button>
-          <button type="button" aria-pressed={c.engMethod === "bayes"} onClick={() => c.setEngMethod("bayes")}>
+          <button
+            type="button"
+            aria-pressed={c.engMethod === "bayes"}
+            onClick={() => c.setEngMethod("bayes")}
+          >
             Bayesiana
           </button>
         </div>
@@ -99,8 +111,8 @@ function Ingeniero() {
         <b>{v.best != null ? fmt(v.best, 2) : "—"}</b>
       </div>
       <p style={{ marginTop: 10, fontSize: 11.5, color: "var(--dim)" }}>
-        J = tiempo + 2 × error acumulado; si no termina, J = 120 (límite del reglamento). Cada controlador tiene su propio
-        estudio.
+        J = tiempo + 2 × error acumulado; si no termina, J = 120 (límite del reglamento). Cada
+        controlador tiene su propio estudio.
       </p>
     </Card>
   );
@@ -122,14 +134,19 @@ function Estudio() {
         <div className="dv" style={{ display: "grid", gap: 12 }}>
           <div className="s7">
             <div className="kpis">
-              {["Corridas evaluadas", "Mejor J", "Mejor tiempo", "Mejora de J vs. primera", "No terminadas", "Mejor setup"].map(
-                (l) => (
-                  <div key={l}>
-                    <div className="lbl">{l}</div>
-                    <div className="v">—</div>
-                  </div>
-                ),
-              )}
+              {[
+                "Corridas evaluadas",
+                "Mejor J",
+                "Mejor tiempo",
+                "Mejora de J vs. primera",
+                "No terminadas",
+                "Mejor setup",
+              ].map((l) => (
+                <div key={l}>
+                  <div className="lbl">{l}</div>
+                  <div className="v">—</div>
+                </div>
+              ))}
             </div>
           </div>
           <div className="s5">
@@ -182,7 +199,16 @@ function Estudio() {
             </div>
             <div>
               <div className="lbl">Mejor tiempo</div>
-              <div className="v">{bestT != null ? <>{fmt(bestT, 3)}<small> s</small></> : "—"}</div>
+              <div className="v">
+                {bestT != null ? (
+                  <>
+                    {fmt(bestT, 3)}
+                    <small> s</small>
+                  </>
+                ) : (
+                  "—"
+                )}
+              </div>
             </div>
             <div>
               <div className="lbl">Mejora de J vs. primera</div>
@@ -242,7 +268,9 @@ function Estudio() {
                     <td className="m" style={{ color: b === best ? col["--purple"] : "" }}>
                       {fmt(b.J, 2)}
                     </td>
-                    <td className="m">{ft.length ? fmt(Math.min(...ft.map((r) => r.t!)), 3) : "—"}</td>
+                    <td className="m">
+                      {ft.length ? fmt(Math.min(...ft.map((r) => r.t!)), 3) : "—"}
+                    </td>
                   </tr>
                 );
               })}
@@ -265,12 +293,31 @@ function Tabla() {
     const v = fins.map((r) => r.sec[i]).filter((x) => x != null) as number[];
     return v.length ? Math.min(...v) : null;
   });
-  const rank = [...rs].sort((a, b) => (a.fin === b.fin ? 0 : a.fin ? -1 : 1) || (a.fin ? a.t! - b.t! : 0));
-  const rows = sortBy === "t" ? rank : sortBy === "J" ? [...rs].sort((a, b) => a.J - b.J) : [...rs].reverse();
+  const rank = [...rs].sort(
+    (a, b) => (a.fin === b.fin ? 0 : a.fin ? -1 : 1) || (a.fin ? a.t! - b.t! : 0),
+  );
+  const rows =
+    sortBy === "t" ? rank : sortBy === "J" ? [...rs].sort((a, b) => a.J - b.J) : [...rs].reverse();
 
   const copiar = async () => {
     const ks = [...new Set(Object.values(CTRL).flatMap((x) => x.keys))];
-    const head = ["n", "robot", "version", "controlador", ...ks, "vbat", "tiempo_s", "s1", "s2", "s3", "error_acum", "termino", "J", "fuente", "nota"].join(",");
+    const head = [
+      "n",
+      "robot",
+      "version",
+      "controlador",
+      ...ks,
+      "vbat",
+      "tiempo_s",
+      "s1",
+      "s2",
+      "s3",
+      "error_acum",
+      "termino",
+      "J",
+      "fuente",
+      "nota",
+    ].join(",");
     const body = rs.map((r) =>
       [
         r.n,
@@ -411,19 +458,51 @@ export function Corridas() {
           </h2>
           <div className="keys">
             <span className="tag">
-              <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: 2, background: "var(--mid)" }} />
+              <span
+                style={{
+                  display: "inline-block",
+                  width: 8,
+                  height: 8,
+                  borderRadius: 2,
+                  background: "var(--mid)",
+                }}
+              />
               PID
             </span>
             <span className="tag">
-              <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: 2, background: "var(--blue)" }} />
+              <span
+                style={{
+                  display: "inline-block",
+                  width: 8,
+                  height: 8,
+                  borderRadius: 2,
+                  background: "var(--blue)",
+                }}
+              />
               Adaptativo
             </span>
             <span className="tag">
-              <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: 2, background: "var(--yellow)" }} />
+              <span
+                style={{
+                  display: "inline-block",
+                  width: 8,
+                  height: 8,
+                  borderRadius: 2,
+                  background: "var(--yellow)",
+                }}
+              />
               Difuso
             </span>
             <span className="tag">
-              <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: 2, background: "var(--red)" }} />
+              <span
+                style={{
+                  display: "inline-block",
+                  width: 8,
+                  height: 8,
+                  borderRadius: 2,
+                  background: "var(--red)",
+                }}
+              />
               Error × 2
             </span>
           </div>

@@ -80,7 +80,10 @@ export const bounds = (pts: { x: number; y: number }[]): Caja => {
 export type Proyeccion = (x: number, y: number) => [number, number];
 
 export const proj = (w: number, h: number, b: Caja, pad = 34): Proyeccion => {
-  const k = Math.min((w - pad * 2) / Math.max(0.1, b.x1 - b.x0), (h - pad * 2) / Math.max(0.1, b.y1 - b.y0));
+  const k = Math.min(
+    (w - pad * 2) / Math.max(0.1, b.x1 - b.x0),
+    (h - pad * 2) / Math.max(0.1, b.y1 - b.y0),
+  );
   const ox = (w - (b.x1 - b.x0) * k) / 2,
     oy = (h - (b.y1 - b.y0) * k) / 2;
   return (x, y) => [ox + (x - b.x0) * k, oy + (y - b.y0) * k];
@@ -96,7 +99,14 @@ export function robotOn(path: Punto[], simS: number, simE: number): { x: number;
   return { x: p.x - Math.sin(p.h) * off, y: p.y + Math.cos(p.h) * off };
 }
 
-export function poly(ctx: CanvasRenderingContext2D, Pj: Proyeccion, pts: Punto[], a: number, b: number, close = false): void {
+export function poly(
+  ctx: CanvasRenderingContext2D,
+  Pj: Proyeccion,
+  pts: Punto[],
+  a: number,
+  b: number,
+  close = false,
+): void {
   ctx.beginPath();
   for (let i = a; i < b; i++) {
     const [x, y] = Pj(pts[i].x, pts[i].y);
@@ -115,7 +125,14 @@ export const errCol = (v: number): string => {
   return `rgb(${a.map((x, i) => Math.round(x + (b[i] - x) * t)).join(",")})`;
 };
 
-export function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number): void {
+export function roundRect(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  r: number,
+): void {
   ctx.beginPath();
   ctx.moveTo(x + r, y);
   ctx.arcTo(x + w, y, x + w, y + h, r);
@@ -179,7 +196,12 @@ export function drawMap(cv: HTMLCanvasElement, m: DatosMapa): void {
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
   if (m.recording && m.raw && m.raw.length > 1) {
-    const b = bounds(m.raw.concat([{ x: -0.7, y: -0.35 }, { x: 0.7, y: 0.35 }] as Punto[])),
+    const b = bounds(
+        m.raw.concat([
+          { x: -0.7, y: -0.35 },
+          { x: 0.7, y: 0.35 },
+        ] as Punto[]),
+      ),
       Pj = proj(w, h, b);
     ctx.strokeStyle = "rgba(255,45,85,.55)";
     ctx.lineWidth = 2;
@@ -208,7 +230,11 @@ export function drawMap(cv: HTMLCanvasElement, m: DatosMapa): void {
   ctx.restore();
   if (m.mapMode === "sectores" && m.lastColsSector && m.lastColsSector.length === 3) {
     const bb = [0, Math.floor(n / 3), Math.floor((2 * n) / 3), n],
-      cm: Record<string, string> = { purple: col["--purple"], green: col["--green"], yellow: col["--yellow"] };
+      cm: Record<string, string> = {
+        purple: col["--purple"],
+        green: col["--green"],
+        yellow: col["--yellow"],
+      };
     for (let i = 0; i < 3; i++) {
       ctx.strokeStyle = cm[m.lastColsSector[i]];
       ctx.lineWidth = 5;
@@ -288,7 +314,11 @@ export interface HistSenales {
   pr: number[];
 }
 
-export function drawChart(cv: HTMLCanvasElement, hist: HistSenales, show: { err: boolean; pl: boolean; pr: boolean }): void {
+export function drawChart(
+  cv: HTMLCanvasElement,
+  hist: HistSenales,
+  show: { err: boolean; pl: boolean; pr: boolean },
+): void {
   const f = fit(cv);
   if (!f) return;
   const { ctx, w, h } = f,
@@ -313,11 +343,13 @@ export function drawChart(cv: HTMLCanvasElement, hist: HistSenales, show: { err:
     ctx.fillText(String(v), 2, y + 3);
   });
   const n = HIST * RATE;
-  ([
-    ["pr", col["--dim"], 1, 1.2],
-    ["pl", col["--ink"], 1, 1.2],
-    ["err", col["--red"], 100, 2],
-  ] as [keyof HistSenales, string, number, number][]).forEach(([k, c, sc, lw]) => {
+  (
+    [
+      ["pr", col["--dim"], 1, 1.2],
+      ["pl", col["--ink"], 1, 1.2],
+      ["err", col["--red"], 100, 2],
+    ] as [keyof HistSenales, string, number, number][]
+  ).forEach(([k, c, sc, lw]) => {
     if (!show[k]) return;
     const a = hist[k];
     if (a.length < 2) return;
@@ -366,7 +398,12 @@ export function drawHealth(
   }
 }
 
-export function drawRec(cv: HTMLCanvasElement, raw: Punto[] | null, corr: Punto[] | null, recording: boolean): void {
+export function drawRec(
+  cv: HTMLCanvasElement,
+  raw: Punto[] | null,
+  corr: Punto[] | null,
+  recording: boolean,
+): void {
   const f = fit(cv);
   if (!f) return;
   const { ctx, w, h } = f,

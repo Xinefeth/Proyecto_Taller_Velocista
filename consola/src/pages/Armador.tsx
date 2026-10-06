@@ -42,18 +42,30 @@ export function Armador() {
   const guardar = () => {
     if (!abDraft) return;
     const d = abDraft;
-    const diff = RANURAS.filter((sl) => JSON.stringify(v.parts[sl.k] || null) !== JSON.stringify(d[sl.k] || null)).map((sl) => {
+    const diff = RANURAS.filter(
+      (sl) => JSON.stringify(v.parts[sl.k] || null) !== JSON.stringify(d[sl.k] || null),
+    ).map((sl) => {
       const a = v.parts[sl.k] && byId(c.catalog, v.parts[sl.k]!.id);
       const b = d[sl.k] && byId(c.catalog, d[sl.k]!.id);
-      return a && b && a.id === b.id ? `${sl.nm} ×${d[sl.k]!.q}` : `${sl.nm}: ${b ? b.nm : "sin pieza"}`;
+      return a && b && a.id === b.id
+        ? `${sl.nm} ×${d[sl.k]!.q}`
+        : `${sl.nm}: ${b ? b.nm : "sin pieza"}`;
     });
     const nvNum = parseInt(v.v.slice(1), 10) + 1;
     const estado = r.fw ? "Actual" : v.estado === "Borrador" ? "Borrador" : "Concepto";
-    const nv = { v: "v" + nvNum, fecha: "hoy", nota: diff.join("; ") || "Cambio de piezas", estado, parts: d };
+    const nv = {
+      v: "v" + nvNum,
+      fecha: "hoy",
+      nota: diff.join("; ") || "Cambio de piezas",
+      estado,
+      parts: d,
+    };
     c.setRobots((list) =>
       list.map((x) => {
         if (x.id !== r.id) return x;
-        const ver = x.ver.map((vv, i) => (i === x.ver.length - 1 && vv.estado === "Actual" ? { ...vv, estado: "Anterior" } : vv));
+        const ver = x.ver.map((vv, i) =>
+          i === x.ver.length - 1 && vv.estado === "Actual" ? { ...vv, estado: "Anterior" } : vv,
+        );
         return { ...x, ver: [...ver, nv] };
       }),
     );
@@ -124,7 +136,12 @@ export function Armador() {
               </button>
             ))}
           </div>
-          <button type="button" className="sb ghost" style={{ width: "100%", marginTop: 10 }} onClick={nuevoRobot}>
+          <button
+            type="button"
+            className="sb ghost"
+            style={{ width: "100%", marginTop: 10 }}
+            onClick={nuevoRobot}
+          >
             <Mas />
             Nuevo robot
           </button>
@@ -168,12 +185,17 @@ export function Armador() {
             {RANURAS.map((sl) => {
               const p = parts[sl.k];
               const comp = p && byId(c.catalog, p.id);
-              const chg = !!abDraft && isCur && JSON.stringify(orig[sl.k] || null) !== JSON.stringify(p || null);
+              const chg =
+                !!abDraft &&
+                isCur &&
+                JSON.stringify(orig[sl.k] || null) !== JSON.stringify(p || null);
               return (
                 <div key={sl.k} className={`slot ${sl.opt ? "opt" : ""} ${chg ? "chg" : ""}`}>
                   <div className="sl">
                     {sl.nm}
-                    <small>{sl.req ? "obligatorio" : sl.opt ? "opcional · según reglamento" : "opcional"}</small>
+                    <small>
+                      {sl.req ? "obligatorio" : sl.opt ? "opcional · según reglamento" : "opcional"}
+                    </small>
                   </div>
                   <select
                     className="inp"
@@ -183,7 +205,11 @@ export function Armador() {
                     onChange={(e) =>
                       edit((d) => {
                         if (!e.target.value) delete d[sl.k];
-                        else d[sl.k] = { id: e.target.value, q: d[sl.k] ? d[sl.k]!.q : sl.k === "motor" ? 2 : 1 };
+                        else
+                          d[sl.k] = {
+                            id: e.target.value,
+                            q: d[sl.k] ? d[sl.k]!.q : sl.k === "motor" ? 2 : 1,
+                          };
                       })
                     }
                   >
@@ -199,11 +225,21 @@ export function Armador() {
                   <div className="q">
                     {sl.q && p ? (
                       <>
-                        <button type="button" disabled={!isCur} aria-label="Menos" onClick={() => edit((d) => (d[sl.k]!.q = clamp(d[sl.k]!.q - 1, 1, 4)))}>
+                        <button
+                          type="button"
+                          disabled={!isCur}
+                          aria-label="Menos"
+                          onClick={() => edit((d) => (d[sl.k]!.q = clamp(d[sl.k]!.q - 1, 1, 4)))}
+                        >
                           −
                         </button>
                         <span>{p.q}</span>
-                        <button type="button" disabled={!isCur} aria-label="Más" onClick={() => edit((d) => (d[sl.k]!.q = clamp(d[sl.k]!.q + 1, 1, 4)))}>
+                        <button
+                          type="button"
+                          disabled={!isCur}
+                          aria-label="Más"
+                          onClick={() => edit((d) => (d[sl.k]!.q = clamp(d[sl.k]!.q + 1, 1, 4)))}
+                        >
                           +
                         </button>
                       </>
@@ -230,7 +266,10 @@ export function Armador() {
               </span>
             </div>
           )}
-          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 12 }} data-sprint="W">
+          <div
+            style={{ display: "flex", justifyContent: "flex-end", marginTop: 12 }}
+            data-sprint="W"
+          >
             <button type="button" className="sb ghost" disabled title="Fuera de este curso (HU-12)">
               <Chispa />
               Sugerir piezas por objetivo
@@ -266,7 +305,10 @@ export function Armador() {
                   const bst = ft.length ? Math.min(...ft.map((z) => z.t!)) : null;
                   const jm = rr.length ? rr.reduce((a, z) => a + z.J, 0) / rr.length : null;
                   return (
-                    <tr key={i} style={i === vi ? { background: "rgba(255,45,85,.05)" } : undefined}>
+                    <tr
+                      key={i}
+                      style={i === vi ? { background: "rgba(255,45,85,.05)" } : undefined}
+                    >
                       <td className="m">{x.v}</td>
                       <td className="sp">{x.nota}</td>
                       <td className="m r">{money(fx.cost)}</td>
@@ -275,7 +317,9 @@ export function Armador() {
                       <td className="m r">{bst != null ? fmt(bst, 3) : "—"}</td>
                       <td className="m r">{jm != null ? fmt(jm, 2) : "—"}</td>
                       <td>
-                        <span className={`badge ${x.estado === "Actual" ? "good" : x.estado === "Descartada" || x.estado === "Anterior" ? "" : "warn"}`}>
+                        <span
+                          className={`badge ${x.estado === "Actual" ? "good" : x.estado === "Descartada" || x.estado === "Anterior" ? "" : "warn"}`}
+                        >
                           {x.estado}
                         </span>
                       </td>
@@ -292,7 +336,9 @@ export function Armador() {
         <Card pbi="HU-07" sprint="1">
           <div className="hd">
             <h2>Resumen</h2>
-            <span className={`tag ${v.estado === "Actual" ? "good" : v.estado === "Concepto" || v.estado === "Borrador" ? "warn" : ""}`}>
+            <span
+              className={`tag ${v.estado === "Actual" ? "good" : v.estado === "Concepto" || v.estado === "Borrador" ? "warn" : ""}`}
+            >
               {v.estado}
             </span>
           </div>
@@ -364,7 +410,11 @@ export function Armador() {
           <div className="hd">
             <h2>Compatibilidad</h2>
             <span className={`tag ${nb ? "red" : nw ? "warn" : "good"}`}>
-              {nb ? `${nb} error${nb > 1 ? "es" : ""}` : nw ? `${nw} aviso${nw > 1 ? "s" : ""}` : "Todo OK"}
+              {nb
+                ? `${nb} error${nb > 1 ? "es" : ""}`
+                : nw
+                  ? `${nw} aviso${nw > 1 ? "s" : ""}`
+                  : "Todo OK"}
             </span>
           </div>
           <ul className="checks">
@@ -392,7 +442,11 @@ export function Armador() {
         <Card pbi="HU-10" sprint="2">
           <div className="hd">
             <h2>Reglamento</h2>
-            <button type="button" className={`tag ${ck.some((x) => x[0] === "bad") ? "red" : "good"}`} onClick={() => c.goTab("reglamento")}>
+            <button
+              type="button"
+              className={`tag ${ck.some((x) => x[0] === "bad") ? "red" : "good"}`}
+              onClick={() => c.goTab("reglamento")}
+            >
               {c.perfil.tag} · {c.perfil.cat}
             </button>
           </div>

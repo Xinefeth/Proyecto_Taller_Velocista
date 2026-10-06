@@ -10,8 +10,14 @@ import { PbiChip } from "./Card";
 
 const TITULOS: Record<string, [string, string]> = {
   catalogo: ["Catálogo de componentes", "Specs reales, precios e inventario del club"],
-  armador: ["Armador de robots", "Arma un robot desde el catálogo: costo, masa, compatibilidad y reglamento"],
-  reglamento: ["Perfiles de reglamento", "Reglas como datos: qué permite cada competencia y categoría"],
+  armador: [
+    "Armador de robots",
+    "Arma un robot desde el catálogo: costo, masa, compatibilidad y reglamento",
+  ],
+  reglamento: [
+    "Perfiles de reglamento",
+    "Reglas como datos: qué permite cada competencia y categoría",
+  ],
 };
 
 export function Strip() {
@@ -61,7 +67,13 @@ export function Strip() {
     <header className="strip">
       <div className="rsel only-v" ref={rsel} data-pbi="HU-13" data-sprint="1">
         <PbiChip pbi="HU-13" sprint="1" inl />
-        <button type="button" className="rbtn" aria-haspopup="menu" aria-expanded={menu} onClick={() => setMenu((m) => !m)}>
+        <button
+          type="button"
+          className="rbtn"
+          aria-haspopup="menu"
+          aria-expanded={menu}
+          onClick={() => setMenu((m) => !m)}
+        >
           <b>
             <span>{c.robot.nm}</span>
             <Chevron />
@@ -92,7 +104,10 @@ export function Strip() {
                   }}
                 >
                   <b>
-                    {r.nm} <span className="dimt m" style={{ fontSize: 11, fontWeight: 400 }}>{v.v}</span>
+                    {r.nm}{" "}
+                    <span className="dimt m" style={{ fontSize: 11, fontWeight: 400 }}>
+                      {v.v}
+                    </span>
                   </b>
                   <span className={`tag ${cumple ? "good" : "red"}`} style={{ fontSize: 9 }}>
                     {cumple ? "Cumple" : "No cumple"}
@@ -108,11 +123,25 @@ export function Strip() {
               );
             })}
             <hr />
-            <button type="button" className="mi" onClick={() => { setMenu(false); c.abrirManifiesto(c.robotId); }}>
+            <button
+              type="button"
+              className="mi"
+              onClick={() => {
+                setMenu(false);
+                c.abrirManifiesto(c.robotId);
+              }}
+            >
               <b>Ver manifiesto</b>
               <small>Lo que el robot envía al conectarse (EN-02)</small>
             </button>
-            <button type="button" className="mi" onClick={() => { setMenu(false); c.abrirEnArmador(c.robotId); }}>
+            <button
+              type="button"
+              className="mi"
+              onClick={() => {
+                setMenu(false);
+                c.abrirEnArmador(c.robotId);
+              }}
+            >
               <b>Abrir en el armador</b>
               <small>Piezas, costo y versiones</small>
             </button>
@@ -127,7 +156,12 @@ export function Strip() {
 
       <div className="stats only-v" data-pbi="HU-14" data-sprint="1">
         <PbiChip pbi="HU-14" sprint="1" inl />
-        <button type="button" className="st" title="Toca para simular un cambio de batería" onClick={c.cambiarBateria}>
+        <button
+          type="button"
+          className="st"
+          title="Toca para simular un cambio de batería"
+          onClick={c.cambiarBateria}
+        >
           <span className="lbl">Batería</span>
           <span className="v">
             <span className="batbar">
@@ -136,7 +170,12 @@ export function Strip() {
             <span>{fmt(c.vbat, 2)} V</span>
           </span>
         </button>
-        <button type="button" className="st" title="Toca para simular una caída del enlace" onClick={c.toggleConnected}>
+        <button
+          type="button"
+          className="st"
+          title="Toca para simular una caída del enlace"
+          onClick={c.toggleConnected}
+        >
           <span className="lbl">Enlace WiFi</span>
           <span className="v" style={{ color: c.connected ? "" : col["--red-hi"] }}>
             {c.connected ? (
@@ -175,11 +214,25 @@ export function Strip() {
 
       <div className="spacer" />
       <div className="stripR">
-        <div className="seg only-v" role="group" aria-label="Fuente de datos" data-pbi="EN-05" data-sprint="1">
-          <button type="button" aria-pressed={c.source === "sim"} onClick={() => c.setSource("sim")}>
+        <div
+          className="seg only-v"
+          role="group"
+          aria-label="Fuente de datos"
+          data-pbi="EN-05"
+          data-sprint="1"
+        >
+          <button
+            type="button"
+            aria-pressed={c.source === "sim"}
+            onClick={() => c.setSource("sim")}
+          >
             Simulado
           </button>
-          <button type="button" aria-pressed={c.source === "robot"} onClick={() => c.setSource("robot")}>
+          <button
+            type="button"
+            aria-pressed={c.source === "robot"}
+            onClick={() => c.setSource("robot")}
+          >
             Robot
           </button>
         </div>

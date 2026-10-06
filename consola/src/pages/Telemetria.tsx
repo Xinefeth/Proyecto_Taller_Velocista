@@ -33,7 +33,12 @@ export function Telemetria() {
           </h2>
           <div className="keys">
             {keys.map(([k, col, t]) => (
-              <button key={k} type="button" aria-pressed={c.show[k]} onClick={() => c.toggleSenal(k)}>
+              <button
+                key={k}
+                type="button"
+                aria-pressed={c.show[k]}
+                onClick={() => c.toggleSenal(k)}
+              >
                 <i style={{ background: col }} />
                 {t}
               </button>
@@ -53,7 +58,12 @@ export function Telemetria() {
         </div>
         <div className="ribbon">
           {lap?.segs.map((s, i) => (
-            <span key={i} className={s.k} style={{ flex: `${s.dur / tot} 1 0` }} title={`${NOMBRES[s.k]}, ${fmt(s.dur, 2)} s`} />
+            <span
+              key={i}
+              className={s.k}
+              style={{ flex: `${s.dur / tot} 1 0` }}
+              title={`${NOMBRES[s.k]}, ${fmt(s.dur, 2)} s`}
+            />
           ))}
         </div>
         <div className="rkey">

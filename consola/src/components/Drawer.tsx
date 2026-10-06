@@ -21,7 +21,11 @@ export function Drawer() {
     : [];
   const usadoQty = usadoEn.reduce((a, x) => a + x.q, 0);
   return (
-    <aside className={`drawer ${abierto ? "on" : ""}`} aria-label="Ficha del componente" aria-hidden={!abierto}>
+    <aside
+      className={`drawer ${abierto ? "on" : ""}`}
+      aria-label="Ficha del componente"
+      aria-hidden={!abierto}
+    >
       {comp && T && (
         <>
           <div className="dh">
@@ -48,7 +52,10 @@ export function Drawer() {
               <div>
                 <div className="lbl">En el club</div>
                 <div className="v">
-                  {comp.stock} <span className="dimt" style={{ fontSize: 12 }}>· {usadoQty} en robots</span>
+                  {comp.stock}{" "}
+                  <span className="dimt" style={{ fontSize: 12 }}>
+                    · {usadoQty} en robots
+                  </span>
                 </div>
               </div>
               <div>
@@ -91,9 +98,16 @@ export function Drawer() {
               </div>
               {usadoEn.length ? (
                 usadoEn.map((x) => (
-                  <div key={x.r.id} className="row" style={{ padding: "7px 0", borderBottom: "1px solid var(--line)" }}>
+                  <div
+                    key={x.r.id}
+                    className="row"
+                    style={{ padding: "7px 0", borderBottom: "1px solid var(--line)" }}
+                  >
                     <span>
-                      {x.r.nm} <span className="dimt m" style={{ fontSize: 11 }}>{curVer(x.r).v}</span>
+                      {x.r.nm}{" "}
+                      <span className="dimt m" style={{ fontSize: 11 }}>
+                        {curVer(x.r).v}
+                      </span>
                     </span>
                     <span className="m">×{x.q}</span>
                   </div>
@@ -104,7 +118,12 @@ export function Drawer() {
                 </p>
               )}
             </div>
-            <div className="card flat" data-pbi="HU-05" data-sprint="2" style={{ padding: "12px 14px" }}>
+            <div
+              className="card flat"
+              data-pbi="HU-05"
+              data-sprint="2"
+              style={{ padding: "12px 14px" }}
+            >
               <div className="hd" style={{ marginBottom: 6 }}>
                 <h2 style={{ fontSize: 13 }}>Historial de precios</h2>
                 <span className="tag">Desde enlace</span>

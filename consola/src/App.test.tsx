@@ -26,7 +26,11 @@ describe("App", () => {
     montar();
     expect(screen.getByText("Velocista 001")).toBeTruthy();
     // Nombres únicos del riel (la nav móvil usa nombres cortos).
-    for (const nombre of ["Catálogo de componentes", "Armador de robots", "Perfiles de reglamento"]) {
+    for (const nombre of [
+      "Catálogo de componentes",
+      "Armador de robots",
+      "Perfiles de reglamento",
+    ]) {
       expect(screen.getByRole("button", { name: nombre })).toBeTruthy();
     }
   });

@@ -55,7 +55,8 @@ export class Ingeniero {
     }
     if (!this.prop || !sameP(r.p, this.prop, this.ctrl!)) {
       if (r.J < this.best && sameP(r.p, this.base!, this.ctrl!)) this.best = r.J;
-      this.msg = "Esta corrida no usó la sugerencia. Cárgala en el setup para que el ingeniero la evalúe.";
+      this.msg =
+        "Esta corrida no usó la sugerencia. Cárgala en el setup para que el ingeniero la evalúe.";
       return;
     }
     if (this.phase === 1) {
@@ -110,7 +111,8 @@ export class Ingeniero {
       this.msg = `La bayesiana necesita al menos 3 corridas con ${CTRL[ctrl].nm} (hay ${Rs.length}). Mientras tanto usa Twiddle.`;
       return;
     }
-    const nz = (p: Record<string, number>) => keys.map((k) => (p[k] - PDEF[k].min) / (PDEF[k].max - PDEF[k].min));
+    const nz = (p: Record<string, number>) =>
+      keys.map((k) => (p[k] - PDEF[k].min) / (PDEF[k].max - PDEF[k].min));
     const X = Rs.map((r) => nz(r.p)),
       Y = Rs.map((r) => r.J);
     const mean = Y.reduce((a, b) => a + b, 0) / Y.length,
@@ -123,7 +125,9 @@ export class Ingeniero {
       bsig = 0;
     for (let i = 0; i < 600; i++) {
       const loc = i < 420;
-      const x = keys.map((_, j) => clamp(loc ? b0[j] + (Math.random() - 0.5) * 0.3 : Math.random(), 0, 1));
+      const x = keys.map((_, j) =>
+        clamp(loc ? b0[j] + (Math.random() - 0.5) * 0.3 : Math.random(), 0, 1),
+      );
       let ws = 0,
         wy = 0,
         wm = 0;
@@ -178,12 +182,18 @@ export class Ingeniero {
         label: `${d.nm} siguiente`,
         val: v != null ? fmt(v, d.dec) : "—",
         dir: (dv > 0 ? "up" : dv < 0 ? "down" : "") as "up" | "down" | "",
-        delta: this.prop ? (Math.abs(dv) > 1e-9 ? `${dv > 0 ? "+" : ""}${fmt(dv, d.dec)} vs. mejor` : "sin cambio") : "",
+        delta: this.prop
+          ? Math.abs(dv) > 1e-9
+            ? `${dv > 0 ? "+" : ""}${fmt(dv, d.dec)} vs. mejor`
+            : "sin cambio"
+          : "",
       };
     });
     let mini: string;
     if (this.prop) {
-      const k = keys.find((kk) => Math.abs(this.prop![kk] - (this.base ? this.base[kk] : 0)) > 1e-9) || keys[0],
+      const k =
+          keys.find((kk) => Math.abs(this.prop![kk] - (this.base ? this.base[kk] : 0)) > 1e-9) ||
+          keys[0],
         d = PDEF[k];
       mini =
         this.method === "bayes"

@@ -35,7 +35,7 @@ for (const g of DEF) {
   let len = g.len ?? 0;
   let c = 0;
   if (g.ang) {
-    len = (Math.abs(g.ang) * Math.PI) / 180 * (g.r ?? 1);
+    len = ((Math.abs(g.ang) * Math.PI) / 180) * (g.r ?? 1);
     c = Math.sign(g.ang) / (g.r ?? 1);
   }
   TRACK.push({ len, ang: g.ang, r: g.r, c, s0: acc });
@@ -181,7 +181,8 @@ export class Simulador {
       base = q.base * (1 - 0.25 * Math.min(1, ap));
     } else {
       U = (q.kp * this.p + q.ki * this.I + q.kd * d) * 100;
-      if (A.ctrl === "adapt") base = Math.max(q.vmin, q.base * (1 - q.kv * Math.min(1, Math.abs(this.p))));
+      if (A.ctrl === "adapt")
+        base = Math.max(q.vmin, q.base * (1 - q.kv * Math.min(1, Math.abs(this.p))));
     }
     this.pl = clamp(base + U, -q.max, q.max);
     this.pr = clamp(base - U, -q.max, q.max);
@@ -292,7 +293,8 @@ export function construirMapa(raw: Punto[]): { corr: Punto[]; stats: StatsMapa }
     p.y -= (ey * i) / n;
   });
   let len = 0;
-  for (let i = 1; i < pts.length; i++) len += Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y);
+  for (let i = 1; i < pts.length; i++)
+    len += Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y);
   pts.forEach((p, i) => {
     const q = pts[Math.min(n, i + 1)],
       o = pts[Math.max(0, i - 1)];
