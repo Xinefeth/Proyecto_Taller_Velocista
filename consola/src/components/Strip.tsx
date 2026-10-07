@@ -39,6 +39,29 @@ export function Strip() {
     };
   }, [menu]);
 
+  // Frescura del enlace en segundos (visible): mientras hay enlace cuenta desde la última
+  // actualización —nunca pasa de ~1 s— y al perderlo cuenta desde la caída (criterios HU-14).
+  const [ahora, setAhora] = useState(() => Date.now());
+  const updStampRef = useRef(Date.now());
+  const prevLinkRef = useRef(c.link);
+  const dropStampRef = useRef<number | null>(null);
+  useEffect(() => {
+    const id = setInterval(() => setAhora(Date.now()), 100);
+    return () => clearInterval(id);
+  }, []);
+  if (c.connected) {
+    // c.link es un objeto nuevo en cada actualización del enlace; su identidad marca el refresco.
+    if (prevLinkRef.current !== c.link) {
+      prevLinkRef.current = c.link;
+      updStampRef.current = Date.now();
+    }
+    dropStampRef.current = null;
+  } else if (dropStampRef.current == null) {
+    dropStampRef.current = Date.now();
+  }
+  const edadEnlace = (ahora - updStampRef.current) / 1000;
+  const edadCaida = (ahora - (dropStampRef.current ?? ahora)) / 1000;
+
   const col = colores();
   const fins = c.laps.filter((l) => l.fin);
   const best = fins.length ? Math.min(...fins.map((l) => l.t)) : null;
@@ -180,10 +203,13 @@ export function Strip() {
           <span className="v" style={{ color: c.connected ? "" : col["--red-hi"] }}>
             {c.connected ? (
               <>
-                −{c.link.dbm} dBm <small>{c.link.ms} ms</small>
+                −{c.link.dbm} dBm <small>{c.link.ms} ms</small>{" "}
+                <small className="dimt">· hace {fmt(edadEnlace, 1)} s</small>
               </>
             ) : (
-              "Sin enlace"
+              <>
+                Sin enlace <small>· {fmt(edadCaida, 1)} s</small>
+              </>
             )}
           </span>
         </button>
