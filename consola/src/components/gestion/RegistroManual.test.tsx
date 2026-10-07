@@ -5,6 +5,7 @@ import App from "../../App";
 import { ProveedorConsola } from "../../stores/ConsolaContext";
 
 beforeEach(() => {
+  localStorage.clear();
   vi.stubGlobal("requestAnimationFrame", () => 0);
   vi.stubGlobal("cancelAnimationFrame", () => {});
   vi.stubGlobal("scrollTo", () => {});

@@ -24,6 +24,8 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). V
 - EN-04 (API): `GET /api/tipos-componentes` consulta los tipos, campos y capacidades en PostgreSQL, con pruebas HTTP de datos persistidos, base vacía y error 503. Contrato EN-01 actualizado.
 - EN-04 (semillas): comando `python -m app.semillas` para cargar los 14 tipos de componente, con campos/capacidades y carga repetible que conserva los registros existentes. Velocista 001 pendiente.
 - EN-04 (catálogo): modelos SQLAlchemy y migración `0002_catalogo` para tipos de componente, componentes e inventario, con pruebas en esquemas temporales de PostgreSQL. Semillas de robots y demás endpoints pendientes.
+- Consola: lo que se registra a mano (componentes y robots) se conserva en el navegador y se puede restablecer a los datos de ejemplo (HU-02, HU-06); no se pueden registrar componentes repetidos.
+- Consola: 52 pruebas del resumen del robot (costo, masa y consumo), la compatibilidad, el reglamento, la ficha, el inventario y el armador (HU-03, HU-04, HU-06, HU-07).
 - DO-03: modelo entidad-relación, diccionario de datos y trazabilidad de campos del prototipo, con capacidades declarativas de los 14 tipos de componente.
 - EN-01: contrato OpenAPI REST con ejemplos por operación, distinción de rutas existentes/propuestas y validación automática del contrato y de su cobertura del catálogo.
 - Consola: componentes comunes de gestión (EN-06) — tabla, buscador, chips, pestañas y formularios con validación — usados en el Catálogo y en el registro manual de componentes (HU-02); la búsqueda ya no distingue tildes.
@@ -37,3 +39,6 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). V
 - Consola: estructura por páginas con el sistema visual del prototipo y verificación del entorno.
 - Firmware: estructura base del robot y del cronómetro con lógica pura probada en PC.
 - Entorno: Docker Compose para PostgreSQL, scripts de arranque, CI y convenciones de trabajo.
+
+### Corregido
+- Consola: un robot nuevo queda con su versión 1 y su lista de piezas; antes el primer guardado creaba una v2 y dejaba la v1 vacía (HU-06).
