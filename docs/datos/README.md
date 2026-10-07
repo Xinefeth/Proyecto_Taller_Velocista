@@ -4,7 +4,7 @@ Versión 1.0 · 6 de octubre de 2026 · Diseño para revisión.
 
 Este documento define el modelo del sistema a partir de la consola que está en el repositorio. Incluye catálogo, inventario, armado, control, corridas, vueltas, eventos y los datos de análisis del prototipo. El motor previsto sigue siendo PostgreSQL 16.
 
-**Estado de implementación:** `0001_base` crea `evento`; `0002_catalogo` agrega `tipo_componente`, `componente` e `inventario`, con modelos SQLAlchemy y pruebas de restricciones. Las otras entidades siguen como diseño para las siguientes migraciones e historias. Tener la migración en el repositorio no la aplica a una base existente: ejecutar `alembic upgrade head`. El catálogo publica `GET /api/tipos-componentes` , `GET /api/componentes` , `POST /api/componentes` , `GET /api/componentes/{componente_id}` y `PATCH /api/componentes/{componente_id}`; los demás endpoints y la integración con la consola todavía están pendientes.
+**Estado de implementación:** migraciones `0001_base` a `0005_operaciones`, con catálogo/inventario, robots/versiones/piezas, controladores, perfiles, setups y resultados de corridas/vueltas. Las 32 operaciones REST de EN-01 están implementadas y probadas. Las semillas conservan registros existentes e incluyen Velocista 001 con v0/v1, 3 controladores y 4 perfiles. La demo opcional carga una corrida simulada. La integración de la consola con estas rutas y la adquisición automática de corridas físicas siguen pendientes. Aplicar migraciones con `alembic upgrade head`; agregar código no cambia una base ya existente.
 
 ## Entregables y fuentes
 
@@ -78,9 +78,7 @@ Las especificaciones siguen siendo opcionales, como el formulario. Un campo ause
 
 ## Implementación posterior
 
-1. Continuar los modelos SQLAlchemy por módulo y sus migraciones después de `0002_catalogo`, conservando los datos existentes. El catálogo ya está registrado en `migrations/env.py`.
-2. Completar las semillas de robots, ranuras, controladores y perfiles del prototipo; importar fechas reales (no «hoy» ni «—») e IDs sin romper referencias. Los 14 tipos y los 25 componentes con su stock inicial ya se pueden cargar con `python -m app.semillas` desde `api/`, sin sobrescribir datos existentes.
-3. Implementar los endpoints marcados como propuestos en EN-01 y los casos transaccionales de versiones/inventario.
-4. Incorporar adaptadores DTO en `consola/src/services/` y mantener separado el modo simulado. La consola actual continúa usando sus datos de maqueta hasta esa integración.
-
-No se declara cerrado el ítem en el backlog: la revisión/aprobación del equipo y la integración por PR siguen el proceso del repositorio.
+1. Conectar la consola mediante adaptadores DTO, manteniendo explícito su modo simulado.
+2. Integrar el ciclo físico de corridas/vueltas con los mensajes EN-02, su reconciliación e idempotencia persistente. El gateway actual valida y redistribuye mensajes; no crea automáticamente resultados en PostgreSQL.
+3. Implementar mapas, estudios/ensayos de optimización, autenticación y contexto extendido de eventos según sus historias; no forman parte de los 32 endpoints actuales.
+4. Revisar en equipo los resultados y continuar la integración por PR. La guía de verificación está en [pruebas-crud.md](../api/pruebas-crud.md).

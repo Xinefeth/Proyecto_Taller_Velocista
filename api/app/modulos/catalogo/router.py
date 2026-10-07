@@ -2,7 +2,7 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Path, Query
+from fastapi import APIRouter, Depends, Path, Query, Response
 from sqlalchemy.orm import Session
 
 from app.core.db import get_session
@@ -11,13 +11,53 @@ from app.modulos.catalogo.schemas import (
     ComponenteCrear,
     ComponenteEditar,
     ComponenteSalida,
+    InventarioActualizar,
+    InventarioSalida,
     PaginaComponentes,
+    PaginaInventario,
     TipoComponenteId,
     TipoComponenteSalida,
 )
 
 router = APIRouter(prefix="/api", tags=["catálogo"])
 SesionBD = Annotated[Session, Depends(get_session)]
+
+
+@router.get(
+    "/inventario",
+    response_model=PaginaInventario,
+    operation_id="listarInventario",
+    summary="Consultar inventario",
+)
+def listar_inventario(
+    session: SesionBD,
+    limite: Annotated[int, Query(ge=1, le=200)] = 50,
+    offset: Annotated[int, Query(ge=0, le=9007199254740991)] = 0,
+):
+    """Stock, revisión y demanda de la última versión de cada robot activo.
+
+    Incluye archivados con stock o demanda. disponible puede ser negativo;
+    faltante=max(0, -disponible). No refleja robots simulados de la consola.
+    """
+    return service.listar_inventario(session, limite=limite, offset=offset)
+
+
+@router.put(
+    "/inventario/{componente_id}",
+    response_model=InventarioSalida,
+    operation_id="actualizarInventario",
+    summary="Actualizar existencias con control de concurrencia",
+)
+def actualizar_inventario(
+    componente_id: Annotated[str, Path(min_length=1, max_length=40)],
+    datos: InventarioActualizar,
+    session: SesionBD,
+):
+    """Fija stock total y aumenta revisión; revisión obsoleta responde 409.
+
+    Admite archivados. Calcula asignaciones desde las versiones persistidas de robots activos.
+    """
+    return service.actualizar_inventario(session, componente_id, datos)
 
 
 @router.post(
@@ -61,6 +101,21 @@ def editar_componente(
     El tipo, ID y stock no son editables aquí. consumo_a admite null.
     """
     return service.editar_componente(session, componente_id, datos)
+
+
+@router.delete(
+    "/componentes/{componente_id}",
+    status_code=204,
+    response_class=Response,
+    operation_id="archivarComponente",
+    summary="Archivar componente",
+)
+def archivar_componente(
+    componente_id: Annotated[str, Path(min_length=1, max_length=40)], session: SesionBD
+):
+    """Conserva la ficha y stock; repetir devuelve 204. Un ID inexistente responde 404."""
+    service.archivar_componente(session, componente_id)
+    return Response(status_code=204)
 
 
 @router.get(

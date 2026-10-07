@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
+from app.core import actividad
 from app.core.config import RAIZ_REPO, settings
 from app.core.db import db_disponible
 from app.core.errores import registrar_manejadores
@@ -21,6 +22,7 @@ ROUTERS_MODULOS = [auth, catalogo, armador, reglamento, corridas, optimizacion, 
 
 
 def create_app() -> FastAPI:
+    actividad.robot_corriendo = ws.robot_corriendo
     configurar_logging(settings.log_level)
     app = FastAPI(
         title="APAEC Lab API",

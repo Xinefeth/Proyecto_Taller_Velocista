@@ -1,0 +1,210 @@
+{
+  "ranuras": [
+    {
+      "id": "mcu",
+      "tipo_id": "mcu",
+      "nombre": "Microcontrolador",
+      "obligatoria": true,
+      "cantidad_editable": false,
+      "depende_reglamento": false
+    },
+    {
+      "id": "exp",
+      "tipo_id": "exp",
+      "nombre": "Placa de expansión",
+      "obligatoria": false,
+      "cantidad_editable": false,
+      "depende_reglamento": false
+    },
+    {
+      "id": "linea",
+      "tipo_id": "linea",
+      "nombre": "Sensores de línea",
+      "obligatoria": true,
+      "cantidad_editable": true,
+      "depende_reglamento": false
+    },
+    {
+      "id": "mux",
+      "tipo_id": "mux",
+      "nombre": "Multiplexor",
+      "obligatoria": false,
+      "cantidad_editable": false,
+      "depende_reglamento": false
+    },
+    {
+      "id": "motor",
+      "tipo_id": "motor",
+      "nombre": "Motores",
+      "obligatoria": true,
+      "cantidad_editable": true,
+      "depende_reglamento": false
+    },
+    {
+      "id": "driver",
+      "tipo_id": "driver",
+      "nombre": "Driver",
+      "obligatoria": true,
+      "cantidad_editable": false,
+      "depende_reglamento": false
+    },
+    {
+      "id": "bat",
+      "tipo_id": "bat",
+      "nombre": "Batería",
+      "obligatoria": true,
+      "cantidad_editable": false,
+      "depende_reglamento": false
+    },
+    {
+      "id": "reg",
+      "tipo_id": "reg",
+      "nombre": "Regulador",
+      "obligatoria": true,
+      "cantidad_editable": false,
+      "depende_reglamento": false
+    },
+    {
+      "id": "rueda",
+      "tipo_id": "rueda",
+      "nombre": "Ruedas (par)",
+      "obligatoria": false,
+      "cantidad_editable": false,
+      "depende_reglamento": false
+    },
+    {
+      "id": "chasis",
+      "tipo_id": "chasis",
+      "nombre": "Chasis",
+      "obligatoria": true,
+      "cantidad_editable": false,
+      "depende_reglamento": false
+    },
+    {
+      "id": "sw",
+      "tipo_id": "sw",
+      "nombre": "Interruptor",
+      "obligatoria": false,
+      "cantidad_editable": false,
+      "depende_reglamento": false
+    },
+    {
+      "id": "enc",
+      "tipo_id": "enc",
+      "nombre": "Encoders",
+      "obligatoria": false,
+      "cantidad_editable": false,
+      "depende_reglamento": true
+    },
+    {
+      "id": "imu",
+      "tipo_id": "imu",
+      "nombre": "IMU",
+      "obligatoria": false,
+      "cantidad_editable": false,
+      "depende_reglamento": true
+    },
+    {
+      "id": "turb",
+      "tipo_id": "turb",
+      "nombre": "Turbina",
+      "obligatoria": false,
+      "cantidad_editable": false,
+      "depende_reglamento": true
+    }
+  ],
+  "versiones": [
+    {
+      "ordinal": 0,
+      "fecha": "2026-09-20T00:00:00-05:00",
+      "nota": "Prueba de concepto: 1 QTR-8A directo al ESP32",
+      "estado": "Descartada",
+      "piezas": {
+        "mcu": {
+          "componente_id": "c01",
+          "cantidad": 1
+        },
+        "linea": {
+          "componente_id": "c05",
+          "cantidad": 1
+        },
+        "motor": {
+          "componente_id": "c09",
+          "cantidad": 2
+        },
+        "driver": {
+          "componente_id": "c12",
+          "cantidad": 1
+        },
+        "bat": {
+          "componente_id": "c15",
+          "cantidad": 1
+        },
+        "reg": {
+          "componente_id": "c17",
+          "cantidad": 1
+        },
+        "rueda": {
+          "componente_id": "c18",
+          "cantidad": 1
+        },
+        "chasis": {
+          "componente_id": "c20",
+          "cantidad": 1
+        }
+      }
+    },
+    {
+      "ordinal": 1,
+      "fecha": "2026-09-29T00:00:00-05:00",
+      "nota": "Primer armado: 2 QTR-8A con multiplexor de 16 canales",
+      "estado": "Actual",
+      "piezas": {
+        "mcu": {
+          "componente_id": "c01",
+          "cantidad": 1
+        },
+        "exp": {
+          "componente_id": "c04",
+          "cantidad": 1
+        },
+        "linea": {
+          "componente_id": "c05",
+          "cantidad": 2
+        },
+        "mux": {
+          "componente_id": "c08",
+          "cantidad": 1
+        },
+        "motor": {
+          "componente_id": "c09",
+          "cantidad": 2
+        },
+        "driver": {
+          "componente_id": "c12",
+          "cantidad": 1
+        },
+        "bat": {
+          "componente_id": "c14",
+          "cantidad": 1
+        },
+        "reg": {
+          "componente_id": "c16",
+          "cantidad": 1
+        },
+        "rueda": {
+          "componente_id": "c18",
+          "cantidad": 1
+        },
+        "chasis": {
+          "componente_id": "c19",
+          "cantidad": 1
+        },
+        "sw": {
+          "componente_id": "c21",
+          "cantidad": 1
+        }
+      }
+    }
+  ]
+}

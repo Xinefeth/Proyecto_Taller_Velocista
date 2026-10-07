@@ -11,7 +11,7 @@ Define las operaciones que necesitan la consola, el Catálogo y el Armador, alin
 - [generar_contrato.py](generar_contrato.py): fuente editable del contrato, esquemas y ejemplos; genera también los tipos/capacidades de DO-03.
 - [validar_contrato.py](validar_contrato.py): comprueba OpenAPI, referencias, todos los ejemplos, cobertura de campos de tipos del prototipo y sincronización de archivos generados.
 
-`x-estado: implementado` identifica las diez operaciones presentes en el backend; `propuesto` identifica el contrato de las siguientes historias. **Este archivo no sustituye el `/openapi.json` servido por FastAPI**: `/docs` solo muestra lo implementado. Los ejemplos usan IDs ilustrativos; no son un script de carga ni una secuencia que deba ejecutarse sobre una base vacía.
+`x-estado: implementado` identifica las 32 operaciones del contrato, disponibles en el backend. La guía [pruebas-crud.md](pruebas-crud.md) reúne la preparación y una secuencia de pruebas manuales. **Este archivo no sustituye el `/openapi.json` servido por FastAPI**: `/docs` solo muestra lo implementado. Los ejemplos usan IDs ilustrativos; no son un script de carga ni una secuencia que deba ejecutarse sobre una base vacía.
 
 ## Operaciones
 
@@ -20,31 +20,34 @@ Todos los paths incluyen `/api`. Los IDs de robot/componente son cadenas; versi�
 | Recurso | Método y ruta | Uso en consola | Estado |
 | --- | --- | --- | --- |
 | Tipos | GET `/api/tipos-componentes` | Formulario dinámico y capacidades | Implementado |
-| Ranuras | GET `/api/ranuras` | Filas, tipos y cantidades del Armador | Propuesto |
+| Ranuras | GET `/api/ranuras` | Filas, tipos y cantidades del Armador | Implementado |
 | Componentes | GET `/api/componentes` | Buscar y listar | Implementado |
 | Registro | POST `/api/componentes` | Registrar componente | Implementado |
 | Ficha | GET `/api/componentes/{componente_id}` | Ficha y stock, incluidos archivados | Implementado |
 | Edición | PATCH `/api/componentes/{componente_id}` | Edición parcial de ficha | Implementado |
-| Archivado | DELETE `/api/componentes/{componente_id}` | Archivado | Propuesto |
-| Inventario | GET `/api/inventario` | Total, asignado, disponible y faltantes | Propuesto |
-| Existencias | PUT `/api/inventario/{componente_id}` | Ajustar stock total con revisión | Propuesto |
-| Robots | GET, POST `/api/robots` | Selector y registro | Propuesto |
-| Robot | GET, PATCH, DELETE `/api/robots/{robot_id}` | Identificación y archivado | Propuesto |
-| Versiones | GET, POST `/api/robots/{robot_id}/versiones` | Historial y nuevo armado | Propuesto |
-| Versión | GET `/api/robots/{robot_id}/versiones/{version_id}` | Ver armado histórico y sus snapshots | Propuesto |
-| Controladores | GET `/api/controladores` | Rangos, presets y parámetros optimizables | Propuesto |
-| Reglamento | GET `/api/perfiles` | Categoría y restricciones | Propuesto |
-| Setups | GET, POST `/api/robots/{robot_id}/setups` | Listar y guardar en PostgreSQL | Propuesto |
-| Setup | GET, DELETE `/api/setups/{setup_id}` | Recuperar o archivar | Propuesto |
-| Corridas | GET `/api/corridas` | Historial, comparación y exportación | Propuesto |
-| Corrida | GET, PATCH `/api/corridas/{corrida_id}` | Detalle y nota | Propuesto |
-| Vueltas | GET `/api/corridas/{corrida_id}/vueltas` | Sectores y segmentos | Propuesto |
+| Archivado | DELETE `/api/componentes/{componente_id}` | Baja lógica, conserva ficha y stock | Implementado |
+| Inventario | GET `/api/inventario` | Stock, revisión y demanda de la última versión de robots activos | Implementado |
+| Existencias | PUT `/api/inventario/{componente_id}` | Ajustar stock total con revisión | Implementado |
+| Robots | GET `/api/robots` | Selector paginado de robots activos | Implementado |
+| Registro de robot | POST `/api/robots` | Registro sin versiones | Implementado |
+| Ficha de robot | GET `/api/robots/{robot_id}` | Identificación, incluidos archivados | Implementado |
+| Robot | PATCH, DELETE `/api/robots/{robot_id}` | Edición y archivado | Implementado |
+| Versiones | GET `/api/robots/{robot_id}/versiones` | Historial y piezas con snapshots | Implementado |
+| Nuevo armado | POST `/api/robots/{robot_id}/versiones` | Crear versión | Implementado |
+| Versión | GET `/api/robots/{robot_id}/versiones/{version_id}` | Ver armado histórico y sus snapshots | Implementado |
+| Controladores | GET `/api/controladores` | Rangos, presets y parámetros optimizables | Implementado |
+| Reglamento | GET `/api/perfiles` | Categoría y restricciones | Implementado |
+| Setups | GET, POST `/api/robots/{robot_id}/setups` | Listar y guardar en PostgreSQL | Implementado |
+| Setup | GET, DELETE `/api/setups/{setup_id}` | Recuperar o archivar | Implementado |
+| Corridas | GET `/api/corridas` | Historial, comparación y exportación | Implementado |
+| Corrida | GET, PATCH `/api/corridas/{corrida_id}` | Detalle y nota | Implementado |
+| Vueltas | GET `/api/corridas/{corrida_id}/vueltas` | Sectores y segmentos | Implementado |
 | Salud | GET `/api/salud` | Franja de estado y Sistema | Implementado |
 | Eventos | GET, POST `/api/eventos` | Registro del sistema | Implementado |
 | Manifiesto | GET `/api/dispositivos/velocista/manifiesto` | Capacidades del robot conectado | Implementado |
 | Comandos | POST `/api/dispositivos/{dispositivo}/comandos` | Calibrar, arrancar, detener, setup, modo, línea y rearmar meta | Implementado |
 
-Los mensajes de telemetría y ack permanecen en `/ws/consola` según EN-02. Las corridas y vueltas físicas se crean desde el procesamiento de esos mensajes; no se define un POST manual que pueda suplantar un tiempo del cronómetro. La importación por enlace, autenticación, persistencia de mapas y ejecución de optimizadores requieren sus historias; sus datos están cubiertos por DO-03 sin inventar rutas ya operativas.
+Los mensajes de telemetría y ack permanecen en `/ws/consola` según EN-02. La persistencia automática de corridas y vueltas físicas desde esos mensajes queda pendiente de la integración de adquisición; los endpoints históricos consultan PostgreSQL y `python -m app.demo` permite probarlos con datos explícitamente simulados; no se define un POST manual que pueda suplantar un tiempo del cronómetro. La importación por enlace, autenticación, persistencia de mapas y ejecución de optimizadores requieren sus historias; sus datos están cubiertos por DO-03 sin inventar rutas ya operativas.
 
 ## Convenciones
 
@@ -97,4 +100,4 @@ python docs/api/validar_contrato.py
 
 La generación solo utiliza la biblioteca estándar. La validación usa `openapi-spec-validator` y JSON Schema; no necesita PostgreSQL, FastAPI, Node ni hardware. El job `contratos` del CI ejecuta la misma comprobación. Los archivos generados se versionan para que el contrato sea legible sin ejecutar herramientas. Editar la fuente y regenerar; no corregir a mano solo el JSON.
 
-La validación de ejemplos y de esquemas comprueba el **contrato de diseño**, no demuestra que los endpoints propuestos estén implementados. Las futuras historias deben agregar pruebas HTTP, de persistencia y de concurrencia contra este contrato.
+La validación de ejemplos y de esquemas comprueba el **contrato de diseño**, no demuestra que los endpoints propuestos estén implementados. Las pruebas HTTP, de persistencia y de concurrencia están en `api/tests/integration/`, con esquemas temporales que no modifican los datos de trabajo.

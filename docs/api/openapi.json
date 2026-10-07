@@ -612,7 +612,7 @@
         "tags": [
           "ranuras"
         ],
-        "x-estado": "propuesto",
+        "x-estado": "implementado",
         "x-ejemplo-peticion": {
           "metodo": "GET",
           "url": "/api/ranuras"
@@ -1370,7 +1370,7 @@
       "patch": {
         "operationId": "editarComponente",
         "summary": "Editar ficha sin alterar versiones históricas",
-        "description": "PATCH parcial: conserva campos omitidos. especificaciones reemplaza el objeto completo y se valida contra el tipo existente. Solo consumo_a admite null. Tipo, ID, archivado y stock no se editan aquí. Archivado responde 409; inexistente 404. Bloquea la ficha durante la edición y no modifica inventario. Las versiones históricas siguen pendientes de implementación.",
+        "description": "PATCH parcial: conserva campos omitidos. especificaciones reemplaza el objeto completo y se valida contra el tipo existente. Solo consumo_a admite null. Tipo, ID, archivado y stock no se editan aquí. Archivado responde 409; inexistente 404. Bloquea la ficha durante la edición y no modifica inventario. Las instantáneas de versiones existentes se conservan.",
         "tags": [
           "componentes"
         ],
@@ -1564,11 +1564,11 @@
       "delete": {
         "operationId": "archivarComponente",
         "summary": "Archivar componente",
-        "description": "Baja lógica, conserva referencias y snapshots; excluye de nuevas selecciones. Repetir sobre un archivado devuelve 204. Un id inexistente devuelve 404.",
+        "description": "Baja lógica con bloqueo de fila; conserva ficha, stock y revisión de inventario. Excluye del listado; la consulta por ID sigue disponible. Las versiones conservan sus instantáneas y referencias. Repetir sobre un archivado devuelve 204. Un id inexistente devuelve 404.",
         "tags": [
           "componentes"
         ],
-        "x-estado": "propuesto",
+        "x-estado": "implementado",
         "x-ejemplo-peticion": {
           "metodo": "DELETE",
           "url": "/api/componentes/c05"
@@ -1720,11 +1720,11 @@
       "get": {
         "operationId": "listarInventario",
         "summary": "Inventario total, asignado y faltante",
-        "description": "en_robots suma cantidades en la última versión de cada robot activo, incluidos Concepto y Borrador como en el prototipo. disponible = stock - en_robots (puede ser negativo); faltante = max(0, -disponible). Incluye componentes archivados con stock o asignaciones.",
+        "description": "No refleja robots simulados de la consola. Orden por componente_id; página vacía si no hay resultados. Incluye activos sin stock. en_robots suma cantidades en la última versión de cada robot activo, incluidos Concepto y Borrador como en el prototipo. disponible = stock - en_robots (puede ser negativo); faltante = max(0, -disponible). Incluye componentes archivados con stock o asignaciones.",
         "tags": [
           "inventario"
         ],
-        "x-estado": "propuesto",
+        "x-estado": "implementado",
         "x-ejemplo-peticion": {
           "metodo": "GET",
           "url": "/api/inventario?limite=50&offset=0"
@@ -1870,11 +1870,11 @@
       "put": {
         "operationId": "actualizarInventario",
         "summary": "Actualizar existencias con control de concurrencia",
-        "description": "Actualizar existencias con control de concurrencia",
+        "description": "Fija stock total y compara e incrementa revisión en un único UPDATE. Revisión obsoleta responde 409 revision_obsoleta; inventario inexistente 404. Admite componentes archivados. Stock entre 0 y 2147483647; revisión entre 1 y 2147483647, límite alcanzado responde 409 revision_agotada. Calcula en_robots desde la última versión de cada robot activo, disponible=stock-en_robots y faltante=max(0,-disponible). No modifica la ficha del componente.",
         "tags": [
           "inventario"
         ],
-        "x-estado": "propuesto",
+        "x-estado": "implementado",
         "x-ejemplo-peticion": {
           "metodo": "PUT",
           "url": "/api/inventario/c05",
@@ -2059,11 +2059,11 @@
       "get": {
         "operationId": "listarRobots",
         "summary": "Listar robots",
-        "description": "Listar robots",
+        "description": "Robots no archivados ordenados por codigo_corto/id. total se calcula antes de paginar. version_actual_id es null hasta cargar una versión; la semilla v001 incluye v0/v1.",
         "tags": [
           "robots"
         ],
-        "x-estado": "propuesto",
+        "x-estado": "implementado",
         "x-ejemplo-peticion": {
           "metodo": "GET",
           "url": "/api/robots?limite=50&offset=0"
@@ -2084,7 +2084,7 @@
                       "codigo_corto": "001",
                       "tipo": "velocista",
                       "firmware": "0.3.1",
-                      "version_actual_id": 1,
+                      "version_actual_id": 2,
                       "archivado": false
                     }
                   ],
@@ -2208,11 +2208,11 @@
       "post": {
         "operationId": "crearRobot",
         "summary": "Registrar robot sin versiones",
-        "description": "Registrar robot sin versiones",
+        "description": "Genera un ID único, recorta espacios y registra identificación sin versiones. Código corto duplicado devuelve 409. firmware es opcional, null por defecto. No crea piezas ni demanda de inventario.",
         "tags": [
           "robots"
         ],
-        "x-estado": "propuesto",
+        "x-estado": "implementado",
         "x-ejemplo-peticion": {
           "metodo": "POST",
           "url": "/api/robots",
@@ -2366,11 +2366,11 @@
       "get": {
         "operationId": "obtenerRobot",
         "summary": "Consultar robot",
-        "description": "Consultar robot",
+        "description": "Devuelve identificación por ID, incluidos archivados; inexistente responde 404. version_actual_id referencia la última versión del mismo robot, o null si no tiene ninguna.",
         "tags": [
           "robots"
         ],
-        "x-estado": "propuesto",
+        "x-estado": "implementado",
         "x-ejemplo-peticion": {
           "metodo": "GET",
           "url": "/api/robots/v001"
@@ -2389,7 +2389,7 @@
                   "codigo_corto": "001",
                   "tipo": "velocista",
                   "firmware": "0.3.1",
-                  "version_actual_id": 1,
+                  "version_actual_id": 2,
                   "archivado": false
                 }
               }
@@ -2520,7 +2520,7 @@
         "tags": [
           "robots"
         ],
-        "x-estado": "propuesto",
+        "x-estado": "implementado",
         "x-ejemplo-peticion": {
           "metodo": "PATCH",
           "url": "/api/robots/v001",
@@ -2706,7 +2706,7 @@
         "tags": [
           "robots"
         ],
-        "x-estado": "propuesto",
+        "x-estado": "implementado",
         "x-ejemplo-peticion": {
           "metodo": "DELETE",
           "url": "/api/robots/v001"
@@ -2858,11 +2858,11 @@
       "get": {
         "operationId": "listarVersiones",
         "summary": "Historial de versiones del robot",
-        "description": "Orden por número de versión ascendente. La última es la seleccionada por el prototipo.",
+        "description": "Orden por número de versión ascendente. Incluye piezas con sus instantáneas persistidas, sin sustituirlas por el catálogo actual. Un robot existente sin versiones responde página vacía; inexistente 404. Admite robots archivados.",
         "tags": [
           "robots"
         ],
-        "x-estado": "propuesto",
+        "x-estado": "implementado",
         "x-ejemplo-peticion": {
           "metodo": "GET",
           "url": "/api/robots/v001/versiones?limite=50&offset=0"
@@ -3245,7 +3245,7 @@
         "tags": [
           "robots"
         ],
-        "x-estado": "propuesto",
+        "x-estado": "implementado",
         "x-ejemplo-peticion": {
           "metodo": "POST",
           "url": "/api/robots/v001/versiones",
@@ -3727,11 +3727,11 @@
       "get": {
         "operationId": "obtenerVersion",
         "summary": "Consultar una versión del robot",
-        "description": "404 si la versión no pertenece al robot, aunque exista bajo otro robot.",
+        "description": "404 si la versión no pertenece al robot, aunque exista bajo otro robot. Incluye piezas e instantáneas históricas. Admite robots archivados.",
         "tags": [
           "robots"
         ],
-        "x-estado": "propuesto",
+        "x-estado": "implementado",
         "x-ejemplo-peticion": {
           "metodo": "GET",
           "url": "/api/robots/v001/versiones/1"
@@ -4096,7 +4096,7 @@
         "tags": [
           "controladores"
         ],
-        "x-estado": "propuesto",
+        "x-estado": "implementado",
         "x-ejemplo-peticion": {
           "metodo": "GET",
           "url": "/api/controladores"
@@ -4277,7 +4277,7 @@
         "tags": [
           "perfiles"
         ],
-        "x-estado": "propuesto",
+        "x-estado": "implementado",
         "x-ejemplo-peticion": {
           "metodo": "GET",
           "url": "/api/perfiles"
@@ -4419,7 +4419,7 @@
         "tags": [
           "robots"
         ],
-        "x-estado": "propuesto",
+        "x-estado": "implementado",
         "x-ejemplo-peticion": {
           "metodo": "GET",
           "url": "/api/robots/v001/setups?limite=50&offset=0&version_id=1"
@@ -4618,7 +4618,7 @@
         "tags": [
           "robots"
         ],
-        "x-estado": "propuesto",
+        "x-estado": "implementado",
         "x-ejemplo-peticion": {
           "metodo": "POST",
           "url": "/api/robots/v001/setups",
@@ -4831,7 +4831,7 @@
         "tags": [
           "setups"
         ],
-        "x-estado": "propuesto",
+        "x-estado": "implementado",
         "x-ejemplo-peticion": {
           "metodo": "GET",
           "url": "/api/setups/1"
@@ -4987,7 +4987,7 @@
         "tags": [
           "setups"
         ],
-        "x-estado": "propuesto",
+        "x-estado": "implementado",
         "x-ejemplo-peticion": {
           "metodo": "DELETE",
           "url": "/api/setups/1"
@@ -5138,11 +5138,11 @@
       "get": {
         "operationId": "listarCorridas",
         "summary": "Historial para tiempos, comparación y CSV",
-        "description": "Orden por fecha e id descendentes. En competencia una corrida contiene un intento de una vuelta; J se calcula en servidor: tiempo_s + 2 × error_acumulado, o 120 si no termina. CSV se construye en la consola, recorriendo páginas.",
+        "description": "Orden por fecha e id descendentes. En competencia una corrida contiene un intento de una vuelta; en pruebas se selecciona la mejor vuelta terminada por J, desempate por número. J se calcula en servidor: tiempo_s + 2 × error_acumulado, o 120 si ninguna termina. CSV se construye en la consola, recorriendo páginas.",
         "tags": [
           "corridas"
         ],
-        "x-estado": "propuesto",
+        "x-estado": "implementado",
         "x-ejemplo-peticion": {
           "metodo": "GET",
           "url": "/api/corridas?limite=50&offset=0&robot_id=v001&version_id=1&controlador_id=pid&fuente=robot"
@@ -5366,7 +5366,7 @@
         "tags": [
           "corridas"
         ],
-        "x-estado": "propuesto",
+        "x-estado": "implementado",
         "x-ejemplo-peticion": {
           "metodo": "GET",
           "url": "/api/corridas/1"
@@ -5560,7 +5560,7 @@
         "tags": [
           "corridas"
         ],
-        "x-estado": "propuesto",
+        "x-estado": "implementado",
         "x-ejemplo-peticion": {
           "metodo": "PATCH",
           "url": "/api/corridas/1",
@@ -5626,6 +5626,26 @@
                       "detail": {
                         "motivo": "no_encontrado",
                         "detalle": "No existe el recurso solicitado"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "La revisión o el estado del recurso cambió",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNegocio"
+                },
+                "examples": {
+                  "negocio": {
+                    "value": {
+                      "detail": {
+                        "motivo": "conflicto",
+                        "detalle": "La revisión o el estado del recurso cambió"
                       }
                     }
                   }
@@ -5752,7 +5772,7 @@
         "tags": [
           "corridas"
         ],
-        "x-estado": "propuesto",
+        "x-estado": "implementado",
         "x-ejemplo-peticion": {
           "metodo": "GET",
           "url": "/api/corridas/1/vueltas?limite=50&offset=0"

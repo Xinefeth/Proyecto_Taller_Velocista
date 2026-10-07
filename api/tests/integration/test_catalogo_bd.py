@@ -43,6 +43,12 @@ def conexion(requiere_db, migracion):
         conn.execute(text(f'SET LOCAL search_path TO "{esquema}"'))
         with Operations.context(MigrationContext.configure(conn)):
             migracion.upgrade()
+            for nombre in ["0003_robot", "0004_versiones", "0005_operaciones"]:
+                archivo = Path(__file__).resolve().parents[2] / f"migrations/versions/{nombre}.py"
+                spec = importlib.util.spec_from_file_location(nombre, archivo)
+                modulo = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(modulo)
+                modulo.upgrade()
             yield conn
         transaccion.rollback()
 
@@ -64,7 +70,20 @@ def poblar(conn):
 
 
 def test_migracion_coincide_con_modelos(conexion):
-    assert set(inspect(conexion).get_table_names()) == TABLAS
+    assert set(inspect(conexion).get_table_names()) == TABLAS | {
+        "controlador",
+        "perfil_reglamento",
+        "setup",
+        "corrida",
+        "vuelta",
+        "sector_vuelta",
+        "segmento_vuelta",
+    } | {
+        "robot",
+        "ranura",
+        "version",
+        "version_componente",
+    }
     ctx = MigrationContext.configure(
         conexion,
         opts={
@@ -132,6 +151,12 @@ def test_no_elimina_referencias_del_inventario(conexion):
 
 
 def test_downgrade_deja_el_esquema_vacio(conexion, migracion):
+    for nombre in ["0005_operaciones", "0004_versiones", "0003_robot"]:
+        archivo = Path(__file__).resolve().parents[2] / f"migrations/versions/{nombre}.py"
+        spec = importlib.util.spec_from_file_location(nombre, archivo)
+        modulo = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(modulo)
+        modulo.downgrade()
     migracion.downgrade()
     assert inspect(conexion).get_table_names() == []
 
@@ -296,6 +321,7 @@ def test_comando_semillas_se_puede_repetir(conexion, monkeypatch, capsys):
     assert "Tipos nuevos: 0." in salida
     assert "Componentes nuevos: 0. Inventarios nuevos: 0." in salida
     assert "Total de componentes: 25. Total de inventarios: 25." in salida
+    assert "Robots nuevos: 0. Total de robots: 1." in salida
 
 
 @pytest.fixture()
@@ -593,3 +619,198 @@ def test_editar_revierte_si_falla_guardado(cliente_catalogo, catalogo_inicial, m
         respuesta = cliente_catalogo.patch("/api/componentes/c22", json={"precio": 65})
         assert respuesta.status_code == 503
     assert cliente_catalogo.get("/api/componentes/c22").json() == anterior
+
+
+def test_archivar_conserva_ficha_inventario_y_es_repetible(
+    cliente_catalogo, catalogo_inicial, conexion
+):
+    anterior = cliente_catalogo.get("/api/componentes/c22").json()
+    for _ in range(2):
+        respuesta = cliente_catalogo.delete("/api/componentes/c22")
+        assert respuesta.status_code == 204
+        assert respuesta.content == b""
+    assert cliente_catalogo.get("/api/componentes/c22").json() == {**anterior, "archivado": True}
+    pagina = cliente_catalogo.get("/api/componentes").json()
+    assert pagina["total"] == 24
+    assert "c22" not in {c["id"] for c in pagina["items"]}
+    with Session(bind=conexion, join_transaction_mode="create_savepoint") as session:
+        assert service.contar_catalogo(session) == (25, 25)
+        inventario = session.get(Inventario, "c22")
+        assert (inventario.stock, inventario.revision) == (anterior["stock"], 1)
+    assert cliente_catalogo.patch("/api/componentes/c22", json={"precio": 40}).status_code == 409
+
+
+def test_archivar_inexistente(cliente_catalogo):
+    respuesta = cliente_catalogo.delete("/api/componentes/no-existe")
+    assert respuesta.status_code == 404
+    assert respuesta.json()["detail"]["motivo"] == "componente_no_encontrado"
+
+
+def test_archivar_valida_id(cliente):
+    assert cliente.delete("/api/componentes/" + "x" * 41).status_code == 422
+
+
+def test_archivar_revierte_si_falla_guardado(cliente_catalogo, catalogo_inicial, monkeypatch):
+    anterior = cliente_catalogo.get("/api/componentes/c22").json()
+    with monkeypatch.context() as parche:
+
+        def falla_commit(session):
+            raise OperationalError("COMMIT", {}, Exception("fallo al confirmar"))
+
+        parche.setattr(Session, "commit", falla_commit)
+        assert cliente_catalogo.delete("/api/componentes/c22").status_code == 503
+    assert cliente_catalogo.get("/api/componentes/c22").json() == anterior
+
+
+def test_inventario_stock_y_revision_persistidos(cliente_catalogo, catalogo_inicial, conexion):
+    conexion.execute(
+        update(Inventario).where(Inventario.componente_id == "c05").values(stock=7, revision=3)
+    )
+    respuesta = cliente_catalogo.get("/api/inventario")
+    assert respuesta.status_code == 200
+    pagina = respuesta.json()
+    assert (pagina["total"], pagina["limite"], pagina["offset"]) == (25, 50, 0)
+    esperados = [
+        {
+            "componente_id": c["id"],
+            "stock": c["stock"],
+            "en_robots": 0,
+            "disponible": c["stock"],
+            "faltante": 0,
+            "revision": 1,
+        }
+        for c in catalogo_inicial
+    ]
+    next(c for c in esperados if c["componente_id"] == "c05").update(
+        stock=7, disponible=7, revision=3
+    )
+    assert pagina["items"] == sorted(esperados, key=lambda c: c["componente_id"])
+
+
+def test_inventario_paginado(cliente_catalogo, catalogo_inicial):
+    primera = cliente_catalogo.get("/api/inventario?limite=4").json()
+    segunda = cliente_catalogo.get("/api/inventario?limite=4&offset=4").json()
+    completa = cliente_catalogo.get("/api/inventario").json()
+    assert primera["total"] == segunda["total"] == 25
+    assert primera["items"] + segunda["items"] == completa["items"][:8]
+    assert cliente_catalogo.get("/api/inventario?offset=99").json()["items"] == []
+
+
+def test_inventario_incluye_archivados_con_stock(cliente_catalogo, catalogo_inicial, conexion):
+    conexion.execute(
+        update(Componente).where(Componente.id.in_(["c22", "c24"])).values(archivado=True)
+    )
+    pagina = cliente_catalogo.get("/api/inventario").json()
+    ids = {c["componente_id"] for c in pagina["items"]}
+    assert "c22" in ids  # Archivado con existencias.
+    assert "c24" not in ids  # Archivado sin stock ni asignaciones.
+    assert "c25" in ids  # Activo sin stock.
+    assert pagina["total"] == 24
+
+
+def test_inventario_vacio(cliente_catalogo):
+    respuesta = cliente_catalogo.get("/api/inventario")
+    assert respuesta.status_code == 200
+    assert respuesta.json() == {"items": [], "total": 0, "limite": 50, "offset": 0}
+
+
+@pytest.mark.parametrize("query", [{"limite": 0}, {"limite": 201}, {"offset": -1}])
+def test_inventario_valida_paginacion(cliente, query):
+    assert cliente.get("/api/inventario", params=query).status_code == 422
+
+
+def test_inventario_con_base_caida(cliente, monkeypatch):
+    def sin_base(*args, **kwargs):
+        raise OperationalError("SELECT", {}, Exception("sin conexión"))
+
+    monkeypatch.setattr(service, "listar_inventario", sin_base)
+    assert cliente.get("/api/inventario").status_code == 503
+
+
+def test_actualizar_stock_y_rechazar_revision_obsoleta(
+    cliente_catalogo, catalogo_inicial, conexion
+):
+    ficha = cliente_catalogo.get("/api/componentes/c05").json()
+    respuesta = cliente_catalogo.put("/api/inventario/c05", json={"stock": 5, "revision": 1})
+    assert respuesta.status_code == 200
+    assert respuesta.json() == {
+        "componente_id": "c05",
+        "stock": 5,
+        "en_robots": 0,
+        "disponible": 5,
+        "faltante": 0,
+        "revision": 2,
+    }
+    obsoleta = cliente_catalogo.put("/api/inventario/c05", json={"stock": 9, "revision": 1})
+    assert obsoleta.status_code == 409
+    assert obsoleta.json()["detail"]["motivo"] == "revision_obsoleta"
+    assert cliente_catalogo.get("/api/componentes/c05").json() == {**ficha, "stock": 5}
+    nueva = cliente_catalogo.put("/api/inventario/c05", json={"stock": 0, "revision": 2})
+    assert nueva.status_code == 200
+    assert (nueva.json()["stock"], nueva.json()["revision"]) == (0, 3)
+    with Session(bind=conexion, join_transaction_mode="create_savepoint") as session:
+        inventario = session.get(Inventario, "c05")
+        assert (inventario.stock, inventario.revision) == (0, 3)
+
+
+def test_actualizar_stock_de_archivado(cliente_catalogo, catalogo_inicial):
+    assert cliente_catalogo.delete("/api/componentes/c22").status_code == 204
+    respuesta = cliente_catalogo.put("/api/inventario/c22", json={"stock": 0, "revision": 1})
+    assert respuesta.status_code == 200
+    assert respuesta.json()["stock"] == 0
+    assert cliente_catalogo.get("/api/componentes/c22").json()["archivado"] is True
+    assert "c22" not in {
+        c["componente_id"] for c in cliente_catalogo.get("/api/inventario").json()["items"]
+    }
+
+
+@pytest.mark.parametrize(
+    "datos",
+    [
+        {},
+        {"stock": 5},
+        {"stock": -1, "revision": 1},
+        {"stock": True, "revision": 1},
+        {"stock": 1.5, "revision": 1},
+        {"stock": 5, "revision": 0},
+        {"stock": 5, "revision": True},
+        {"stock": 2147483648, "revision": 1},
+        {"stock": 5, "revision": 1, "en_robots": 3},
+    ],
+)
+def test_actualizar_inventario_valida_entrada(cliente_catalogo, catalogo_inicial, datos):
+    anterior = cliente_catalogo.get("/api/inventario").json()
+    assert cliente_catalogo.put("/api/inventario/c05", json=datos).status_code == 422
+    assert cliente_catalogo.get("/api/inventario").json() == anterior
+
+
+def test_actualizar_inventario_inexistente(cliente_catalogo):
+    respuesta = cliente_catalogo.put("/api/inventario/no-existe", json={"stock": 5, "revision": 1})
+    assert respuesta.status_code == 404
+
+
+def test_actualizar_inventario_limite_revision(cliente_catalogo, catalogo_inicial, conexion):
+    conexion.execute(
+        update(Inventario).where(Inventario.componente_id == "c05").values(revision=2147483647)
+    )
+    respuesta = cliente_catalogo.put(
+        "/api/inventario/c05", json={"stock": 5, "revision": 2147483647}
+    )
+    assert respuesta.status_code == 409
+    assert respuesta.json()["detail"]["motivo"] == "revision_agotada"
+    assert cliente_catalogo.get("/api/componentes/c05").json()["stock"] == 3
+
+
+def test_actualizar_inventario_revierte_si_falla_commit(
+    cliente_catalogo, catalogo_inicial, monkeypatch
+):
+    anterior = cliente_catalogo.get("/api/inventario").json()
+    with monkeypatch.context() as parche:
+
+        def falla_commit(session):
+            raise OperationalError("COMMIT", {}, Exception("fallo al confirmar"))
+
+        parche.setattr(Session, "commit", falla_commit)
+        respuesta = cliente_catalogo.put("/api/inventario/c05", json={"stock": 5, "revision": 1})
+        assert respuesta.status_code == 503
+    assert cliente_catalogo.get("/api/inventario").json() == anterior

@@ -2,7 +2,7 @@
 
 Desde api/: python -m app.semillas
 Carga tipos, componentes e inventario sin borrar ni actualizar los registros
-existentes. Los robots se incorporarán en el siguiente paso de EN-04.
+existentes. Carga Velocista 001 y su historial inicial solo si no tiene versiones.
 """
 
 import json
@@ -14,7 +14,11 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from app.core.config import RAIZ_REPO
 from app.core.db import SessionLocal
+from app.core.errores import ErrorDeNegocio
+from app.modulos.armador import service as armador
 from app.modulos.catalogo import service as catalogo
+from app.modulos.optimizacion import service as control
+from app.modulos.reglamento import service as reglamento
 
 
 def leer_tipos_iniciales() -> list[dict[str, Any]]:
@@ -73,6 +77,7 @@ def main() -> int:
     try:
         tipos = leer_tipos_iniciales()
         componentes = leer_componentes_iniciales()
+        armado = json.loads(files("app").joinpath("datos/armador.json").read_text(encoding="utf-8"))
         # Una transacción para toda la carga. Cualquier error revierte el lote.
         with SessionLocal.begin() as session:
             nuevos = catalogo.cargar_tipos_iniciales(session, tipos)
@@ -81,7 +86,18 @@ def main() -> int:
             )
             listado = [(t.id, t.nombre) for t in catalogo.listar_tipos(session)]
             total_componentes, total_inventarios = catalogo.contar_catalogo(session)
-    except (OSError, ValueError) as exc:
+            nuevos_robots = armador.cargar_robot_inicial(session)
+            total_robots = armador.contar_robots(session)
+            nuevas_ranuras, nuevas_versiones = armador.cargar_versiones_iniciales(session, armado)
+            controladores = json.loads(
+                files("app").joinpath("datos/controladores.json").read_text(encoding="utf-8")
+            )
+            perfiles = json.loads(
+                files("app").joinpath("datos/perfiles.json").read_text(encoding="utf-8")
+            )
+            nuevos_controladores = control.cargar_controladores(session, controladores)
+            nuevos_perfiles = reglamento.cargar_perfiles(session, perfiles)
+    except (OSError, ValueError, ErrorDeNegocio) as exc:
         print(f"No se pudieron leer los datos iniciales: {exc}", file=sys.stderr)
         return 1
     except SQLAlchemyError:
@@ -97,6 +113,10 @@ def main() -> int:
         print(f"  {clave}: {nombre}")
     print(f"Componentes nuevos: {nuevos_componentes}. Inventarios nuevos: {nuevos_inventarios}.")
     print(f"Total de componentes: {total_componentes}. Total de inventarios: {total_inventarios}.")
+    print(f"Robots nuevos: {nuevos_robots}. Total de robots: {total_robots}.")
+    print(f"Ranuras nuevas: {nuevas_ranuras}. Versiones nuevas: {nuevas_versiones}.")
+    print("Velocista 001: historial existente conservado o versiones v0/v1 iniciales cargadas.")
+    print(f"Controladores nuevos: {nuevos_controladores}. Perfiles nuevos: {nuevos_perfiles}.")
     return 0
 
 

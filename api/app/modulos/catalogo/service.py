@@ -3,13 +3,20 @@
 from typing import Any
 from uuid import uuid4
 
-from sqlalchemy import String, cast, func, or_, select
+from sqlalchemy import String, cast, func, or_, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
 from app.core.errores import ErrorDeNegocio
+from app.modulos.armador.puertos import demanda_inventario
 from app.modulos.catalogo.models import Componente, Inventario, TipoComponente
-from app.modulos.catalogo.schemas import ComponenteCrear, ComponenteEditar, ComponenteSalida
+from app.modulos.catalogo.schemas import (
+    ComponenteCrear,
+    ComponenteEditar,
+    ComponenteSalida,
+    InventarioActualizar,
+    InventarioSalida,
+)
 
 
 def _validar_especificaciones(session: Session, datos: ComponenteCrear) -> None:
@@ -103,6 +110,20 @@ def editar_componente(
         raise
 
 
+def archivar_componente(session: Session, componente_id: str) -> None:
+    """Baja lógica repetible; conserva ficha, inventario y referencias."""
+    try:
+        componente = session.get(Componente, componente_id, with_for_update=True)
+        if componente is None:
+            raise ErrorDeNegocio(404, "componente_no_encontrado", "El componente no existe")
+        componente.archivado = True
+        session.flush()
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
+
+
 def cargar_tipos_iniciales(session: Session, tipos: list[dict[str, Any]]) -> int:
     """Inserta solo IDs ausentes; el llamador confirma o revierte la transacción.
 
@@ -149,6 +170,89 @@ def cargar_componentes_iniciales(
         .returning(Inventario.componente_id)
     ).all()
     return len(nuevos), len(inventarios)
+
+
+def listar_inventario(session: Session, *, limite: int = 50, offset: int = 0) -> dict[str, Any]:
+    """Stock real y demanda de la última versión de cada robot activo."""
+    demanda = demanda_inventario()
+    asignado = func.coalesce(demanda.c.en_robots, 0).label("en_robots")
+    consulta = (
+        select(Inventario.componente_id, Inventario.stock, Inventario.revision, asignado)
+        .join(Componente, Componente.id == Inventario.componente_id)
+        .outerjoin(demanda, demanda.c.componente_id == Inventario.componente_id)
+        .where(or_(Componente.archivado.is_(False), Inventario.stock > 0, asignado > 0))
+    )
+    total = session.scalar(select(func.count()).select_from(consulta.subquery()))
+    filas = session.execute(
+        consulta.order_by(Inventario.componente_id).limit(limite).offset(offset)
+    ).all()
+    return {
+        "items": [
+            {
+                "componente_id": fila.componente_id,
+                "stock": fila.stock,
+                "en_robots": fila.en_robots,
+                "disponible": fila.stock - fila.en_robots,
+                "faltante": max(0, fila.en_robots - fila.stock),
+                "revision": fila.revision,
+            }
+            for fila in filas
+        ],
+        "total": total,
+        "limite": limite,
+        "offset": offset,
+    }
+
+
+def actualizar_inventario(
+    session: Session, componente_id: str, datos: InventarioActualizar
+) -> InventarioSalida:
+    """Compara e incrementa revisión en el mismo UPDATE; también permite archivados.
+
+    Deriva disponibilidad de la demanda persistida en la misma transacción.
+    """
+    try:
+        fila = (
+            session.execute(
+                update(Inventario)
+                .where(
+                    Inventario.componente_id == componente_id,
+                    Inventario.revision == datos.revision,
+                    Inventario.revision < 2147483647,
+                )
+                .values(stock=datos.stock, revision=Inventario.revision + 1)
+                .returning(Inventario.componente_id, Inventario.stock, Inventario.revision)
+            )
+            .mappings()
+            .one_or_none()
+        )
+        if fila is None:
+            actual = session.get(Inventario, componente_id)
+            if actual is None:
+                raise ErrorDeNegocio(404, "inventario_no_encontrado", "El inventario no existe")
+            if actual.revision != datos.revision:
+                raise ErrorDeNegocio(
+                    409, "revision_obsoleta", "Vuelve a consultar el inventario antes de guardar"
+                )
+            raise ErrorDeNegocio(409, "revision_agotada", "Se alcanzó el límite de revisiones")
+        demanda = demanda_inventario()
+        asignado = (
+            session.scalar(
+                select(demanda.c.en_robots).where(demanda.c.componente_id == componente_id)
+            )
+            or 0
+        )
+        salida = InventarioSalida(
+            **dict(fila),
+            en_robots=asignado,
+            disponible=fila["stock"] - asignado,
+            faltante=max(0, asignado - fila["stock"]),
+        )
+        session.commit()
+        return salida
+    except Exception:
+        session.rollback()
+        raise
 
 
 def contar_catalogo(session: Session) -> tuple[int, int]:
@@ -213,3 +317,12 @@ def listar_componentes(
         "limite": limite,
         "offset": offset,
     }
+
+
+def ficha_para_version(session, componente_id):
+    ficha = session.get(Componente, componente_id, with_for_update=True)
+    if ficha is None:
+        raise ErrorDeNegocio(404, "componente_no_encontrado", "El componente no existe")
+    if ficha.archivado:
+        raise ErrorDeNegocio(409, "componente_archivado", "No se puede seleccionar un archivado")
+    return obtener_componente(session, componente_id)

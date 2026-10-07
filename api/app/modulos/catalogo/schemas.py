@@ -119,3 +119,30 @@ class PaginaComponentes(BaseModel):
     total: int = Field(ge=0)
     limite: int = Field(ge=1, le=200)
     offset: int = Field(ge=0)
+
+
+class InventarioActualizar(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    stock: int = Field(strict=True, ge=0, le=2147483647)
+    revision: int = Field(strict=True, ge=1, le=2147483647)
+
+
+class InventarioSalida(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    componente_id: str
+    stock: int = Field(ge=0)
+    en_robots: int = Field(ge=0)
+    disponible: int
+    faltante: int = Field(ge=0)
+    revision: int = Field(ge=1)
+
+
+class PaginaInventario(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    items: list[InventarioSalida]
+    total: int = Field(ge=0)
+    limite: int = Field(ge=1, le=200)
+    offset: int = Field(ge=0)

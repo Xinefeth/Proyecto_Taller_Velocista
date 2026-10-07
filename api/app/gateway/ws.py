@@ -199,3 +199,14 @@ async def ws_consola(ws: WebSocket) -> None:
             await ws.receive_text()  # la consola solo escucha; sus acciones van por REST
     except WebSocketDisconnect:
         consolas.activas.discard(ws)
+
+
+def robot_corriendo(robot_id: str) -> bool:
+    conexion = conexiones.get("velocista")
+    return bool(
+        conexion
+        and conexion.manifiesto
+        and conexion.manifiesto.id == robot_id
+        and conexion.ultimo_estado
+        and conexion.ultimo_estado.estado == "corriendo"
+    )

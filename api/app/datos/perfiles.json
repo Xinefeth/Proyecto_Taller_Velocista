@@ -1,0 +1,122 @@
+[
+  {
+    "id": "mr4a",
+    "competencia": "Muchik Rumble 4",
+    "etiqueta": "MR4",
+    "categoria": "Amateur",
+    "reglas": {
+      "dim": [
+        200,
+        250
+      ],
+      "sensMax": 8,
+      "motores": 2,
+      "motorFam": [
+        "TT amarillo"
+      ],
+      "ruedas": 2,
+      "drivers": 1,
+      "mcu": [
+        "Arduino UNO",
+        "Arduino Nano",
+        "Raspberry Pi Pico",
+        "ESP32"
+      ],
+      "turbina": false,
+      "pcbComercial": false,
+      "montaje": "Protoboard, cableado directo, shield genérico o PCB propia",
+      "chasis": "Obligatorio: impresión 3D o MDF",
+      "chasisMat": [
+        "3D",
+        "MDF"
+      ],
+      "arranque": "Interruptor, pulsador, IR o Bluetooth",
+      "inal": false,
+      "enc": false,
+      "imu": false,
+      "mapaVel": false,
+      "mr4": true
+    }
+  },
+  {
+    "id": "mr4s",
+    "competencia": "Muchik Rumble 4",
+    "etiqueta": "MR4",
+    "categoria": "Senior",
+    "reglas": {
+      "dim": [
+        200,
+        250
+      ],
+      "sensMax": null,
+      "motores": 2,
+      "motorFam": null,
+      "ruedas": 2,
+      "drivers": null,
+      "mcu": null,
+      "turbina": false,
+      "pcbComercial": true,
+      "montaje": "Libre",
+      "chasis": "Libre",
+      "arranque": "Inalámbrico",
+      "inal": true,
+      "enc": false,
+      "imu": false,
+      "mapaVel": false,
+      "mr4": true
+    }
+  },
+  {
+    "id": "mr4m",
+    "competencia": "Muchik Rumble 4",
+    "etiqueta": "MR4",
+    "categoria": "Master",
+    "reglas": {
+      "dim": [
+        300,
+        300
+      ],
+      "sensMax": null,
+      "motores": null,
+      "motorFam": null,
+      "ruedas": null,
+      "drivers": null,
+      "mcu": null,
+      "turbina": true,
+      "pcbComercial": true,
+      "montaje": "Libre (se admiten robots comerciales)",
+      "chasis": "Libre",
+      "arranque": "Inalámbrico",
+      "inal": true,
+      "enc": false,
+      "imu": false,
+      "mapaVel": false,
+      "mr4": true
+    }
+  },
+  {
+    "id": "club",
+    "competencia": "Pruebas del club",
+    "etiqueta": "Club",
+    "categoria": "Libre",
+    "reglas": {
+      "dim": null,
+      "sensMax": null,
+      "motores": null,
+      "motorFam": null,
+      "ruedas": null,
+      "drivers": null,
+      "mcu": null,
+      "turbina": true,
+      "pcbComercial": true,
+      "montaje": "Libre",
+      "chasis": "Libre",
+      "arranque": "Libre",
+      "inal": false,
+      "enc": true,
+      "imu": true,
+      "mapaVel": true,
+      "mr4": false
+    }
+  }
+]
