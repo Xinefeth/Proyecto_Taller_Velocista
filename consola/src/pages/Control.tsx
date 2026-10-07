@@ -2,7 +2,7 @@
 // EN-19, HU-13 a HU-18, HU-21 a HU-24, HU-30, HU-11.
 import { useState } from "react";
 import { useConsola } from "../stores/ConsolaContext";
-import { Card } from "../components/Card";
+import { Card, type Sprint } from "../components/Card";
 import { ICO, Gate, Play, Stop } from "../components/IconosUI";
 import { CTRL, PDEF, differs } from "../datos/controladores";
 import { curVer, facts } from "../logica/dominio";
@@ -17,6 +17,38 @@ const CTRL_SPRINT: Record<string, "2" | "C" | undefined> = {
   fuzzy: "C",
 };
 
+// Placeholder deshabilitado para los paneles que dependen de telemetría en vivo.
+// Se muestra mientras no hay robot conectado (source !== "robot"); al conectarse,
+// cada panel renderiza su contenido real de nuevo.
+function PanelEnEspera({
+  titulo,
+  sub,
+  className,
+  pbi,
+  sprint,
+}: {
+  titulo: string;
+  sub?: string;
+  className: string;
+  pbi: string;
+  sprint: Sprint;
+}) {
+  return (
+    <Card className={`${className} panel-espera`} aria-label={titulo} pbi={pbi} sprint={sprint}>
+      <div className="hd">
+        <h2>
+          {titulo} {sub ? <small>{sub}</small> : null}
+        </h2>
+        <span className="tag">Sin robot</span>
+      </div>
+      <div className="espera-robot" role="status">
+        <p>Disponible al conectar el robot.</p>
+        <p className="muted">Estos datos llegan en vivo; se activan al conectarse en modo Robot.</p>
+      </div>
+    </Card>
+  );
+}
+
 function Salida() {
   const c = useConsola();
   const calTag = c.calibrating
@@ -25,7 +57,8 @@ function Salida() {
       ? ["Calibrado", "tag good"]
       : ["Sin calibrar", "tag warn"];
   let hint: [string, string];
-  if (c.running)
+  if (!c.robotConectado) hint = ["Conecta el robot para arrancar (modo Robot).", "hint warn"];
+  else if (c.running)
     hint = [
       c.mode === "competencia" ? "Intento en curso: una vuelta." : "En pista, modo prueba.",
       "hint",
@@ -46,7 +79,13 @@ function Salida() {
         <h2>Salida</h2>
         <span className={calTag[1]}>{calTag[0]}</span>
       </div>
-      <button type="button" className="go" data-running={c.running} onClick={c.arrancarDetener}>
+      <button
+        type="button"
+        className="go"
+        data-running={c.running}
+        disabled={!c.robotConectado}
+        onClick={c.arrancarDetener}
+      >
         {c.running ? <Stop /> : <Play />}
         <span>{c.running ? "DETENER" : "ARRANCAR"}</span>
       </button>
@@ -315,6 +354,8 @@ function PistaEnVivo() {
       : c.lastLap
         ? fmt(c.lastLap.iae / Math.max(0.01, c.lastLap.t), 2)
         : "—";
+  if (!c.robotConectado)
+    return <PanelEnEspera titulo="Pista en vivo" className="a-map" pbi="HU-22 · HU-24" sprint="2" />;
   return (
     <Card className="a-map" aria-label="Pista en vivo" pbi="HU-22 · HU-24" sprint="2">
       <div className="hd">
@@ -417,6 +458,8 @@ function Cronometraje() {
     if (c.lastLap?.fin) return [c.lastLap.col[i], fmt(c.lastLap.sec[i], 3)];
     return ["", "—"];
   };
+  if (!c.robotConectado)
+    return <PanelEnEspera titulo="Cronometraje" className="a-time" pbi="HU-19 · EN-15" sprint="2" />;
   return (
     <Card className="a-time" aria-label="Cronometraje" pbi="HU-19 · EN-15" sprint="2">
       <div className="hd">
@@ -551,6 +594,16 @@ function Regleta() {
     : Math.abs(pos) < 0.25
       ? ["Centrada", "tag good"]
       : [pos > 0 ? "Hacia la derecha" : "Hacia la izquierda", "tag"];
+  if (!c.robotConectado)
+    return (
+      <PanelEnEspera
+        titulo="Regleta"
+        sub="16 canales · 2 × QTR-8A"
+        className="a-sens"
+        pbi="HU-15"
+        sprint="1"
+      />
+    );
   return (
     <Card className="a-sens" pbi="HU-15" sprint="1">
       <div className="hd">
@@ -601,6 +654,10 @@ function Senales() {
     ["pl", "var(--ink)", "Izq"],
     ["pr", "var(--dim)", "Der"],
   ];
+  if (!c.robotConectado)
+    return (
+      <PanelEnEspera titulo="Señales" sub="6 s · 20 Hz" className="a-sig" pbi="HU-21" sprint="2" />
+    );
   return (
     <Card className="a-sig" pbi="HU-21" sprint="2">
       <div className="hd">
@@ -668,6 +725,16 @@ function ErrorPista() {
       c.lastBinsRef.current,
     ),
   );
+  if (!c.robotConectado)
+    return (
+      <PanelEnEspera
+        titulo="Error a lo largo de la pista"
+        sub="vuelta actual sobre la anterior"
+        className="a-health"
+        pbi="HU-30"
+        sprint="C"
+      />
+    );
   return (
     <Card className="a-health" pbi="HU-30" sprint="C">
       <div className="hd">

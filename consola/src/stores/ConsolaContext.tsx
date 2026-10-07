@@ -116,6 +116,9 @@ export interface Consola {
   // conexión / fuente
   source: Fuente;
   setSource: (v: Fuente) => void;
+  // true solo con un robot real conectado (source === "robot"); los paneles en
+  // vivo se deshabilitan mientras sea false y se reactivan al conectarse.
+  robotConectado: boolean;
   connected: boolean;
   toggleConnected: () => void;
   link: { dbm: number; ms: number };
@@ -982,6 +985,7 @@ export function ProveedorConsola({ children }: { children: ReactNode }) {
     setProfile,
     source,
     setSource,
+    robotConectado: source === "robot",
     connected,
     toggleConnected,
     link: linkRef.current,
