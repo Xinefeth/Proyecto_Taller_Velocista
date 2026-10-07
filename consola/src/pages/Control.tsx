@@ -57,8 +57,7 @@ function Salida() {
       ? ["Calibrado", "tag good"]
       : ["Sin calibrar", "tag warn"];
   let hint: [string, string];
-  if (!c.robotConectado) hint = ["Conecta el robot para arrancar (modo Robot).", "hint warn"];
-  else if (c.running)
+  if (c.running)
     hint = [
       c.mode === "competencia" ? "Intento en curso: una vuelta." : "En pista, modo prueba.",
       "hint",
@@ -83,7 +82,6 @@ function Salida() {
         type="button"
         className="go"
         data-running={c.running}
-        disabled={!c.robotConectado}
         onClick={c.arrancarDetener}
       >
         {c.running ? <Stop /> : <Play />}
@@ -354,8 +352,6 @@ function PistaEnVivo() {
       : c.lastLap
         ? fmt(c.lastLap.iae / Math.max(0.01, c.lastLap.t), 2)
         : "—";
-  if (!c.robotConectado)
-    return <PanelEnEspera titulo="Pista en vivo" className="a-map" pbi="HU-22 · HU-24" sprint="2" />;
   return (
     <Card className="a-map" aria-label="Pista en vivo" pbi="HU-22 · HU-24" sprint="2">
       <div className="hd">
@@ -594,16 +590,6 @@ function Regleta() {
     : Math.abs(pos) < 0.25
       ? ["Centrada", "tag good"]
       : [pos > 0 ? "Hacia la derecha" : "Hacia la izquierda", "tag"];
-  if (!c.robotConectado)
-    return (
-      <PanelEnEspera
-        titulo="Regleta"
-        sub="16 canales · 2 × QTR-8A"
-        className="a-sens"
-        pbi="HU-15"
-        sprint="1"
-      />
-    );
   return (
     <Card className="a-sens" pbi="HU-15" sprint="1">
       <div className="hd">

@@ -79,6 +79,17 @@ El CI ejecuta todo en cada pull request.
 | PostgreSQL | `127.0.0.1:5432` | `127.0.0.1:5432` (nunca expuesto a la red) |
 | Robot / cronómetro | — | `192.168.50.101` / `192.168.50.102` |
 
+## Despliegue en la nube (Render)
+
+La rama `main` se despliega en el servidor con un Blueprint de Render:
+
+1. Sube `main` a GitHub.
+2. En Render: **New → Blueprint** y elige este repositorio.
+3. Render lee [`render.yaml`](render.yaml), crea el servicio web (Docker) y el Postgres, e inyecta las variables (`DATABASE_URL`, `SECRET_KEY`, tokens).
+4. Al terminar el build, abre la URL del servicio (`/` consola, `/api/salud` health check).
+
+Procedimiento completo, variables y opción manual: [docs/despliegue-render.md](docs/despliegue-render.md). Qué se preparó para desplegar: [docs/preparacion-despliegue.md](docs/preparacion-despliegue.md).
+
 ## Cómo trabajamos
 
 Ramas, commits, pull requests y responsables por carpeta: [CONTRIBUTING.md](CONTRIBUTING.md). Despliegue en la pista: [docs/despliegue-pista.md](docs/despliegue-pista.md).
