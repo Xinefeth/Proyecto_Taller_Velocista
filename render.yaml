@@ -1,0 +1,39 @@
+# Blueprint de Render: un servicio web (API + consola + WebSocket) y un Postgres.
+# Desplegar: en Render -> New -> Blueprint, apuntando a este repo.
+# Doc completa: docs/despliegue-render.md
+
+databases:
+  - name: apaec-lab-db
+    plan: free          # el Postgres gratuito de Render caduca a los ~30 días
+    databaseName: apaec_lab
+    user: apaec_app
+
+services:
+  - type: web
+    name: apaec-lab
+    runtime: docker
+    plan: free          # el servicio gratis se duerme tras inactividad
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/salud
+    envVars:
+      # La base llega en una sola variable; config.py la normaliza al driver psycopg.
+      - key: DATABASE_URL
+        fromDatabase:
+          name: apaec-lab-db
+          property: connectionString
+      - key: APP_ENV
+        value: produccion
+      - key: SECRET_KEY
+        generateValue: true          # Render genera una clave larga aleatoria
+      # La consola se sirve del mismo origen que la API, así que no hace falta CORS.
+      - key: CORS_ORIGINS
+        value: ""
+      # Tokens que presentarían el robot/cronómetro simulados al conectarse por WS.
+      - key: DEVICE_TOKEN_VELOCISTA
+        generateValue: true
+      - key: DEVICE_TOKEN_CRONOMETRO
+        generateValue: true
+      # Cuántas corridas simuladas asegura el generador en cada arranque.
+      - key: SEED_CORRIDAS
+        value: "40"

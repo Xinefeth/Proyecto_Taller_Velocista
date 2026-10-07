@@ -4,8 +4,9 @@ Habla el contrato v1.0: envía el manifiesto de ejemplo, estado a 1 Hz,
 señales a 20 Hz mientras "corre" y responde los comandos con ack.
 
 Uso (con la API levantada):
-    python herramientas/robot_falso.py
-    python herramientas/robot_falso.py --host 192.168.50.10
+    python herramientas/robot_falso.py                       # local, ws://localhost:8000
+    python herramientas/robot_falso.py --host 192.168.50.10  # pista, red local
+    python herramientas/robot_falso.py --url wss://apaec-lab.onrender.com/ws/robot  # nube
 """
 
 import argparse
@@ -137,10 +138,18 @@ def main() -> None:
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     p.add_argument("--host", default="localhost")
     p.add_argument("--puerto", default=8000, type=int)
+    p.add_argument("--tls", action="store_true", help="usar wss:// (TLS); puerto 443 por defecto")
+    p.add_argument("--url", help="URL WebSocket completa (p. ej. wss://host/ws/robot); ignora host/puerto")
     p.add_argument("--token", default="dev-token-velocista")
     a = p.parse_args()
+    if a.url:
+        url = a.url
+    else:
+        esquema = "wss" if a.tls else "ws"
+        puerto = 443 if (a.tls and a.puerto == 8000) else a.puerto
+        url = f"{esquema}://{a.host}:{puerto}/ws/robot"
     try:
-        asyncio.run(RobotFalso().correr(f"ws://{a.host}:{a.puerto}/ws/robot", a.token))
+        asyncio.run(RobotFalso().correr(url, a.token))
     except KeyboardInterrupt:
         pass
 
