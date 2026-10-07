@@ -218,14 +218,14 @@ export function drawMap(cv: HTMLCanvasElement, m: DatosMapa): void {
   if (!B) B = bounds(path);
   const Pj = proj(w, h, B),
     n = path.length;
-  ctx.strokeStyle = "rgba(255,255,255,.04)";
-  ctx.lineWidth = 16;
+  ctx.strokeStyle = "rgba(255,255,255,.09)";
+  ctx.lineWidth = 18;
   poly(ctx, Pj, path, 0, n, true);
   ctx.save();
-  ctx.shadowColor = "rgba(255,45,85,.8)";
-  ctx.shadowBlur = 14;
-  ctx.strokeStyle = col["--red"];
-  ctx.lineWidth = 2.4;
+  ctx.shadowColor = "rgba(255,45,85,.9)";
+  ctx.shadowBlur = 12;
+  ctx.strokeStyle = col["--red-hi"];
+  ctx.lineWidth = 3.4;
   poly(ctx, Pj, path, 0, n, true);
   ctx.restore();
   if (m.mapMode === "sectores" && m.lastColsSector && m.lastColsSector.length === 3) {
