@@ -203,11 +203,18 @@ export function drawMap(cv: HTMLCanvasElement, m: DatosMapa): void {
         ] as Punto[]),
       ),
       Pj = proj(w, h, b);
-    ctx.strokeStyle = "rgba(255,45,85,.55)";
-    ctx.lineWidth = 2;
-    ctx.setLineDash([3, 6]);
+    ctx.strokeStyle = "rgba(255,255,255,.1)";
+    ctx.lineWidth = 12;
+    poly(ctx, Pj, m.raw, 0, m.raw.length);
+    ctx.save();
+    ctx.shadowColor = "rgba(255,45,85,.9)";
+    ctx.shadowBlur = 10;
+    ctx.strokeStyle = col["--red-hi"];
+    ctx.lineWidth = 3;
+    ctx.setLineDash([4, 5]);
     poly(ctx, Pj, m.raw, 0, m.raw.length);
     ctx.setLineDash([]);
+    ctx.restore();
     const e = m.raw[m.raw.length - 1];
     const [x, y] = Pj(e.x, e.y);
     robotDot(ctx, x, y, m.short);
