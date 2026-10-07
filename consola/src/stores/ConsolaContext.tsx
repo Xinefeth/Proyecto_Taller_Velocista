@@ -599,6 +599,24 @@ export function ProveedorConsola({ children }: { children: ReactNode }) {
   useEffect(() => {
     document.body.dataset.scope = scope;
   }, [scope]);
+  // Los paneles fuera del alcance activo deben ser realmente estáticos (EN-19): además del
+  // atenuado por CSS, se marcan `inert` para que no respondan ni al ratón ni al teclado (salen
+  // del orden de tabulación y del árbol de accesibilidad). Un observador cubre también lo que
+  // monte React después (cambios de pestaña, paneles condicionales, botones de un map).
+  useEffect(() => {
+    const fueraDeAlcance = (s: string | undefined) =>
+      (scope === "s1" && s !== "1") || (scope === "s2" && s === "W");
+    const aplicar = () => {
+      document.querySelectorAll<HTMLElement>("[data-sprint]").forEach((el) => {
+        const fuera = fueraDeAlcance(el.dataset.sprint);
+        if (el.inert !== fuera) el.inert = fuera;
+      });
+    };
+    aplicar();
+    const obs = new MutationObserver(aplicar);
+    obs.observe(document.body, { childList: true, subtree: true });
+    return () => obs.disconnect();
+  }, [scope]);
 
   // --- Acciones ---
   const goTab = useCallback((t: Tab) => {
