@@ -4,7 +4,7 @@ Versión 1.0 · 6 de octubre de 2026 · Diseño para revisión.
 
 Este documento define el modelo del sistema a partir de la consola que está en el repositorio. Incluye catálogo, inventario, armado, control, corridas, vueltas, eventos y los datos de análisis del prototipo. El motor previsto sigue siendo PostgreSQL 16.
 
-**Estado de implementación:** la migración `0001_base` solo crea `evento`. Las demás entidades de este documento son el diseño para las siguientes migraciones e historias. Este entregable no instala PostgreSQL, no ejecuta migraciones ni conecta la maqueta con la base de datos.
+**Estado de implementación:** migraciones `0001_base` a `0005_operaciones`, con catálogo/inventario, robots/versiones/piezas, controladores, perfiles, setups y resultados de corridas/vueltas. Las 32 operaciones REST de EN-01 están implementadas y probadas. Las semillas conservan registros existentes e incluyen Velocista 001 con v0/v1, 3 controladores y 4 perfiles. La demo opcional carga una corrida simulada. La integración de la consola con estas rutas y la adquisición automática de corridas físicas siguen pendientes. Aplicar migraciones con `alembic upgrade head`; agregar código no cambia una base ya existente.
 
 ## Entregables y fuentes
 
@@ -78,9 +78,7 @@ Las especificaciones siguen siendo opcionales, como el formulario. Un campo ause
 
 ## Implementación posterior
 
-1. Convertir este diccionario en modelos SQLAlchemy por módulo y una migración posterior a `0001_base`, conservando los eventos existentes. Agregar los modelos a `migrations/env.py`.
-2. Cargar tipos, ranuras, controladores y perfiles del prototipo como datos iniciales; importar fechas reales (no «hoy» ni «—») e IDs sin romper referencias.
-3. Implementar los endpoints marcados como propuestos en EN-01 y los casos transaccionales de versiones/inventario.
-4. Incorporar adaptadores DTO en `consola/src/services/` y mantener separado el modo simulado. La consola actual continúa usando sus datos de maqueta hasta esa integración.
-
-No se declara cerrado el ítem en el backlog: la revisión/aprobación del equipo y la integración por PR siguen el proceso del repositorio.
+1. Conectar la consola mediante adaptadores DTO, manteniendo explícito su modo simulado.
+2. Integrar el ciclo físico de corridas/vueltas con los mensajes EN-02, su reconciliación e idempotencia persistente. El gateway actual valida y redistribuye mensajes; no crea automáticamente resultados en PostgreSQL.
+3. Implementar mapas, estudios/ensayos de optimización, autenticación y contexto extendido de eventos según sus historias; no forman parte de los 32 endpoints actuales.
+4. Revisar en equipo los resultados y continuar la integración por PR. La guía de verificación está en [pruebas-crud.md](../api/pruebas-crud.md).

@@ -1,0 +1,258 @@
+[
+  {
+    "id": "pid",
+    "nombre": "PID",
+    "nombre_corto": "PID",
+    "descripcion": "Clásico. Con Ki = 0 funciona como PD, lo más usado en velocistas.",
+    "parametros": [
+      {
+        "clave": "kp",
+        "nombre": "Kp",
+        "descripcion": "Proporcional",
+        "min": 0,
+        "max": 2,
+        "paso": 0.01,
+        "decimales": 2,
+        "optimizable": true
+      },
+      {
+        "clave": "ki",
+        "nombre": "Ki",
+        "descripcion": "Integral",
+        "min": 0,
+        "max": 0.3,
+        "paso": 0.005,
+        "decimales": 3,
+        "optimizable": false
+      },
+      {
+        "clave": "kd",
+        "nombre": "Kd",
+        "descripcion": "Derivativo",
+        "min": 0,
+        "max": 10,
+        "paso": 0.1,
+        "decimales": 1,
+        "optimizable": true
+      },
+      {
+        "clave": "base",
+        "nombre": "Base",
+        "descripcion": "Velocidad base (%)",
+        "min": 10,
+        "max": 100,
+        "paso": 1,
+        "decimales": 0,
+        "optimizable": false
+      },
+      {
+        "clave": "max",
+        "nombre": "Máx",
+        "descripcion": "PWM máximo (%)",
+        "min": 20,
+        "max": 100,
+        "paso": 1,
+        "decimales": 0,
+        "optimizable": false
+      }
+    ],
+    "presets": {
+      "Seguro": {
+        "kp": 0.45,
+        "ki": 0,
+        "kd": 3.5,
+        "base": 38,
+        "max": 80
+      },
+      "Base": {
+        "kp": 0.6,
+        "ki": 0,
+        "kd": 2.5,
+        "base": 45,
+        "max": 86
+      },
+      "Agresivo": {
+        "kp": 0.8,
+        "ki": 0,
+        "kd": 4,
+        "base": 62,
+        "max": 86
+      }
+    }
+  },
+  {
+    "id": "adapt",
+    "nombre": "PID adaptativo",
+    "nombre_corto": "Adaptativo",
+    "descripcion": "PID con velocidad base variable: frena según el error (Kv) sin bajar de Vmín. Rápido en rectas, prudente en curvas.",
+    "parametros": [
+      {
+        "clave": "kp",
+        "nombre": "Kp",
+        "descripcion": "Proporcional",
+        "min": 0,
+        "max": 2,
+        "paso": 0.01,
+        "decimales": 2,
+        "optimizable": true
+      },
+      {
+        "clave": "ki",
+        "nombre": "Ki",
+        "descripcion": "Integral",
+        "min": 0,
+        "max": 0.3,
+        "paso": 0.005,
+        "decimales": 3,
+        "optimizable": false
+      },
+      {
+        "clave": "kd",
+        "nombre": "Kd",
+        "descripcion": "Derivativo",
+        "min": 0,
+        "max": 10,
+        "paso": 0.1,
+        "decimales": 1,
+        "optimizable": true
+      },
+      {
+        "clave": "base",
+        "nombre": "Base",
+        "descripcion": "Velocidad base (%)",
+        "min": 10,
+        "max": 100,
+        "paso": 1,
+        "decimales": 0,
+        "optimizable": false
+      },
+      {
+        "clave": "max",
+        "nombre": "Máx",
+        "descripcion": "PWM máximo (%)",
+        "min": 20,
+        "max": 100,
+        "paso": 1,
+        "decimales": 0,
+        "optimizable": false
+      },
+      {
+        "clave": "kv",
+        "nombre": "Kv",
+        "descripcion": "Frenado: cuánto baja la velocidad con el error",
+        "min": 0,
+        "max": 1,
+        "paso": 0.05,
+        "decimales": 2,
+        "optimizable": true
+      },
+      {
+        "clave": "vmin",
+        "nombre": "Vmín",
+        "descripcion": "Velocidad mínima en curva (%)",
+        "min": 10,
+        "max": 60,
+        "paso": 1,
+        "decimales": 0,
+        "optimizable": false
+      }
+    ],
+    "presets": {
+      "Seguro": {
+        "kp": 0.5,
+        "ki": 0,
+        "kd": 3,
+        "base": 55,
+        "max": 86,
+        "kv": 0.5,
+        "vmin": 30
+      },
+      "Base": {
+        "kp": 0.6,
+        "ki": 0,
+        "kd": 2.8,
+        "base": 65,
+        "max": 86,
+        "kv": 0.55,
+        "vmin": 32
+      },
+      "Agresivo": {
+        "kp": 0.75,
+        "ki": 0,
+        "kd": 3.5,
+        "base": 78,
+        "max": 86,
+        "kv": 0.6,
+        "vmin": 35
+      }
+    }
+  },
+  {
+    "id": "fuzzy",
+    "nombre": "Difuso",
+    "nombre_corto": "Difuso",
+    "descripcion": "Reglas difusas: corrige suave con error chico y fuerte con error grande. Para comparar contra el PID en el informe.",
+    "parametros": [
+      {
+        "clave": "g",
+        "nombre": "G",
+        "descripcion": "Ganancia de las reglas difusas",
+        "min": 0,
+        "max": 2,
+        "paso": 0.01,
+        "decimales": 2,
+        "optimizable": true
+      },
+      {
+        "clave": "d",
+        "nombre": "D",
+        "descripcion": "Amortiguamiento (derivativo)",
+        "min": 0,
+        "max": 10,
+        "paso": 0.1,
+        "decimales": 1,
+        "optimizable": true
+      },
+      {
+        "clave": "base",
+        "nombre": "Base",
+        "descripcion": "Velocidad base (%)",
+        "min": 10,
+        "max": 100,
+        "paso": 1,
+        "decimales": 0,
+        "optimizable": false
+      },
+      {
+        "clave": "max",
+        "nombre": "Máx",
+        "descripcion": "PWM máximo (%)",
+        "min": 20,
+        "max": 100,
+        "paso": 1,
+        "decimales": 0,
+        "optimizable": false
+      }
+    ],
+    "presets": {
+      "Seguro": {
+        "g": 0.5,
+        "d": 3,
+        "base": 42,
+        "max": 86
+      },
+      "Base": {
+        "g": 0.65,
+        "d": 2.6,
+        "base": 50,
+        "max": 86
+      },
+      "Agresivo": {
+        "g": 0.85,
+        "d": 3.6,
+        "base": 60,
+        "max": 86
+      }
+    }
+  }
+]

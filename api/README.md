@@ -21,6 +21,66 @@ y estado de implementación por operación. El [modelo DO-03](../docs/datos/READ
 define las tablas y relaciones pendientes de migrar. `/docs` describe solamente
 los endpoints que el backend tiene implementados.
 
+## CRUD y consultas EN-04
+
+Las **32 operaciones de EN-01** están implementadas. Componentes y robots admiten
+alta, consulta, edición y archivado. El inventario compara revisión al actualizar.
+Crear una versión bloquea el robot, verifica `version_base_id`, valida ranuras y
+piezas, guarda instantáneas y mueve el puntero en una transacción. La demanda
+cuenta solo la última versión de robots activos, incluidos Concepto/Borrador.
+
+Los setups son configuraciones históricas: cada guardado crea un nuevo ID y congela
+la definición del controlador. Valida claves, rangos, pasos y relaciones entre
+parámetros. Se pueden consultar y archivar, conservando corridas previas.
+Las corridas permiten listado con filtros, detalle, notas y vueltas con sectores/segmentos.
+El resumen selecciona la mejor vuelta terminada por J y desempata por número.
+Los catálogos de tipos, ranuras, controladores y perfiles son de lectura por API.
+
+### Aplicar a una instalación existente
+
+Desde `api/`, en PowerShell:
+
+```powershell
+.\.venv\Scripts\alembic.exe upgrade head
+.\.venv\Scripts\alembic.exe current
+.\.venv\Scripts\python.exe -m app.semillas
+```
+
+Head esperado: `0005_operaciones`. Las semillas agregan lo ausente y conservan
+precios, stock, revisiones, robots e historial existentes. Incluyen 14 tipos,
+25 componentes, 14 ranuras, Velocista 001 con v0/v1, 3 controladores y 4 perfiles.
+Las fechas del prototipo tienen precisión de día y se cargan a medianoche de Lima;
+las instantáneas iniciales usan las fichas persistidas al cargar, no precios históricos comprobados.
+
+Para disponer de una corrida **simulada** y un setup de ejemplo (opcional y repetible):
+
+```powershell
+.\.venv\Scripts\python.exe -m app.demo
+```
+
+La demo informa el ID para consultar corrida y vueltas; no envía comandos físicos.
+La guía [pruebas-crud.md](../docs/api/pruebas-crud.md) permite probar el conjunto en Swagger.
+
+### Verificación
+
+```powershell
+.\.venv\Scripts\python.exe -m ruff check .
+.\.venv\Scripts\python.exe -m ruff format --check .
+.\.venv\Scripts\python.exe -m pytest --cov=app --cov-report=term-missing
+```
+
+Las pruebas de escritura, incluidos eventos, usan esquemas temporales. Las pruebas
+de concurrencia confirman transacciones solo en esos esquemas y los eliminan al terminar.
+Requieren PostgreSQL; se omiten si no está disponible. El validador de diseño está
+en `docs/api/validar_contrato.py` y usa las dependencias de `docs/api/requirements-validation.txt`.
+
+### Alcance de esta entrega
+
+Completa el backend REST EN-01. La consola todavía usa datos simulados y necesita
+sus adaptadores. El gateway conserva su validación y difusión EN-02; la captura
+persistente automática de corridas físicas requiere integrar el ciclo de adquisición.
+Mapas, optimizadores y autenticación de usuarios corresponden a historias posteriores.
+
 ## Estructura
 
 ```
@@ -42,7 +102,7 @@ app/
         ├── service.py     Lógica de negocio; única interfaz pública del módulo
         ├── models.py      Tablas SQLAlchemy del módulo
         └── schemas.py     DTO Pydantic de entrada y salida
-migrations/            Alembic (0001_base crea la tabla evento)
+migrations/            Alembic (0001_base: evento; 0002_catalogo: catálogo; 0003_robot: robots; 0004_versiones: versiones; 0005_operaciones: setups/corridas)
 herramientas/          robot_falso.py: robot simulado para desarrollo (no es parte del sistema)
 tests/
 ├── contract/          Ejemplos y reglas del contrato de mensajes

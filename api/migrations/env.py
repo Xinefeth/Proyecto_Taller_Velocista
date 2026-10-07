@@ -9,7 +9,12 @@ from app.core.config import settings
 from app.core.db import Base
 
 # Importa aquí los models.py de cada módulo para que autogenerate los vea.
+from app.modulos.armador import models as _armador  # noqa: F401, E402
+from app.modulos.catalogo import models as _catalogo  # noqa: F401, E402
+from app.modulos.corridas import models as _corridas  # noqa: F401, E402
 from app.modulos.eventos import models as _eventos  # noqa: F401, E402
+from app.modulos.optimizacion import models as _optimizacion  # noqa: F401, E402
+from app.modulos.reglamento import models as _reglamento  # noqa: F401, E402
 
 config = context.config
 config.set_main_option("sqlalchemy.url", settings.database_url.replace("%", "%%"))

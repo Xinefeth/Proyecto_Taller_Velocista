@@ -2,7 +2,7 @@
 # Rutas propuestas: consultar x-estado en openapi.json antes de ejecutar.
 @base = http://localhost:8000
 
-### listarTipos · propuesto
+### listarTipos · implementado
 GET {{base}}/api/tipos-componentes
 
 # Respuesta: 200
@@ -483,7 +483,7 @@ GET {{base}}/api/tipos-componentes
 #   }
 # ]
 
-### listarRanuras · propuesto
+### listarRanuras · implementado
 GET {{base}}/api/ranuras
 
 # Respuesta: 200
@@ -602,7 +602,7 @@ GET {{base}}/api/ranuras
 #   }
 # ]
 
-### listarComponentes · propuesto
+### listarComponentes · implementado
 GET {{base}}/api/componentes?limite=50&offset=0&q=QTR&tipo_id=linea
 
 # Respuesta: 200
@@ -631,7 +631,7 @@ GET {{base}}/api/componentes?limite=50&offset=0&q=QTR&tipo_id=linea
 #   "offset": 0
 # }
 
-### crearComponente · propuesto
+### crearComponente · implementado
 POST {{base}}/api/componentes
 Content-Type: application/json
 
@@ -670,7 +670,7 @@ Content-Type: application/json
 #   "archivado": false
 # }
 
-### obtenerComponente · propuesto
+### obtenerComponente · implementado
 GET {{base}}/api/componentes/c05
 
 # Respuesta: 200
@@ -692,7 +692,7 @@ GET {{base}}/api/componentes/c05
 #   "archivado": false
 # }
 
-### editarComponente · propuesto
+### editarComponente · implementado
 PATCH {{base}}/api/componentes/c05
 Content-Type: application/json
 
@@ -719,13 +719,13 @@ Content-Type: application/json
 #   "archivado": false
 # }
 
-### archivarComponente · propuesto
+### archivarComponente · implementado
 DELETE {{base}}/api/componentes/c05
 
 # Respuesta: 204
 # Sin cuerpo.
 
-### listarInventario · propuesto
+### listarInventario · implementado
 GET {{base}}/api/inventario?limite=50&offset=0
 
 # Respuesta: 200
@@ -745,7 +745,7 @@ GET {{base}}/api/inventario?limite=50&offset=0
 #   "offset": 0
 # }
 
-### actualizarInventario · propuesto
+### actualizarInventario · implementado
 PUT {{base}}/api/inventario/c05
 Content-Type: application/json
 
@@ -764,7 +764,7 @@ Content-Type: application/json
 #   "revision": 2
 # }
 
-### listarRobots · propuesto
+### listarRobots · implementado
 GET {{base}}/api/robots?limite=50&offset=0
 
 # Respuesta: 200
@@ -776,7 +776,7 @@ GET {{base}}/api/robots?limite=50&offset=0
 #       "codigo_corto": "001",
 #       "tipo": "velocista",
 #       "firmware": "0.3.1",
-#       "version_actual_id": 1,
+#       "version_actual_id": 2,
 #       "archivado": false
 #     }
 #   ],
@@ -785,7 +785,7 @@ GET {{base}}/api/robots?limite=50&offset=0
 #   "offset": 0
 # }
 
-### crearRobot · propuesto
+### crearRobot · implementado
 POST {{base}}/api/robots
 Content-Type: application/json
 
@@ -806,7 +806,7 @@ Content-Type: application/json
 #   "archivado": false
 # }
 
-### obtenerRobot · propuesto
+### obtenerRobot · implementado
 GET {{base}}/api/robots/v001
 
 # Respuesta: 200
@@ -816,11 +816,11 @@ GET {{base}}/api/robots/v001
 #   "codigo_corto": "001",
 #   "tipo": "velocista",
 #   "firmware": "0.3.1",
-#   "version_actual_id": 1,
+#   "version_actual_id": 2,
 #   "archivado": false
 # }
 
-### editarRobot · propuesto
+### editarRobot · implementado
 PATCH {{base}}/api/robots/v001
 Content-Type: application/json
 
@@ -839,13 +839,13 @@ Content-Type: application/json
 #   "archivado": false
 # }
 
-### archivarRobot · propuesto
+### archivarRobot · implementado
 DELETE {{base}}/api/robots/v001
 
 # Respuesta: 204
 # Sin cuerpo.
 
-### listarVersiones · propuesto
+### listarVersiones · implementado
 GET {{base}}/api/robots/v001/versiones?limite=50&offset=0
 
 # Respuesta: 200
@@ -1068,7 +1068,7 @@ GET {{base}}/api/robots/v001/versiones?limite=50&offset=0
 #   "offset": 0
 # }
 
-### crearVersion · propuesto
+### crearVersion · implementado
 POST {{base}}/api/robots/v001/versiones
 Content-Type: application/json
 
@@ -1337,7 +1337,7 @@ Content-Type: application/json
 #   }
 # }
 
-### obtenerVersion · propuesto
+### obtenerVersion · implementado
 GET {{base}}/api/robots/v001/versiones/1
 
 # Respuesta: 200
@@ -1553,7 +1553,7 @@ GET {{base}}/api/robots/v001/versiones/1
 #   }
 # }
 
-### listarControladores · propuesto
+### listarControladores · implementado
 GET {{base}}/api/controladores
 
 # Respuesta: 200
@@ -1627,7 +1627,7 @@ GET {{base}}/api/controladores
 #   }
 # ]
 
-### listarPerfiles · propuesto
+### listarPerfiles · implementado
 GET {{base}}/api/perfiles
 
 # Respuesta: 200
@@ -1662,7 +1662,7 @@ GET {{base}}/api/perfiles
 #   }
 # ]
 
-### listarSetups · propuesto
+### listarSetups · implementado
 GET {{base}}/api/robots/v001/setups?limite=50&offset=0&version_id=1
 
 # Respuesta: 200
@@ -1690,7 +1690,7 @@ GET {{base}}/api/robots/v001/setups?limite=50&offset=0&version_id=1
 #   "offset": 0
 # }
 
-### crearSetup · propuesto
+### crearSetup · implementado
 POST {{base}}/api/robots/v001/setups
 Content-Type: application/json
 
@@ -1725,7 +1725,7 @@ Content-Type: application/json
 #   "archivado": false
 # }
 
-### obtenerSetup · propuesto
+### obtenerSetup · implementado
 GET {{base}}/api/setups/1
 
 # Respuesta: 200
@@ -1746,13 +1746,13 @@ GET {{base}}/api/setups/1
 #   "archivado": false
 # }
 
-### archivarSetup · propuesto
+### archivarSetup · implementado
 DELETE {{base}}/api/setups/1
 
 # Respuesta: 204
 # Sin cuerpo.
 
-### listarCorridas · propuesto
+### listarCorridas · implementado
 GET {{base}}/api/corridas?limite=50&offset=0&robot_id=v001&version_id=1&controlador_id=pid&fuente=robot
 
 # Respuesta: 200
@@ -1798,7 +1798,7 @@ GET {{base}}/api/corridas?limite=50&offset=0&robot_id=v001&version_id=1&controla
 #   "offset": 0
 # }
 
-### obtenerCorrida · propuesto
+### obtenerCorrida · implementado
 GET {{base}}/api/corridas/1
 
 # Respuesta: 200
@@ -1837,7 +1837,7 @@ GET {{base}}/api/corridas/1
 #   "j": 11.8
 # }
 
-### anotarCorrida · propuesto
+### anotarCorrida · implementado
 PATCH {{base}}/api/corridas/1
 Content-Type: application/json
 
@@ -1881,7 +1881,7 @@ Content-Type: application/json
 #   "j": 11.8
 # }
 
-### listarVueltas · propuesto
+### listarVueltas · implementado
 GET {{base}}/api/corridas/1/vueltas?limite=50&offset=0
 
 # Respuesta: 200
