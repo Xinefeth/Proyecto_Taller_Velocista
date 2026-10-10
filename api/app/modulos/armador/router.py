@@ -19,7 +19,18 @@ from app.modulos.armador.schemas import (
     VersionSalida,
 )
 
-router = APIRouter(prefix="/api", tags=["builder"])
+# Todos los endpoints del armador acceden a la base de datos, así que cualquiera puede
+# responder 503 si la BD no está disponible. Se documenta a nivel de router para no repetirlo.
+DATABASE_UNAVAILABLE_RESPONSES = error_responses(
+    (
+        503,
+        "base_no_disponible",
+        "La base de datos no está disponible",
+        "La base de datos no está disponible (sin conexión o caída).",
+    ),
+)
+
+router = APIRouter(prefix="/api", tags=["builder"], responses=DATABASE_UNAVAILABLE_RESPONSES)
 
 DbSession = Annotated[Session, Depends(get_session)]
 RobotId = Annotated[str, Path(min_length=1, max_length=40)]

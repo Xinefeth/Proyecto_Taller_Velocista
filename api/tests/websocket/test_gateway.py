@@ -4,6 +4,7 @@ import pytest
 from starlette.websockets import WebSocketDisconnect
 
 from app.core.config import settings
+from app.gateway import ws
 
 URL_ROBOT = f"/ws/robot?token={settings.device_token_velocista}"
 URL_CRONO = f"/ws/cronometro?token={settings.device_token_cronometro}"
@@ -147,5 +148,21 @@ def test_comandos_validados_y_enviados(cliente, ejemplo):
 
 
 def test_comando_a_dispositivo_desconectado(cliente):
-    r = cliente.post("/api/devices/velocista/commands", json={"tipo": "detener"})
+    r = cliente.post("/api/devices/velocista/commands", json={"tipo": "stop"})
     assert r.status_code == 409 and r.json()["detail"]["motivo"] == "desconectado"
+
+
+def test_comando_con_enlace_caido_al_enviar_devuelve_503(cliente, ejemplo, monkeypatch):
+    """El robot pasa el pre-chequeo pero el enlace se cae al enviar: 503 dispositivo_no_disponible."""
+    with cliente.websocket_connect("/ws/consola") as consola:
+        consola.receive_json()
+        robot = conectar_robot(cliente, consola, ejemplo)
+
+        def enlace_caido(*_a, **_k):
+            raise RuntimeError("el socket del dispositivo ya está cerrado")
+
+        monkeypatch.setattr(ws, "enviar", enlace_caido)
+        r = cliente.post("/api/devices/velocista/commands", json={"tipo": "stop"})
+        assert r.status_code == 503
+        assert r.json()["detail"]["motivo"] == "dispositivo_no_disponible"
+        robot.__exit__(None, None, None)

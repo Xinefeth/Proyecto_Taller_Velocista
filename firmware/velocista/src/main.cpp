@@ -73,10 +73,10 @@ static int nPendientes = 0;
 
 static const char* nombreEstado(Estado e) {
   switch (e) {
-    case Estado::Listo: return "listo";
-    case Estado::Calibrando: return "calibrando";
-    case Estado::Corriendo: return "corriendo";
-    case Estado::Detenido: return "detenido";
+    case Estado::Listo: return "ready";
+    case Estado::Calibrando: return "calibrating";
+    case Estado::Corriendo: return "running";
+    case Estado::Detenido: return "stopped";
     default: return "error";
   }
 }
@@ -248,7 +248,7 @@ static void enviarManifiesto() {
   d["controlador_activo"] = "pid";
 
   JsonArray comandos = d["comandos"].to<JsonArray>();
-  for (const char* c : {"calibrar", "arrancar", "detener", "setup", "modo", "linea", "cierre_vuelta"})
+  for (const char* c : {"calibrate", "start", "stop", "setup", "modo", "linea", "cierre_vuelta"})
     comandos.add(c);
   d["frecuencias"]["lazo_hz"] = 1000;
   d["frecuencias"]["estado_hz"] = 1;
@@ -327,18 +327,18 @@ static const char* aplicarSetup(JsonObject datos, String& detalle) {
 // Devuelve el motivo de rechazo, o nullptr si se aceptó.
 static const char* atenderComando(const char* tipo, JsonObject datos, String& detalle) {
   Compartido c = copiar();
-  if (c.modoCompetencia && c.estado == Estado::Corriendo && strcmp(tipo, "detener") != 0 &&
+  if (c.modoCompetencia && c.estado == Estado::Corriendo && strcmp(tipo, "stop") != 0 &&
       strcmp(tipo, "cierre_vuelta") != 0)
     return "bloqueado_competencia";
 
-  if (!strcmp(tipo, "calibrar")) {
+  if (!strcmp(tipo, "calibrate")) {
     if (c.estado == Estado::Corriendo) return "ocupado";
     portENTER_CRITICAL(&mux);
     robot.calibrado = true;  // TODO(EN-10): rutina real de calibración
     robot.estado = Estado::Listo;
     portEXIT_CRITICAL(&mux);
     enviarEvento("calibracion_ok", "info", "Calibración terminada");
-  } else if (!strcmp(tipo, "arrancar")) {
+  } else if (!strcmp(tipo, "start")) {
     if (!c.calibrado) return "no_calibrado";
     portENTER_CRITICAL(&mux);
     robot.estado = Estado::Corriendo;
@@ -346,7 +346,7 @@ static const char* atenderComando(const char* tipo, JsonObject datos, String& de
     robot.errorAcumulado = 0;
     portEXIT_CRITICAL(&mux);
     enviarEvento("arranque", "info", "El robot empezó a correr");
-  } else if (!strcmp(tipo, "detener")) {
+  } else if (!strcmp(tipo, "stop")) {
     portENTER_CRITICAL(&mux);
     robot.estado = Estado::Detenido;
     portEXIT_CRITICAL(&mux);

@@ -49,7 +49,7 @@ No da batería/lazo en vivo; eso va por WebSocket.
 
 | Criterio | Estado | Nota |
 |---|---|---|
-| Barra con batería (V), enlace (dBm y ms), lazo (Hz) y estado | **Parcial** | La barra existe (`Strip.tsx`) pero hoy con **datos simulados** (comentario "enlace simulados"; la batería cambia por clic). El contrato real trae `bateria_v`, `rssi_dbm`, `lazo_hz` y `estado`. |
+| Barra con batería (V), enlace (dBm y ms), lazo (Hz) y estado | **Parcial (mejorado)** | La barra **ya consume datos reales del WebSocket** cuando hay un robot enlazado: batería (`bateria_v`), enlace en dBm (`rssi_dbm`) y lazo (`lazo_hz`) salen del mensaje `estado`; si no hay robot, cae a los simulados. Se montó `ProveedorConexion` en `main.tsx` (antes nunca se montaba) y la lógica vive en `consola/src/logica/robotStatus.ts` (con test). **Pendiente:** el **"ms" no tiene origen real** (se omite en modo real), y el texto de estado (`liveTxt`) sigue derivado de la simulación. |
 | Se actualiza ≥ 1 vez por segundo | **No verificado** | El contrato define `estado` a `estado_hz` = 1 Hz, pero no se pudo verificar el tiempo real sin robot (hoy simulado). |
 | Pérdida de enlace indicada en < 2 s | **No verificado** | El gateway emite `enlace` conectado=false al desconectar y la consola muestra "SIN ENLACE"; el umbral de 2 s no se verificó con robot real. |
 

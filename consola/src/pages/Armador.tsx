@@ -6,7 +6,16 @@ import { useConsola, RANURAS } from "../stores/ConsolaContext";
 import { Card } from "../components/Card";
 import { ICO, Chispa, Mas } from "../components/IconosUI";
 import { TIPO } from "../datos/robots";
-import { byId, checks, compat, curVer, facts, guardarPiezas } from "../logica/dominio";
+import {
+  byId,
+  checks,
+  compat,
+  curVer,
+  facts,
+  guardarPiezas,
+  manifest,
+  panelesManifiesto,
+} from "../logica/dominio";
 import { clamp, clone, fmt, money } from "../logica/formato";
 import type { Piezas, RobotDef } from "../types/dominio";
 
@@ -86,13 +95,17 @@ export function Armador() {
   const nb = cp.filter((x) => x[0] === "bad").length;
   const nw = cp.filter((x) => x[0] === "warn").length;
   const ck = checks(f, c.perfil);
-  const expo: string[] = [];
-  if (f.sensores) expo.push(`Regleta de ${f.sensores} canales`);
-  if (f.motores) expo.push(`${f.motores} motores (PWM)`);
-  if (f.bat) expo.push("Voltaje de batería");
-  if (f.enc) expo.push("Encoders");
-  if (f.imu) expo.push("IMU");
-  if (f.turb) expo.push("Turbina");
+  const declaredManifest = manifest(
+    { ...r, ver: [{ ...v, parts }] },
+    c.catalog,
+    c.applied.ctrl,
+    c.comp,
+  );
+  const expo = panelesManifiesto(declaredManifest).map((panel) => {
+    if (panel.id === "regleta") return `Regleta de ${f.sensores} canales`;
+    if (panel.id === "bateria") return "Voltaje de batería";
+    return panel.nombre;
+  });
   if (f.radio !== "Ninguna") expo.push(`Arranque inalámbrico (${f.radio.split(" ")[0]})`);
 
   return (
@@ -119,7 +132,8 @@ export function Armador() {
                 <span className="ic">{x.tipo === "velocista" ? ICO.velo : ICO.sumo}</span>
                 <b>{x.nm}</b>
                 <small>
-                  {TIPO[x.tipo]} · {curVer(x).v} · {curVer(x).estado}
+                  {TIPO[x.tipo]} · {curVer(x).v} · {x.fw ? `Firmware ${x.fw}` : "Sin firmware"} ·{" "}
+                  {curVer(x).estado}
                 </small>
               </button>
             ))}

@@ -15,7 +15,7 @@ TipoCanal = Literal["float", "int", "bool", "float[]", "int[]"]
 # Canales que la API necesita para calcular J y vigilar la batería.
 CANALES_REQUERIDOS: dict[str, str] = {"error": "senales", "bateria_v": "estado"}
 
-COMANDOS_ROBOT = {"calibrar", "arrancar", "detener", "setup", "modo", "linea", "cierre_vuelta"}
+COMANDOS_ROBOT = {"calibrate", "start", "stop", "setup", "modo", "linea", "cierre_vuelta"}
 
 
 class Canal(Estricto):

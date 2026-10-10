@@ -4,6 +4,7 @@ La consola nunca habla con el robot: pide el comando aquí, la API lo valida y e
 lo envía. La confirmación del dispositivo llega a la consola por /ws/consola como ack.
 """
 
+import json
 from typing import Any, Literal
 
 from fastapi import APIRouter
@@ -12,25 +13,46 @@ from pydantic import BaseModel, ConfigDict, Field
 from app.contrato import Manifiesto, MensajeInvalido, validar_datos
 from app.contrato.robot import Estado, Setup
 from app.contrato.validacion import revisar_setup
+from app.core.config import RAIZ_REPO
 from app.core.errores import ErrorDeNegocio, error_responses
 from app.gateway import ws
 
-router = APIRouter(prefix="/api/devices", tags=["devices"])
+DATABASE_UNAVAILABLE_RESPONSES = error_responses(
+    (
+        503,
+        "base_no_disponible",
+        "La base de datos no está disponible",
+        "Base de datos no disponible. Documentado como error de infraestructura; "
+        "actualmente este gateway usa conexiones WebSocket en memoria y no consulta la BD.",
+    ),
+)
+
+router = APIRouter(
+    prefix="/api/devices", tags=["devices"], responses=DATABASE_UNAVAILABLE_RESPONSES
+)
 
 Device = Literal["velocista", "cronometro"]
+
+# Ejemplo real del manifiesto para Swagger, en vez del texto aleatorio que genera el esquema.
+# Es el mismo ejemplo del contrato; tomamos su `datos` porque el endpoint devuelve el manifiesto.
+MANIFEST_EXAMPLE = json.loads(
+    (RAIZ_REPO / "docs" / "contrato" / "ejemplos" / "velocista.manifiesto.json").read_text(
+        encoding="utf-8"
+    )
+)["datos"]
 
 
 class Command(BaseModel):
     """Command that the console asks to send to a device (HU-16)."""
 
-    model_config = ConfigDict(json_schema_extra={"example": {"tipo": "arrancar", "datos": {}}})
+    model_config = ConfigDict(json_schema_extra={"example": {"tipo": "start", "datos": {}}})
 
     tipo: str = Field(
         description=(
             "Tipo de comando. Para el velocista debe estar declarado en su manifiesto: "
-            "calibrar, arrancar, detener, setup, modo, linea, cierre_vuelta."
+            "calibrate, start, stop, setup, modo, linea, cierre_vuelta."
         ),
-        examples=["calibrar", "arrancar", "detener"],
+        examples=["calibrate", "start", "stop"],
     )
     datos: dict[str, Any] = Field(
         default_factory=dict,
@@ -79,9 +101,9 @@ def validar_comando(
     if tipo not in manifiesto.comandos:
         raise ErrorDeNegocio(422, "comando_desconocido", "El robot no declara ese comando")
     e = ultimo_estado
-    if e and e.modo == "competencia" and e.estado == "corriendo" and tipo != "detener":
+    if e and e.modo == "competencia" and e.estado == "running" and tipo != "stop":
         raise ErrorDeNegocio(409, "bloqueado_competencia", "En competencia solo se puede detener")
-    if tipo == "arrancar" and (e is None or not e.calibrado):
+    if tipo == "start" and (e is None or not e.calibrado):
         raise ErrorDeNegocio(409, "no_calibrado", "Calibra el robot antes de arrancar")
     if isinstance(modelo, Setup) and (problema := revisar_setup(manifiesto, modelo)):
         raise ErrorDeNegocio(422, problema[0], problema[1])
@@ -90,6 +112,7 @@ def validar_comando(
 
 @router.get(
     "/velocista/manifest",
+    status_code=200,
     response_model=Manifiesto,
     operation_id="getRacerManifest",
     summary="Consultar el manifiesto del velocista",
@@ -99,14 +122,17 @@ def validar_comando(
         "robot seleccionado (HU-13). Requiere que el velocista esté conectado y haya enviado su "
         "manifiesto por `/ws/robot`."
     ),
-    responses=error_responses(
-        (
-            404,
-            "sin_manifiesto",
-            "El robot no está conectado o aún no envió su manifiesto",
-            "El velocista no está conectado o todavía no envió su manifiesto.",
+    responses={
+        200: {"content": {"application/json": {"example": MANIFEST_EXAMPLE}}},
+        **error_responses(
+            (
+                404,
+                "sin_manifiesto",
+                "El robot no está conectado o aún no envió su manifiesto",
+                "El velocista no está conectado o todavía no envió su manifiesto.",
+            ),
         ),
-    ),
+    },
 )
 def get_racer_manifest() -> dict:
     connection = ws.conexiones.get("velocista")
@@ -148,6 +174,18 @@ def get_racer_manifest() -> dict:
             "El robot no declara ese comando",
             "Comando o datos inválidos: no declarado en el manifiesto, mal formado o fuera de rango.",
         ),
+        (
+            503,
+            "base_no_disponible",
+            "La base de datos no está disponible",
+            "Base de datos no disponible (error de infraestructura; actualmente sin acceso a BD).",
+        ),
+        (
+            503,
+            "dispositivo_no_disponible",
+            "No se pudo entregar el comando: el dispositivo dejó de responder",
+            "El enlace con el dispositivo se perdió al enviar el comando (se cayó entre la validación y el envío); reintenta.",
+        ),
     ),
 )
 async def send_command(device: Device, command: Command) -> CommandAccepted:
@@ -157,5 +195,13 @@ async def send_command(device: Device, command: Command) -> CommandAccepted:
     model = validar_comando(
         device, command.tipo, command.datos, connection.manifiesto, connection.ultimo_estado
     )
-    seq = await ws.enviar(device, command.tipo, model.model_dump(exclude_none=True))
+    try:
+        seq = await ws.enviar(device, command.tipo, model.model_dump(exclude_none=True))
+    except (KeyError, RuntimeError, OSError) as e:
+        # El enlace se cayó entre el pre-chequeo y el envío: el dispositivo ya no recibe.
+        raise ErrorDeNegocio(
+            503,
+            "dispositivo_no_disponible",
+            "No se pudo entregar el comando: el dispositivo dejó de responder",
+        ) from e
     return CommandAccepted(seq=seq)

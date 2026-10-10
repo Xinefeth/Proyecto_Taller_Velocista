@@ -14,7 +14,7 @@ ValorCanal = float | int | bool | list[float] | list[int]
 class Estado(Estricto):
     """Cada 1/estado_hz segundos (1 Hz por defecto)."""
 
-    estado: Literal["listo", "calibrando", "corriendo", "detenido", "error"]
+    estado: Literal["ready", "calibrating", "running", "stopped", "error"]
     calibrado: bool
     modo: Literal["prueba", "competencia"]
     linea: Literal["negra", "blanca"]
@@ -62,7 +62,7 @@ class Evento(Estricto):
 
 
 class SinDatos(Estricto):
-    """calibrar, arrancar, detener."""
+    """calibrate, start, stop."""
 
 
 class Setup(Estricto):

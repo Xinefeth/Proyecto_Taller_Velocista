@@ -1,7 +1,9 @@
 // Franja superior de la consola (Protoripo.html): selector de robot con manifiesto, batería y
 // enlace simulados, tiempos de vuelta, fuente de datos (EN-05) y chip del perfil de reglamento.
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useConsola } from "../stores/ConsolaContext";
+import { useConexionOpcional } from "../stores/ConexionContext";
+import { robotStatusFromMessages } from "../logica/robotStatus";
 import { complies, curVer, facts } from "../logica/dominio";
 import { clamp, fmt } from "../logica/formato";
 import { colores } from "../logica/lienzos";
@@ -22,6 +24,16 @@ const TITULOS: Record<string, [string, string]> = {
 
 export function Strip() {
   const c = useConsola();
+  // HU-14: estado real del robot por WebSocket; si hay robot enlazado, la barra usa sus
+  // valores (batería, enlace, lazo, estado); si no, cae a los datos simulados.
+  const conexion = useConexionOpcional();
+  const live = useMemo(
+    () => robotStatusFromMessages(conexion?.mensajes ?? []),
+    [conexion?.mensajes],
+  );
+  const useReal = live.connected && live.state != null;
+  const connected = useReal ? live.connected : c.connected;
+  const vbat = useReal && live.battery != null ? live.battery : c.vbat;
   const [menu, setMenu] = useState(false);
   const rsel = useRef<HTMLDivElement>(null);
 
@@ -49,7 +61,7 @@ export function Strip() {
     const id = setInterval(() => setAhora(Date.now()), 100);
     return () => clearInterval(id);
   }, []);
-  if (c.connected) {
+  if (connected) {
     // c.link es un objeto nuevo en cada actualización del enlace; su identidad marca el refresco.
     if (prevLinkRef.current !== c.link) {
       prevLinkRef.current = c.link;
@@ -71,7 +83,7 @@ export function Strip() {
     gap = g <= 1e-9 ? "Mejor" : `+${fmt(g, 3)}`;
   }
   const rec = c.mapRef.current.recording;
-  const liveTxt = !c.connected
+  const liveTxt = !connected
     ? "SIN ENLACE"
     : c.running
       ? rec
@@ -81,7 +93,7 @@ export function Strip() {
         ? "EN REPOSO · SIMULADO"
         : "EN REPOSO";
 
-  const pct = clamp((c.vbat - 6.8) / (8.4 - 6.8), 0, 1);
+  const pct = clamp((vbat - 6.8) / (8.4 - 6.8), 0, 1);
   const batColor = pct < 0.3 ? col["--red"] : pct < 0.55 ? col["--yellow"] : col["--green"];
   const ok = complies(c.robot, c.perfil, c.catalog);
   const titulo = TITULOS[c.tab];
@@ -101,7 +113,7 @@ export function Strip() {
             <span>{c.robot.nm}</span>
             <Chevron />
           </b>
-          <span className={`live ${!c.running || !c.connected ? "off" : ""}`}>
+          <span className={`live ${!c.running || !connected ? "off" : ""}`}>
             <i />
             <span>{liveTxt}</span>
           </span>
@@ -190,7 +202,7 @@ export function Strip() {
             <span className="batbar">
               <i style={{ width: `${pct * 100}%`, background: batColor }} />
             </span>
-            <span>{fmt(c.vbat, 2)} V</span>
+            <span>{fmt(vbat, 2)} V</span>
           </span>
         </button>
         <button
@@ -200,22 +212,24 @@ export function Strip() {
           onClick={c.toggleConnected}
         >
           <span className="lbl">Enlace WiFi</span>
-          <span className="v" style={{ color: c.connected ? "" : col["--red-hi"] }}>
-            {c.connected ? (
+          <span className="v" style={{ color: connected ? "" : col["--red-hi"] }}>
+            {!connected ? (
+              <>
+                Sin enlace <small>· {fmt(edadCaida, 1)} s</small>
+              </>
+            ) : useReal ? (
+              <>−{live.rssiDbm} dBm</>
+            ) : (
               <>
                 −{c.link.dbm} dBm <small>{c.link.ms} ms</small>{" "}
                 <small className="dimt">· hace {fmt(edadEnlace, 1)} s</small>
-              </>
-            ) : (
-              <>
-                Sin enlace <small>· {fmt(edadCaida, 1)} s</small>
               </>
             )}
           </span>
         </button>
         <div className="st hide-m">
           <span className="lbl">Lazo</span>
-          <span className="v">1000 Hz</span>
+          <span className="v">{useReal && live.loopHz != null ? live.loopHz : 1000} Hz</span>
         </div>
         <div className="divv" />
         <div className="st" data-sprint="2">

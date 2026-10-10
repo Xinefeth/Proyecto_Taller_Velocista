@@ -14,4 +14,4 @@
 
 #define ROBOT_ID "v001"
 #define FIRMWARE_VERSION "0.2.0"
-#define CONTRATO_VERSION "1.0"
+#define CONTRATO_VERSION "2.0"

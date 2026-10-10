@@ -2,6 +2,7 @@
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import App from "../App";
+import { ROBOTS as TEST_ROBOTS } from "../datos/robots";
 import { ProveedorConsola } from "../stores/ConsolaContext";
 
 beforeEach(() => {
@@ -18,7 +19,7 @@ afterEach(() => {
 
 const montar = () =>
   render(
-    <ProveedorConsola>
+    <ProveedorConsola initialRobots={TEST_ROBOTS}>
       <App />
     </ProveedorConsola>,
   );

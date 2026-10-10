@@ -27,7 +27,7 @@ class RobotFalso:
         self.manifiesto = json.loads((EJEMPLOS / "velocista.manifiesto.json").read_text())["datos"]
         self.seq = 0
         self.inicio = time.monotonic()
-        self.estado = "listo"
+        self.estado = "ready"
         self.calibrado = False
         self.modo = "prueba"
         self.linea = "negra"
@@ -46,18 +46,18 @@ class RobotFalso:
     def comando(self, tipo: str, datos: dict) -> dict:
         if (
             self.modo == "competencia"
-            and self.estado == "corriendo"
-            and tipo not in ("detener", "cierre_vuelta")
+            and self.estado == "running"
+            and tipo not in ("stop", "cierre_vuelta")
         ):
             return {"ok": False, "motivo": "bloqueado_competencia"}
-        if tipo == "calibrar":
+        if tipo == "calibrate":
             self.calibrado = True
-        elif tipo == "arrancar":
+        elif tipo == "start":
             if not self.calibrado:
                 return {"ok": False, "motivo": "no_calibrado"}
-            self.estado, self.inicio_vuelta, self.error_acumulado = "corriendo", self.ms(), 0.0
-        elif tipo == "detener":
-            self.estado = "detenido"
+            self.estado, self.inicio_vuelta, self.error_acumulado = "running", self.ms(), 0.0
+        elif tipo == "stop":
+            self.estado = "stopped"
         elif tipo == "modo":
             self.modo = datos["modo"]
         elif tipo == "linea":
@@ -117,16 +117,16 @@ class RobotFalso:
                     "canales": {"bateria_v": round(8.2 - tick / 20000, 2)},
                 }
                 await ws.send(self.sobre("estado", estado))
-            if self.estado == "corriendo":
+            if self.estado == "running":
                 error = round(0.4 * math.sin(tick / 8) + random.uniform(-0.05, 0.05), 3)
                 self.error_acumulado += abs(error) * 0.05
-                centro = 7.5 + error * 7.5
-                regleta = [max(0, int(1000 - 350 * abs(i - centro) ** 1.5)) for i in range(16)]
+                center = 7.5 + error * 7.5
+                strip_readings = [max(0, int(1000 - 350 * abs(i - center) ** 1.5)) for i in range(16)]
                 senales = {
                     "t_ms": self.ms(),
                     "canales": {
                         "error": error,
-                        "regleta": regleta,
+                        "regleta": strip_readings,
                         "pwm_izq": int(160 + 80 * error),
                         "pwm_der": int(160 - 80 * error),
                     },

@@ -2,12 +2,14 @@
 // EN-19, HU-13 a HU-18, HU-21 a HU-24, HU-30, HU-11.
 import { useState } from "react";
 import { useConsola } from "../stores/ConsolaContext";
+import { useConexionOpcional } from "../stores/ConexionContext";
 import { Card, type Sprint } from "../components/Card";
 import { ICO, Gate, Play, Stop } from "../components/IconosUI";
 import { CTRL, PDEF, differs } from "../datos/controladores";
 import { curVer, facts } from "../logica/dominio";
 import { clamp, fmt } from "../logica/formato";
 import { drawChart, drawHealth, drawMap, type DatosMapa } from "../logica/lienzos";
+import { ACTIVE_THRESHOLD, stripFromMessages, type StripView } from "../logica/strip";
 import { useCanvas } from "../hooks/useCanvas";
 
 // Alcance de cada controlador: en Sprint 1 solo PID; adaptativo (EN-21) es S2 y difuso (HU-31) es Could.
@@ -571,25 +573,41 @@ function Cronometraje() {
   );
 }
 
-function Regleta() {
-  const c = useConsola();
-  const sim = c.simRef.current;
+// Regleta simulada: el bucle de simulación (modo Simulado) mueve la línea con `sim.es`.
+// Se usa como respaldo mientras no llega un `senales` real del robot por el WebSocket.
+function simulatedStrip(sim: { es: number; p: number }): StripView {
   const pos = -sim.es;
   const vis = Math.abs(sim.es) <= 1.1;
-  let act = 0;
+  let active = 0;
   const bars = Array.from({ length: 16 }, (_, i) => {
     const x = -1 + i * (2 / 15);
-    let v = vis ? Math.exp(-((x - pos) ** 2) / (2 * 0.018)) : 0;
-    v = clamp(v + Math.random() * 0.04, 0, 1);
-    const hot = v > 0.5;
-    if (hot) act++;
-    return { h: 8 + v * 92, hot, n: Math.round(v * 9) };
+    const v = clamp((vis ? Math.exp(-((x - pos) ** 2) / (2 * 0.018)) : 0) + Math.random() * 0.04, 0, 1);
+    if (v >= ACTIVE_THRESHOLD) active++;
+    return v;
   });
-  const posTag: [string, string] = !vis
+  return {
+    bars,
+    digits: bars.map((v) => Math.round(v * 9)),
+    positionNorm: pos,
+    positionMm: pos * 72,
+    error: sim.p,
+    centered: vis && Math.abs(pos) < 0.25,
+    lost: !vis,
+    active,
+  };
+}
+
+export function Regleta() {
+  const c = useConsola();
+  const conexion = useConexionOpcional();
+  // Datos reales del robot (canal `regleta` de `senales`) si los hay; si no, la simulación.
+  const real = conexion ? stripFromMessages(conexion.mensajes) : null;
+  const v = real ?? simulatedStrip(c.simRef.current);
+  const posTag: [string, string] = v.lost
     ? ["Línea perdida", "tag red"]
-    : Math.abs(pos) < 0.25
+    : v.centered
       ? ["Centrada", "tag good"]
-      : [pos > 0 ? "Hacia la derecha" : "Hacia la izquierda", "tag"];
+      : [v.positionNorm > 0 ? "Hacia la derecha" : "Hacia la izquierda", "tag"];
   return (
     <Card className="a-sens" pbi="HU-15" sprint="1">
       <div className="hd">
@@ -599,12 +617,12 @@ function Regleta() {
         <span className={posTag[1]}>{posTag[0]}</span>
       </div>
       <div className="bars">
-        {bars.map((b, i) => (
+        {v.bars.map((b, i) => (
           <div className="bar" key={i}>
             <div className="tb">
-              <i className={b.hot ? "hot" : ""} style={{ height: `${b.h}%` }} />
+              <i className={b >= ACTIVE_THRESHOLD ? "hot" : ""} style={{ height: `${8 + b * 92}%` }} />
             </div>
-            <div className="n">{b.n}</div>
+            <div className="n">{v.digits[i]}</div>
           </div>
         ))}
       </div>
@@ -615,17 +633,17 @@ function Regleta() {
       <div className="sread">
         <div>
           <div className="lbl">Posición</div>
-          <div className={`v ${vis ? "" : "bad"}`}>
-            {vis ? `${pos > 0 ? "+" : ""}${fmt(pos * 72, 1)} mm` : "Perdida"}
+          <div className={`v ${v.lost ? "bad" : ""}`}>
+            {v.lost ? "Perdida" : `${v.positionMm > 0 ? "+" : ""}${fmt(v.positionMm, 1)} mm`}
           </div>
         </div>
         <div>
           <div className="lbl">Error</div>
-          <div className="v">{fmt(sim.p, 2)}</div>
+          <div className="v">{fmt(v.error, 2)}</div>
         </div>
         <div>
           <div className="lbl">Sobre la línea</div>
-          <div className="v">{act} / 16</div>
+          <div className="v">{v.active} / 16</div>
         </div>
       </div>
     </Card>

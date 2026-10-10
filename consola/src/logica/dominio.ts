@@ -11,6 +11,7 @@ import type {
   Severidad,
   Version,
 } from "../types/dominio";
+import type { RobotApi } from "../types/api";
 import { CTRL, PDEF } from "../datos/controladores";
 import { clone, fmt, num } from "./formato";
 
@@ -19,6 +20,20 @@ export const byId = (cat: Componente[], id: string): Componente | undefined =>
 
 export const robotById = (robots: RobotDef[], id: string): RobotDef | undefined =>
   robots.find((r) => r.id === id);
+
+/**
+ * Fusiona el resumen de robots de la API (HU-13) sobre los robots locales: por id, toma del
+ * backend el tipo y el firmware (los campos que la API expone), y conserva las versiones y
+ * piezas locales, que la API no entrega. Los robots sin coincidencia local se omiten (sin
+ * piezas no se pueden armar sus paneles); si la API no respondió, se usa la lista local tal cual.
+ */
+export const fusionarRobotsApi = (locales: RobotDef[], resumen: RobotApi[]): RobotDef[] => {
+  const porId = new Map(resumen.map((r) => [r.id, r]));
+  return locales.map((r) => {
+    const s = porId.get(r.id);
+    return s ? { ...r, tipo: s.tipo, fw: s.firmware } : r;
+  });
+};
 
 /** Versión actual de un robot (la última). */
 export const curVer = (r: RobotDef): Version => r.ver[r.ver.length - 1];
@@ -370,7 +385,7 @@ export function manifest(
       modulos: f.sensMods,
       via: f.mux ? "multiplexor" : "directo",
     });
-  m.sensores.push({ id: "bateria", tipo: "voltaje", unidad: "V" });
+  if (f.bat) m.sensores.push({ id: "bateria", tipo: "voltaje", unidad: "V" });
   if (f.enc) m.sensores.push({ id: "encoders", tipo: "encoder", cpr: f.enc.s.cpr, ruedas: 2 });
   if (f.imu) m.sensores.push({ id: "imu", tipo: "imu", ejes: f.imu.s.ejes });
   if (f.motores)
@@ -380,3 +395,25 @@ export function manifest(
   if (f.turb) m.actuadores.push({ id: "turbina", tipo: "turbina", pwm: [0, 100] });
   return m;
 }
+
+/** Nombre legible de cada panel de dispositivo, por id declarado en el manifiesto. */
+const PANEL_NAMES: Record<string, string> = {
+  regleta: "Regleta de línea",
+  bateria: "Batería",
+  encoders: "Encoders",
+  imu: "IMU",
+  motor_izq: "Motor izquierdo",
+  motor_der: "Motor derecho",
+  turbina: "Turbina",
+};
+
+/**
+ * Paneles de dispositivo que la consola arma a partir del manifiesto (HU-13): un panel por cada
+ * sensor y actuador declarado, en ese orden. Lo que el robot no declara no produce panel, así
+ * que, p. ej., sin encoder no aparece el panel de encoder.
+ */
+export const panelesManifiesto = (m: Manifiesto): { id: string; nombre: string }[] =>
+  [...m.sensores, ...m.actuadores].map((d) => {
+    const id = String(d.id);
+    return { id, nombre: PANEL_NAMES[id] ?? id };
+  });

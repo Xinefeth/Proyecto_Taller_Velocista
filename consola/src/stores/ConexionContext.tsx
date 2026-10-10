@@ -35,3 +35,8 @@ export function useConexion(): Conexion {
   if (!c) throw new Error("useConexion debe usarse dentro de ProveedorConexion");
   return c;
 }
+
+/** Como useConexion pero devuelve null si no hay proveedor (no lanza). */
+export function useConexionOpcional(): Conexion | null {
+  return useContext(Contexto);
+}

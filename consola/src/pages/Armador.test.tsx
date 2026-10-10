@@ -2,6 +2,7 @@
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import App from "../App";
+import { ROBOTS as TEST_ROBOTS } from "../datos/robots";
 import { ProveedorConsola } from "../stores/ConsolaContext";
 
 beforeEach(() => {
@@ -17,7 +18,7 @@ afterEach(() => {
 
 const abrirArmador = () => {
   const vista = render(
-    <ProveedorConsola>
+    <ProveedorConsola initialRobots={TEST_ROBOTS}>
       <App />
     </ProveedorConsola>,
   );
@@ -55,6 +56,15 @@ describe("HU-07 · resumen del robot", () => {
     elegir("Chasis", "c20");
     fireEvent.click(screen.getByRole("button", { name: "Descartar" }));
     expect(resumen("Costo total")).toBe("S/ 405.50");
+  });
+
+  it("no expone encoders/IMU/turbina si el robot no los declara (HU-13)", () => {
+    abrirArmador(); // Velocista 001: regleta, batería y motores, sin encoder/IMU/turbina
+    const expone = within(tarjetaResumen());
+    expect(expone.getByText("Voltaje de batería")).toBeTruthy();
+    expect(expone.queryByText("Encoders")).toBeNull();
+    expect(expone.queryByText("IMU")).toBeNull();
+    expect(expone.queryByText("Turbina")).toBeNull();
   });
 });
 

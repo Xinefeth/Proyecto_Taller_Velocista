@@ -27,9 +27,9 @@ CATALOGO: dict[tuple[str, str], Definicion] = {
     ("velocista", "evento"): Definicion(r.Evento, True, "cuando ocurre"),
     ("velocista", "ack"): Definicion(r.Ack, False, "por cada comando"),
     # API -> Robot
-    ("api->velocista", "calibrar"): Definicion(r.SinDatos, True, "a pedido"),
-    ("api->velocista", "arrancar"): Definicion(r.SinDatos, True, "a pedido"),
-    ("api->velocista", "detener"): Definicion(r.SinDatos, True, "a pedido"),
+    ("api->velocista", "calibrate"): Definicion(r.SinDatos, True, "a pedido"),
+    ("api->velocista", "start"): Definicion(r.SinDatos, True, "a pedido"),
+    ("api->velocista", "stop"): Definicion(r.SinDatos, True, "a pedido"),
     ("api->velocista", "setup"): Definicion(r.Setup, True, "a pedido"),
     ("api->velocista", "modo"): Definicion(r.Modo, True, "a pedido"),
     ("api->velocista", "linea"): Definicion(r.Linea, True, "a pedido"),

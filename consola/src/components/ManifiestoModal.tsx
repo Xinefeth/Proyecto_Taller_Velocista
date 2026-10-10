@@ -1,13 +1,15 @@
 // Modal del manifiesto del robot (EN-02): lo que el robot envía al conectarse. Del prototipo.
 import { useConsola } from "../stores/ConsolaContext";
 import { Cerrar } from "./IconosUI";
-import { manifest, robotById } from "../logica/dominio";
+import { manifest, panelesManifiesto, robotById } from "../logica/dominio";
 
 export function ManifiestoModal() {
   const c = useConsola();
   const r = c.manifiestoId ? robotById(c.robots, c.manifiestoId) : null;
   const abierto = !!r;
-  const json = r ? JSON.stringify(manifest(r, c.catalog, c.applied.ctrl, c.comp), null, 2) : "";
+  const m = r ? manifest(r, c.catalog, c.applied.ctrl, c.comp) : null;
+  const panels = m ? panelesManifiesto(m) : [];
+  const json = m ? JSON.stringify(m, null, 2) : "";
   const copiar = async () => {
     try {
       await navigator.clipboard.writeText(json);
@@ -40,7 +42,23 @@ export function ManifiestoModal() {
               El robot lo envía al conectarse. La consola arma sus paneles y el panel Setup a partir
               de este mensaje.
             </p>
-            <pre className="json">{json}</pre>
+            <p className="sub" style={{ margin: "12px 0 6px" }}>
+              Paneles del robot
+            </p>
+            <div
+              aria-label="Paneles del robot"
+              style={{ display: "flex", flexWrap: "wrap", gap: 6 }}
+            >
+              {panels.map((panel) => (
+                <span key={panel.id} className="tag">
+                  {panel.nombre}
+                </span>
+              ))}
+              {panels.length === 0 && <span>Sin dispositivos declarados.</span>}
+            </div>
+            <pre className="json" style={{ marginTop: 12 }}>
+              {json}
+            </pre>
           </div>
           <div className="mf">
             <button type="button" className="sb" onClick={copiar}>

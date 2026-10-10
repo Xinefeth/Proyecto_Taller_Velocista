@@ -54,7 +54,7 @@ export interface Manifiesto {
 }
 
 export interface EstadoRobot {
-  estado: "listo" | "calibrando" | "corriendo" | "detenido" | "error";
+  estado: "ready" | "calibrating" | "running" | "stopped" | "error";
   calibrado: boolean;
   modo: "prueba" | "competencia";
   linea: "negra" | "blanca";

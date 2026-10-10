@@ -15,7 +15,7 @@ def manifiesto(ejemplo):
 
 def estado(**cambios) -> Estado:
     base = dict(
-        estado="listo",
+        estado="ready",
         calibrado=True,
         modo="prueba",
         linea="negra",
@@ -39,19 +39,19 @@ SETUP_OK = {"controlador": "pid", "parametros": {"kp": 0.4}}
 
 
 def test_arrancar_calibrado_se_acepta(manifiesto):
-    assert motivo("velocista", "arrancar", {}, manifiesto, estado()) is None
+    assert motivo("velocista", "start", {}, manifiesto, estado()) is None
 
 
 def test_arrancar_sin_calibrar(manifiesto):
     assert (
-        motivo("velocista", "arrancar", {}, manifiesto, estado(calibrado=False)) == "no_calibrado"
+        motivo("velocista", "start", {}, manifiesto, estado(calibrado=False)) == "no_calibrado"
     )
 
 
 def test_en_competencia_corriendo_solo_detener(manifiesto):
-    e = estado(modo="competencia", estado="corriendo")
+    e = estado(modo="competencia", estado="running")
     assert motivo("velocista", "setup", SETUP_OK, manifiesto, e) == "bloqueado_competencia"
-    assert motivo("velocista", "detener", {}, manifiesto, e) is None
+    assert motivo("velocista", "stop", {}, manifiesto, e) is None
 
 
 @pytest.mark.parametrize(
@@ -73,7 +73,7 @@ def test_controlador_no_disponible(manifiesto):
 
 
 def test_sin_manifiesto():
-    assert motivo("velocista", "calibrar", {}, None, None) == "sin_manifiesto"
+    assert motivo("velocista", "calibrate", {}, None, None) == "sin_manifiesto"
 
 
 def test_tipo_desconocido_y_ack(manifiesto):

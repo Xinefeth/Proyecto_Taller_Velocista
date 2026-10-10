@@ -11,14 +11,17 @@ import {
   complies,
   curVer,
   facts,
+  fusionarRobotsApi,
   guardarPiezas,
   manifest,
+  panelesManifiesto,
   profById,
   robotById,
   siguienteIdComponente,
   usedIn,
   usedQty,
 } from "./dominio";
+import type { RobotApi } from "../types/api";
 
 // Catálogo pequeño con números fáciles de comprobar a mano.
 const comp = (
@@ -236,6 +239,25 @@ describe("manifest: sensores y actuadores salen de las piezas (HU-06, EN-02)", (
   });
 });
 
+describe("panelesManifiesto: un panel por dispositivo declarado (HU-13)", () => {
+  const paneles = (id: string) =>
+    panelesManifiesto(manifest(robotById(ROBOTS, id)!, CAT, "pid", true)).map((p) => p.nombre);
+
+  it("el Velocista 001 muestra regleta, batería y motores, pero NO encoders/IMU/turbina", () => {
+    const nombres = paneles("v001");
+    expect(nombres).toEqual(["Regleta de línea", "Batería", "Motor izquierdo", "Motor derecho"]);
+    expect(nombres).not.toContain("Encoders"); // sin encoder no aparece ese panel
+    expect(nombres).not.toContain("IMU");
+    expect(nombres).not.toContain("Turbina");
+  });
+
+  it("un robot con encoders y turbina sí muestra esos paneles", () => {
+    const nombres = paneles("v002");
+    expect(nombres).toContain("Encoders");
+    expect(nombres).toContain("Turbina");
+  });
+});
+
 describe("inventario: robots que usan cada pieza (HU-03, HU-04)", () => {
   it("cuenta las piezas en la versión actual de cada robot", () => {
     const u = usedIn(ROBOTS, "c05"); // Pololu QTR-8A
@@ -293,5 +315,56 @@ describe("guardarPiezas: versiones del robot (HU-06)", () => {
     const { robot } = guardarPiezas(nuevo, todas, "Con extras");
     const f = facts(curVer(robot).parts, CAT);
     expect([f.enc?.id, f.imu?.id, f.turb?.id]).toEqual(["c22", "c23", "c24"]);
+  });
+});
+
+it("un robot sin piezas no declara sensores ni actuadores por defecto (HU-13)", () => {
+  const robot = { ...ROBOTS[0], ver: [{ ...curVer(ROBOTS[0]), parts: {} }] };
+  const declared = manifest(robot, CAT, "pid", false);
+  expect(declared.sensores).toEqual([]);
+  expect(declared.actuadores).toEqual([]);
+  expect(panelesManifiesto(declared)).toEqual([]);
+});
+
+describe("fusionarRobotsApi (HU-13)", () => {
+  const resumen = (
+    id: string,
+    tipo: "velocista" | "minisumo",
+    firmware: string | null,
+  ): RobotApi => ({
+    id,
+    nombre: id,
+    codigo_corto: id,
+    tipo,
+    firmware,
+    version_actual_id: null,
+    archivado: false,
+  });
+
+  it("toma tipo y firmware del backend por id y conserva versiones y piezas locales", () => {
+    const [fusionado] = fusionarRobotsApi(
+      [robotById(ROBOTS, "v001")!],
+      [resumen("v001", "velocista", "9.9.9")],
+    );
+    expect(fusionado.fw).toBe("9.9.9");
+    expect(fusionado.tipo).toBe("velocista");
+    expect(fusionado.ver).toEqual(robotById(ROBOTS, "v001")!.ver); // piezas/versiones intactas
+  });
+
+  it("deja igual a los robots locales sin coincidencia en la API y no agrega los que solo están en la API", () => {
+    const soloApi = fusionarRobotsApi(
+      [robotById(ROBOTS, "v002")!],
+      [resumen("zzz", "velocista", "1.0.0")],
+    );
+    expect(soloApi).toEqual([robotById(ROBOTS, "v002")!]);
+    expect(soloApi.map((r) => r.id)).toEqual(["v002"]);
+  });
+
+  it("propaga firmware null (robot sin firmware declarado)", () => {
+    const [fusionado] = fusionarRobotsApi(
+      [robotById(ROBOTS, "v001")!],
+      [resumen("v001", "velocista", null)],
+    );
+    expect(fusionado.fw).toBeNull();
   });
 });

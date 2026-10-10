@@ -47,3 +47,31 @@ export interface PaginaCorridas {
   limite: number;
   offset: number;
 }
+
+/** Resumen de un robot devuelto por la API (EN-01 · RobotSalida). */
+export interface RobotApi {
+  id: string;
+  nombre: string;
+  codigo_corto: string;
+  tipo: "velocista" | "minisumo";
+  firmware: string | null;
+  version_actual_id: number | null;
+  archivado: boolean;
+}
+
+export interface PaginaRobots {
+  items: RobotApi[];
+  total: number;
+  limite: number;
+  offset: number;
+}
+
+export interface RobotVersionApi {
+  id: number;
+  robot_id: string;
+  etiqueta: string;
+  fecha: string;
+  nota: string;
+  estado: string;
+  piezas: Record<string, { componente_id: string; cantidad: number }>;
+}

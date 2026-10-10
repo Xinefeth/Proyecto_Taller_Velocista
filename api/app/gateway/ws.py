@@ -208,5 +208,5 @@ def robot_corriendo(robot_id: str) -> bool:
         and conexion.manifiesto
         and conexion.manifiesto.id == robot_id
         and conexion.ultimo_estado
-        and conexion.ultimo_estado.estado == "corriendo"
+        and conexion.ultimo_estado.estado == "running"
     )

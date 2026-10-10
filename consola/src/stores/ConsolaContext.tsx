@@ -14,7 +14,6 @@ import {
 import type { Componente, Perfil, RobotDef, Setup } from "../types/dominio";
 import type { Corrida, Vuelta } from "../types/corridas";
 import { CAT, RANURAS } from "../datos/catalogo";
-import { ROBOTS } from "../datos/robots";
 import { PERFILES } from "../datos/reglamento";
 import { CTRL, PDEF, psum } from "../datos/controladores";
 import { curVer, facts, profById, robotById } from "../logica/dominio";
@@ -215,16 +214,29 @@ export interface Consola {
 
 const Contexto = createContext<Consola | null>(null);
 
-export function ProveedorConsola({ children }: { children: ReactNode }) {
+export function ProveedorConsola({
+  children,
+  initialRobots,
+}: {
+  children: ReactNode;
+  initialRobots?: RobotDef[];
+}) {
   const [tick, setTick] = useState(0);
   const bump = useCallback(() => setTick((t) => (t + 1) % 1_000_000), []);
 
   const [tab, setTab] = useState<Tab>("control");
   // Lo registrado a mano se conserva en el navegador hasta que exista la API (HU-02, HU-06).
   const [catalog, setCatalogState] = useState<Componente[]>(() => cargarComponentes(CAT));
-  const [robots, setRobotsState] = useState<RobotDef[]>(() => cargarRobots(ROBOTS));
+  const [robots, setRobotsState] = useState<RobotDef[]>(() =>
+    initialRobots ? cargarRobots(initialRobots) : [],
+  );
+  const [robotsLoading, setRobotsLoading] = useState(!initialRobots);
+  const [robotsError, setRobotsError] = useState<string | null>(null);
+  const [robotsRequest, setRobotsRequest] = useState(0);
   useEffect(() => guardarComponentes(catalog, CAT), [catalog]);
-  useEffect(() => guardarRobots(robots, ROBOTS), [robots]);
+  useEffect(() => {
+    if (initialRobots) guardarRobots(robots, initialRobots);
+  }, [robots, initialRobots]);
   const [perfiles] = useState<Perfil[]>(() => clone(PERFILES));
 
   const [robotId, setRobotId] = useState("v001");
@@ -345,6 +357,36 @@ export function ProveedorConsola({ children }: { children: ReactNode }) {
       .join(":");
     logRef.current = [{ t, sys, msg, lv }, ...logRef.current].slice(0, 80);
   }, []);
+
+  // initialRobots permite inyectar fixtures; en producción la API es la fuente de la lista.
+  useEffect(() => {
+    if (initialRobots) return;
+    let vivo = true;
+    setRobotsLoading(true);
+    setRobotsError(null);
+    api.robots
+      .selection()
+      .then((records) => {
+        if (!vivo) return;
+        setRobotsState(records);
+        setRobotId((id) =>
+          records.some((record) => record.id === id) ? id : (records[0]?.id ?? ""),
+        );
+        registrar("Robots", `Lista sincronizada con la API · ${records.length} registrados`);
+      })
+      .catch((e) => {
+        if (vivo)
+          setRobotsError(
+            `No se pudieron cargar los robots: ${e instanceof ErrorApi ? e.message : "sin conexión con la API"}`,
+          );
+      })
+      .finally(() => {
+        if (vivo) setRobotsLoading(false);
+      });
+    return () => {
+      vivo = false;
+    };
+  }, [registrar, initialRobots, robotsRequest]);
 
   // --- Corridas ---
   const registrarCorrida = useCallback(
@@ -806,7 +848,10 @@ export function ProveedorConsola({ children }: { children: ReactNode }) {
       api.corridas
         .crearSimulada()
         .then((cor) =>
-          registrar("Corridas", `Guardada en la base de datos · #${cor.numero} (J ${fmt(cor.j, 2)})`),
+          registrar(
+            "Corridas",
+            `Guardada en la base de datos · #${cor.numero} (J ${fmt(cor.j, 2)})`,
+          ),
         )
         .catch((e) =>
           registrar(
@@ -972,11 +1017,12 @@ export function ProveedorConsola({ children }: { children: ReactNode }) {
   const restablecerDatos = useCallback(() => {
     borrarRegistrados();
     setCatalogState(clone(CAT));
-    setRobotsState(clone(ROBOTS));
+    setRobotsState(initialRobots ? clone(initialRobots) : []);
+    if (!initialRobots) setRobotsRequest((value) => value + 1);
     setRobotId("v001");
     setFichaId(null);
     mostrarToast("Datos de ejemplo restablecidos.");
-  }, [mostrarToast]);
+  }, [mostrarToast, initialRobots]);
   const abrirManifiesto = useCallback((id: string) => setManifiestoId(id), []);
   const cerrarManifiesto = useCallback(() => setManifiestoId(null), []);
   const abrirEnArmador = useCallback(
@@ -1102,6 +1148,17 @@ export function ProveedorConsola({ children }: { children: ReactNode }) {
     lastBinsRef,
   };
 
+  if (robotsLoading) return <p role="status">Cargando robots…</p>;
+  if (robotsError)
+    return (
+      <div role="alert">
+        {robotsError}
+        <button type="button" onClick={() => setRobotsRequest((value) => value + 1)}>
+          Reintentar
+        </button>
+      </div>
+    );
+  if (!robot) return <p role="status">No hay robots registrados en el armador.</p>;
   return <Contexto.Provider value={valor}>{children}</Contexto.Provider>;
 }
 

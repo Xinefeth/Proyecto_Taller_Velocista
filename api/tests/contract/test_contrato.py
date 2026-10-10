@@ -35,8 +35,8 @@ def test_todo_tipo_del_catalogo_tiene_ejemplo():
     con_ejemplo = {(_emisor(p.name), p.name.split(".")[1]) for p in EJEMPLOS.glob("*.json")}
     sin_ejemplo = {k for k in CATALOGO if k[1] != "ack" or k[0] == "velocista"} - con_ejemplo
     assert not sin_ejemplo - {
-        ("api->velocista", "calibrar"),
-        ("api->velocista", "detener"),
+        ("api->velocista", "calibrate"),
+        ("api->velocista", "stop"),
         ("cronometro", "ack"),
     }
 
@@ -132,7 +132,7 @@ def test_revisar_setup(parametros, controlador, motivo):
 
 
 def test_version_mayor_distinta_se_rechaza():
-    m = _manifiesto() | {"contrato": "2.0"}
+    m = _manifiesto() | {"contrato": "1.0"}
     with pytest.raises(ValueError, match="incompatible"):
         Manifiesto.model_validate(m)
-    Manifiesto.model_validate(_manifiesto() | {"contrato": "1.3"})
+    Manifiesto.model_validate(_manifiesto() | {"contrato": "2.3"})

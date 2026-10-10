@@ -12,7 +12,7 @@
 
 - [x] Barra superior con enlace (dBm y ms), lazo (Hz), batería y estado — `consola/src/components/Strip.tsx`
 - [x] Indicación de "SIN ENLACE" con frescura en segundos — `consola/src/components/Strip.tsx`
-- [ ] Alimentar la barra con datos reales del WebSocket en vez de simulados — `consola/src/stores/ConexionContext.tsx`, `consola/src/components/Strip.tsx`
+- [x] Alimentar la barra con datos reales del WebSocket en vez de simulados — `consola/src/logica/robotStatus.ts` (función pura + test), `consola/src/components/Strip.tsx`, `consola/src/stores/ConexionContext.tsx` (`useConexionOpcional`), `consola/src/main.tsx` (monta `ProveedorConexion`)
 - [ ] Verificar refresco ≥ 1/s y pérdida de enlace < 2 s con robot real o `robot_falso.py`
 
 ## Renombrado (migración en curso)

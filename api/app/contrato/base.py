@@ -4,7 +4,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-VERSION_CONTRATO = "1.0"
+VERSION_CONTRATO = "2.0"
 
 
 def misma_version_mayor(version: str) -> str:

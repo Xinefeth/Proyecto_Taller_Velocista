@@ -10,11 +10,14 @@ import "./styles/prototipo.css";
 import "./styles/app.css";
 import App from "./App";
 import { ProveedorConsola } from "./stores/ConsolaContext";
+import { ProveedorConexion } from "./stores/ConexionContext";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <ProveedorConsola>
-      <App />
-    </ProveedorConsola>
+    <ProveedorConexion>
+      <ProveedorConsola>
+        <App />
+      </ProveedorConsola>
+    </ProveedorConexion>
   </StrictMode>,
 );

@@ -13,7 +13,7 @@
 
 #define CRONOMETRO_ID "meta_01"
 #define FIRMWARE_VERSION "0.2.0"
-#define CONTRATO_VERSION "1.0"
+#define CONTRATO_VERSION "2.0"
 
 #define PIN_RECEPTOR 27         // salida del receptor TSOP (HIGH = haz cortado)
 #define PIN_EMISOR 26           // LED IR del emisor, si lo alimenta este mismo ESP32
