@@ -27,14 +27,14 @@ class Command(BaseModel):
 
     tipo: str = Field(
         description=(
-            "Command type. For the line follower it must be declared in its manifest: "
+            "Tipo de comando. Para el velocista debe estar declarado en su manifiesto: "
             "calibrar, arrancar, detener, setup, modo, linea, cierre_vuelta."
         ),
         examples=["calibrar", "arrancar", "detener"],
     )
     datos: dict[str, Any] = Field(
         default_factory=dict,
-        description="Command data. Empty for calibrar/arrancar/detener; with fields for setup/modo/linea.",
+        description="Datos del comando. Vacío para calibrar/arrancar/detener; con campos para setup/modo/linea.",
         examples=[{}],
     )
 
@@ -51,10 +51,10 @@ class CommandAccepted(BaseModel):
         }
     )
 
-    seq: int = Field(description="Sequence number of the sent message; the robot's ack repeats it.")
+    seq: int = Field(description="Número de secuencia del mensaje enviado; el ack del robot lo repite.")
     mensaje: str = Field(
         default="Enviado. La confirmación del dispositivo llega a la consola como ack.",
-        description="Message for the user (in Spanish).",
+        description="Mensaje para el usuario.",
     )
 
 
@@ -92,19 +92,19 @@ def validar_comando(
     "/velocista/manifest",
     response_model=Manifiesto,
     operation_id="getRacerManifest",
-    summary="Get the line follower manifest",
+    summary="Consultar el manifiesto del velocista",
     description=(
-        "Returns what the robot declared about itself when it connected: sensors, actuators, "
-        "channels, controllers and parameters. The console uses it to draw the panels of the "
-        "selected robot (HU-13). It requires the line follower to be connected and to have sent "
-        "its manifest over `/ws/robot`."
+        "Devuelve lo que el robot declaró de sí mismo al conectarse: sensores, actuadores, "
+        "canales, controladores y parámetros. La consola lo usa para pintar los paneles del "
+        "robot seleccionado (HU-13). Requiere que el velocista esté conectado y haya enviado su "
+        "manifiesto por `/ws/robot`."
     ),
     responses=error_responses(
         (
             404,
             "sin_manifiesto",
             "El robot no está conectado o aún no envió su manifiesto",
-            "The line follower is not connected or has not sent its manifest yet.",
+            "El velocista no está conectado o todavía no envió su manifiesto.",
         ),
     ),
 )
@@ -122,31 +122,31 @@ def get_racer_manifest() -> dict:
     status_code=202,
     response_model=CommandAccepted,
     operation_id="sendCommand",
-    summary="Send a command to a device",
+    summary="Enviar un comando a un dispositivo",
     description=(
-        "The console never talks to the robot directly: it requests the command here, the API "
-        "validates it against the manifest and the current state, and the gateway forwards it "
-        "over WebSocket. The device confirmation (ack) reaches the console through "
-        "`/ws/consola`, not in this response. It covers calibrate and start/stop (HU-16)."
+        "La consola nunca habla directo con el robot: pide el comando aquí, la API lo valida "
+        "contra el manifiesto y el estado actual, y el gateway lo reenvía por WebSocket. La "
+        "confirmación del dispositivo (ack) llega a la consola por `/ws/consola`, no en esta "
+        "respuesta. Cubre calibrar y arrancar/detener (HU-16)."
     ),
     responses=error_responses(
         (
             409,
             "desconectado",
             "velocista no está conectado",
-            "The target device is not connected.",
+            "El dispositivo destino no está conectado.",
         ),
         (
             409,
             "no_calibrado",
             "Calibra el robot antes de arrancar",
-            "Invalid state for the command (not calibrated, locked in competition, or no manifest).",
+            "Estado inválido para el comando (sin calibrar, bloqueado en competencia o sin manifiesto).",
         ),
         (
             422,
             "comando_desconocido",
             "El robot no declara ese comando",
-            "Invalid command or data: not declared in the manifest, malformed or out of range.",
+            "Comando o datos inválidos: no declarado en el manifiesto, mal formado o fuera de rango.",
         ),
     ),
 )

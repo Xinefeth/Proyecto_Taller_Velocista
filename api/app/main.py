@@ -21,46 +21,46 @@ from app.modulos.reglamento.router import router as reglamento
 ROUTERS_MODULOS = [auth, catalogo, armador, reglamento, corridas, optimizacion, eventos]
 
 OPENAPI_TAGS = [
-    {"name": "system", "description": "Health of the API, the database and the connected devices."},
+    {"name": "system", "description": "Salud de la API, la base de datos y los dispositivos conectados."},
     {
         "name": "devices",
         "description": (
-            "Bridge between the console and the robot/timer. The console requests commands here "
-            "(HU-16) and reads the robot manifest (HU-13); the API validates and forwards them "
-            "over WebSocket."
+            "Puente entre la consola y el robot/cronómetro. La consola pide comandos aquí "
+            "(HU-16) y consulta el manifiesto del robot (HU-13); la API valida y los reenvía "
+            "por WebSocket."
         ),
     },
     {
         "name": "builder",
-        "description": "Robots and their versions. Source of the list for selecting a robot (HU-13).",
+        "description": "Robots y sus versiones. Fuente de la lista para seleccionar robot (HU-13).",
     },
-    {"name": "runs", "description": "Saved runs, their laps, and run notes."},
+    {"name": "runs", "description": "Corridas guardadas, sus vueltas y notas."},
 ]
 
 DESCRIPTION = """\
-Local API of the competition robotics management and optimization system.
+API local del sistema de gestión y optimización para competencia robótica.
 
-## WebSocket messages
+## Mensajes WebSocket
 
-Swagger only documents REST. Real time goes over WebSocket, and the message contract
-travels in an envelope `{tipo, seq, ts, datos}`. Channels:
+Swagger solo documenta REST. El tiempo real va por WebSocket y el contrato de mensajes
+viaja en un sobre `{tipo, seq, ts, datos}`. Canales:
 
-- **`/ws/robot`**: the line follower. Mandatory first message: `manifiesto`. Then:
+- **`/ws/robot`**: el velocista. Primer mensaje obligatorio: `manifiesto`. Luego:
   - `estado` (~1 Hz): `estado` (listo/calibrando/corriendo/detenido/error), `calibrado`,
-    `modo`, `linea`, `controlador`, `lazo_hz`, `rssi_dbm` and `canales` (includes `bateria_v`).
-    It is the base of **querying the robot status (HU-14)**: connection, state, battery, firmware.
-  - `senales` (~20 Hz, only while running): samples of the `senales` channel group, e.g. the
-    16 channels of the **sensor bar (HU-15, 2x QTR-8A)**.
+    `modo`, `linea`, `controlador`, `lazo_hz`, `rssi_dbm` y `canales` (incluye `bateria_v`).
+    Es la base de **consultar el estado del robot (HU-14)**: conexión, estado, batería, firmware.
+  - `senales` (~20 Hz, solo mientras corre): muestras del grupo de canales `senales`, p. ej.
+    los 16 canales de la **regleta de sensores (HU-15, 2× QTR-8A)**.
   - `vuelta` / `sync`, `evento`, `ack`.
-- **`/ws/cronometro`**: the timer (official lap times).
-- **`/ws/consola`**: listen-only. Receives `hola` (initial device state), `enlace`
-  (a device connected/disconnected) and the rebroadcast of the messages above, plus the `ack`
-  of every command sent through `POST /api/dispositivos/{dispositivo}/comandos` (**HU-16**).
+- **`/ws/cronometro`**: el cronómetro (tiempos oficiales de vuelta).
+- **`/ws/consola`**: solo escucha. Recibe `hola` (estado inicial de dispositivos), `enlace`
+  (un dispositivo se conectó/desconectó) y la redifusión de los mensajes anteriores, más el `ack`
+  de cada comando enviado por `POST /api/devices/{device}/commands` (**HU-16**).
 
-Message and field names on the wire are still the Spanish ones of the EN-02 contract; their
-English rename is planned.
+Los nombres de tipos y campos en el cable siguen siendo los del contrato EN-02 en español;
+su renombrado a inglés está planificado.
 
-The connection of each device is also visible in `GET /api/health` (field `dispositivos`).
+La conexión de cada dispositivo también se ve en `GET /api/health` (campo `dispositivos`).
 """
 
 
@@ -83,9 +83,17 @@ def create_app() -> FastAPI:
     registrar_middleware(app)
     registrar_manejadores(app)
 
-    @app.get("/api/health", tags=["system"], operation_id="getHealth")
-    def salud() -> dict:
-        """Estado de la API, de la base de datos y de los dispositivos conectados."""
+    @app.get(
+        "/api/health",
+        tags=["system"],
+        operation_id="getHealth",
+        summary="Consultar la salud de la API",
+        description=(
+            "Estado de la API, la base de datos y los dispositivos conectados. "
+            "El campo `dispositivos` indica si el velocista y el cronómetro están conectados (HU-14)."
+        ),
+    )
+    def health() -> dict:
         return {
             "api": "ok",
             "base_de_datos": "ok" if db_disponible() else "sin conexión",

@@ -20,8 +20,8 @@ PageOffset = Annotated[int, Query(ge=0, le=9007199254740991)]
     "",
     response_model=PaginaCorridas,
     operation_id="listRuns",
-    summary="List runs",
-    description="Run history for times, comparison and CSV export. It can be filtered by robot, version, controller and source.",
+    summary="Listar corridas",
+    description="Historial de corridas para tiempos, comparación y exportación a CSV. Se puede filtrar por robot, versión, controlador y fuente.",
 )
 def list_runs(
     session: DbSession,
@@ -42,11 +42,11 @@ def list_runs(
     response_model=CorridaSalida,
     status_code=201,
     operation_id="createSimulatedRun",
-    summary="Create and save a simulated run",
+    summary="Crear y guardar una corrida simulada",
     description=(
-        "The console calls it on START in Simulated mode: it generates a simulated run with its "
-        "laps and stores it in PostgreSQL (source `sim`). It is not idempotent: every call "
-        "creates a new run."
+        "La consola la invoca al ARRANCAR en modo Simulado: genera una corrida simulada con sus "
+        "vueltas y la guarda en PostgreSQL (fuente `sim`). No es idempotente: cada llamada crea "
+        "una corrida nueva."
     ),
 )
 def create_simulated_run(session: DbSession):
@@ -57,8 +57,8 @@ def create_simulated_run(session: DbSession):
     "/{run_id}",
     response_model=CorridaSalida,
     operation_id="getRun",
-    summary="Get a run",
-    description="A run with the snapshot of the setup that was applied.",
+    summary="Consultar una corrida",
+    description="Una corrida con la instantánea del setup aplicado.",
 )
 def get_run(run_id: RunId, session: DbSession):
     return service.obtener_corrida(session, run_id)
@@ -68,8 +68,8 @@ def get_run(run_id: RunId, session: DbSession):
     "/{run_id}",
     response_model=CorridaSalida,
     operation_id="annotateRun",
-    summary="Annotate a run",
-    description="Updates the note of a run.",
+    summary="Anotar una corrida",
+    description="Actualiza la nota de una corrida.",
 )
 def annotate_run(run_id: RunId, data: NotaCorrida, session: DbSession):
     return service.anotar_corrida(session, run_id, data)
@@ -79,8 +79,8 @@ def annotate_run(run_id: RunId, data: NotaCorrida, session: DbSession):
     "/{run_id}/laps",
     response_model=PaginaVueltas,
     operation_id="listRunLaps",
-    summary="List the laps of a run",
-    description="Laps of a run with their sectors and segments.",
+    summary="Listar las vueltas de una corrida",
+    description="Vueltas de una corrida con sus sectores y segmentos.",
 )
 def list_run_laps(
     run_id: RunId, session: DbSession, limit: PageLimit = 50, offset: PageOffset = 0

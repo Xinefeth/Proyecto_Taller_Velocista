@@ -30,10 +30,10 @@ RobotId = Annotated[str, Path(min_length=1, max_length=40)]
     status_code=201,
     response_model=RobotSalida,
     operation_id="createRobot",
-    summary="Register a robot without versions",
+    summary="Registrar robot sin versiones",
     description=(
-        "Generates the ID. A duplicate short code returns 409. "
-        "Creates no versions and no inventory demand."
+        "Genera el ID; un código corto duplicado responde 409. "
+        "No crea versiones ni demanda de inventario."
     ),
 )
 def create_robot(data: RobotCrear, session: DbSession):
@@ -44,17 +44,17 @@ def create_robot(data: RobotCrear, session: DbSession):
     "/robots",
     response_model=PaginaRobots,
     operation_id="listRobots",
-    summary="List robots",
+    summary="Listar robots",
     description=(
-        "Paginated list of active (not archived) robots, ordered by code/ID, each one with a "
-        "pointer to its current version. It is the source of the list for selecting a robot (HU-13)."
+        "Lista paginada de robots activos (no archivados), ordenados por código/ID, cada uno con "
+        "el puntero a su versión actual. Es la fuente de la lista para seleccionar robot (HU-13)."
     ),
 )
 def list_robots(
     session: DbSession,
-    limite: Annotated[int, Query(ge=1, le=200, description="Maximum robots per page.")] = 50,
+    limite: Annotated[int, Query(ge=1, le=200, description="Máximo de robots por página.")] = 50,
     offset: Annotated[
-        int, Query(ge=0, le=9007199254740991, description="Robots to skip from the start.")
+        int, Query(ge=0, le=9007199254740991, description="Robots a saltar desde el inicio.")
     ] = 0,
 ):
     return service.listar_robots(session, limite=limite, offset=offset)
@@ -64,10 +64,10 @@ def list_robots(
     "/robots/{robot_id}",
     response_model=RobotSalida,
     operation_id="getRobot",
-    summary="Get a robot",
-    description="Robot record by ID, with a pointer to its current version.",
+    summary="Consultar un robot",
+    description="Ficha de un robot por su ID, con el puntero a su versión actual.",
     responses=error_responses(
-        (404, "no_encontrado", "No existe un robot con ese ID", "No robot exists with that ID."),
+        (404, "no_encontrado", "No existe un robot con ese ID", "No existe un robot con ese ID."),
     ),
 )
 def get_robot(robot_id: RobotId, session: DbSession):
@@ -78,21 +78,21 @@ def get_robot(robot_id: RobotId, session: DbSession):
     "/robots/{robot_id}/versions",
     response_model=PaginaVersiones,
     operation_id="listRobotVersions",
-    summary="List the versions of a robot",
+    summary="Historial de versiones del robot",
     description=(
-        "Version history of the robot in ascending ordinal order, with the saved snapshot of "
-        "each part. It lets the user choose which robot version to use (HU-13)."
+        "Historial de versiones del robot por ordinal ascendente, con la instantánea guardada de "
+        "cada pieza. Permite elegir qué versión del robot usar (HU-13)."
     ),
     responses=error_responses(
-        (404, "no_encontrado", "No existe un robot con ese ID", "No robot exists with that ID."),
+        (404, "no_encontrado", "No existe un robot con ese ID", "No existe un robot con ese ID."),
     ),
 )
 def list_robot_versions(
     robot_id: RobotId,
     session: DbSession,
-    limite: Annotated[int, Query(ge=1, le=200, description="Maximum versions per page.")] = 50,
+    limite: Annotated[int, Query(ge=1, le=200, description="Máximo de versiones por página.")] = 50,
     offset: Annotated[
-        int, Query(ge=0, le=9007199254740991, description="Versions to skip from the start.")
+        int, Query(ge=0, le=9007199254740991, description="Versiones a saltar desde el inicio.")
     ] = 0,
 ):
     return service.listar_versiones(session, robot_id, limite=limite, offset=offset)
@@ -102,14 +102,14 @@ def list_robot_versions(
     "/robots/{robot_id}/versions/{version_id}",
     response_model=VersionSalida,
     operation_id="getRobotVersion",
-    summary="Get one version of a robot",
-    description="Detail of a specific robot version. Archived robots are accepted.",
+    summary="Consultar una versión del robot",
+    description="Detalle de una versión concreta del robot. Admite robots archivados.",
     responses=error_responses(
         (
             404,
             "no_encontrado",
             "La versión no existe o pertenece a otro robot",
-            "The version does not exist or does not belong to that robot.",
+            "La versión no existe o no pertenece a ese robot.",
         ),
     ),
 )
@@ -125,8 +125,8 @@ def get_robot_version(
     "/slots",
     response_model=list[RanuraSalida],
     operation_id="listSlots",
-    summary="List robot slots",
-    description="Slots (part positions) that a robot version can fill.",
+    summary="Listar ranuras del robot",
+    description="Ranuras (posiciones de pieza) que puede ocupar una versión del robot.",
 )
 def list_slots(session: DbSession):
     return service.listar_ranuras(session)
@@ -136,7 +136,7 @@ def list_slots(session: DbSession):
     "/robots/{robot_id}",
     response_model=RobotSalida,
     operation_id="updateRobot",
-    summary="Update the identification of a robot",
+    summary="Editar la identificación de un robot",
 )
 def update_robot(robot_id: RobotId, data: RobotEditar, session: DbSession):
     return service.editar_robot(session, robot_id, data)
@@ -147,8 +147,8 @@ def update_robot(robot_id: RobotId, data: RobotEditar, session: DbSession):
     status_code=204,
     response_class=Response,
     operation_id="archiveRobot",
-    summary="Archive a robot",
-    description="Archives the robot and releases its inventory demand.",
+    summary="Archivar un robot",
+    description="Archiva el robot y libera su demanda de inventario.",
 )
 def archive_robot(robot_id: RobotId, session: DbSession):
     service.archivar_robot(session, robot_id)
@@ -160,8 +160,8 @@ def archive_robot(robot_id: RobotId, session: DbSession):
     status_code=201,
     response_model=VersionSalida,
     operation_id="createRobotVersion",
-    summary="Save a new version of a robot",
-    description="Saves a new version together with its parts list.",
+    summary="Guardar una nueva versión del robot",
+    description="Guarda una nueva versión junto con su lista de piezas.",
 )
 def create_robot_version(robot_id: RobotId, data: VersionCrear, session: DbSession):
     return service.crear_version(session, robot_id, data)

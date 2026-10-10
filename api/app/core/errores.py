@@ -32,11 +32,11 @@ class ErrorDetail(BaseModel):
     """Body of `detail` in a business error."""
 
     motivo: str = Field(
-        description="Short, stable reason code; the console decides the final message.",
+        description="Código corto y estable del motivo; la consola decide el mensaje final.",
         examples=["no_calibrado"],
     )
     detalle: str = Field(
-        description="Human-readable text to show or log (in Spanish, it is user-facing).",
+        description="Texto legible para mostrar o registrar.",
         examples=["Calibra el robot antes de arrancar"],
     )
 

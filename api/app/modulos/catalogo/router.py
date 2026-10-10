@@ -27,7 +27,7 @@ DbSession = Annotated[Session, Depends(get_session)]
     "/inventory",
     response_model=PaginaInventario,
     operation_id="listInventory",
-    summary="List inventory",
+    summary="Consultar inventario",
 )
 def list_inventory(
     session: DbSession,
@@ -46,7 +46,7 @@ def list_inventory(
     "/inventory/{component_id}",
     response_model=InventarioSalida,
     operation_id="updateInventory",
-    summary="Update stock with concurrency control",
+    summary="Actualizar existencias con control de concurrencia",
 )
 def update_inventory(
     component_id: Annotated[str, Path(min_length=1, max_length=40)],
@@ -65,7 +65,7 @@ def update_inventory(
     status_code=201,
     response_model=ComponenteSalida,
     operation_id="createComponent",
-    summary="Register a component and its initial inventory",
+    summary="Registrar componente e inventario inicial",
 )
 def create_component(data: ComponenteCrear, session: DbSession):
     """Genera un ID y guarda la ficha y su stock inicial en una transacción."""
@@ -76,7 +76,7 @@ def create_component(data: ComponenteCrear, session: DbSession):
     "/components/{component_id}",
     response_model=ComponenteSalida,
     operation_id="getComponent",
-    summary="Get a component",
+    summary="Consultar ficha de componente",
 )
 def get_component(
     component_id: Annotated[str, Path(min_length=1, max_length=40)], session: DbSession
@@ -89,7 +89,7 @@ def get_component(
     "/components/{component_id}",
     response_model=ComponenteSalida,
     operation_id="updateComponent",
-    summary="Edit a component",
+    summary="Editar ficha de componente",
 )
 def update_component(
     component_id: Annotated[str, Path(min_length=1, max_length=40)],
@@ -108,7 +108,7 @@ def update_component(
     status_code=204,
     response_class=Response,
     operation_id="archiveComponent",
-    summary="Archive a component",
+    summary="Archivar componente",
 )
 def archive_component(
     component_id: Annotated[str, Path(min_length=1, max_length=40)], session: DbSession
@@ -123,7 +123,7 @@ def archive_component(
     response_model=list[TipoComponenteSalida],
     response_model_exclude_none=True,
     operation_id="listComponentTypes",
-    summary="Component types, fields and capabilities",
+    summary="Tipos, campos y capacidades",
 )
 def list_component_types(session: DbSession):
     """Catálogo completo ordenado por ID; una base sin semillas devuelve []."""
@@ -134,7 +134,7 @@ def list_component_types(session: DbSession):
     "/components",
     response_model=PaginaComponentes,
     operation_id="listComponents",
-    summary="Search catalog components",
+    summary="Buscar componentes del catálogo",
 )
 def list_components(
     session: DbSession,
