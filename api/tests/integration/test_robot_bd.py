@@ -286,12 +286,12 @@ def test_historial_inicial_y_repeticion_conservan_instantaneas(historial_inicial
 
 
 def test_inventario_demanda_solo_version_vigente(cliente_robot, historial_inicial):
-    pagina = cliente_robot.get("/api/inventario").json()
+    pagina = cliente_robot.get("/api/inventory").json()
     items = {i["componente_id"]: i for i in pagina["items"]}
     assert items["c05"]["en_robots"] == 2
     assert items["c05"]["disponible"] == 1
     assert items["c15"]["en_robots"] == 0  # Solo usada en v0.
-    respuesta = cliente_robot.put("/api/inventario/c05", json={"stock": 1, "revision": 1})
+    respuesta = cliente_robot.put("/api/inventory/c05", json={"stock": 1, "revision": 1})
     assert respuesta.status_code == 200
     assert respuesta.json() == {
         "componente_id": "c05",
@@ -307,17 +307,17 @@ def test_inventario_archivado_con_demanda_y_robot_archivado(cliente_robot, histo
     conn = historial_inicial
     conn.execute(update(Componente).where(Componente.id == "c05").values(archivado=True))
     conn.execute(update(Inventario).where(Inventario.componente_id == "c05").values(stock=0))
-    items = {i["componente_id"]: i for i in cliente_robot.get("/api/inventario").json()["items"]}
+    items = {i["componente_id"]: i for i in cliente_robot.get("/api/inventory").json()["items"]}
     assert items["c05"]["faltante"] == 2
     conn.execute(update(Robot).where(Robot.id == "v001").values(archivado=True))
-    items = {i["componente_id"]: i for i in cliente_robot.get("/api/inventario").json()["items"]}
+    items = {i["componente_id"]: i for i in cliente_robot.get("/api/inventory").json()["items"]}
     assert "c05" not in items
     assert all(i["en_robots"] == 0 for i in items.values())
 
 
 def test_inventario_incluye_concepto(cliente_robot, historial_inicial):
     historial_inicial.execute(update(Version).where(Version.ordinal == 1).values(estado="Concepto"))
-    items = {i["componente_id"]: i for i in cliente_robot.get("/api/inventario").json()["items"]}
+    items = {i["componente_id"]: i for i in cliente_robot.get("/api/inventory").json()["items"]}
     assert items["c05"]["en_robots"] == 2
 
 
@@ -348,7 +348,7 @@ def test_version_rechaza_segunda_actual(historial_inicial):
 
 
 def test_historial_http_con_piezas_y_paginacion(cliente_robot, historial_inicial):
-    respuesta = cliente_robot.get("/api/robots/v001/versiones")
+    respuesta = cliente_robot.get("/api/robots/v001/versions")
     assert respuesta.status_code == 200
     pagina = respuesta.json()
     assert (pagina["total"], pagina["limite"], pagina["offset"]) == (2, 50, 0)
@@ -359,30 +359,30 @@ def test_historial_http_con_piezas_y_paginacion(cliente_robot, historial_inicial
     assert v1["piezas"]["linea"]["componente_id"] == "c05"
     assert v1["id"] == cliente_robot.get("/api/robots/v001").json()["version_actual_id"]
     for version in (v0, v1):
-        detalle = cliente_robot.get(f"/api/robots/v001/versiones/{version['id']}")
+        detalle = cliente_robot.get(f"/api/robots/v001/versions/{version['id']}")
         assert detalle.status_code == 200
         assert detalle.json() == version
         for pieza in version["piezas"].values():
             assert "stock" not in pieza["componente_snapshot"]
             assert "archivado" not in pieza["componente_snapshot"]
-    pagina2 = cliente_robot.get("/api/robots/v001/versiones?limite=1&offset=1").json()
+    pagina2 = cliente_robot.get("/api/robots/v001/versions?limite=1&offset=1").json()
     assert pagina2["items"] == [v1]
     assert pagina2["total"] == 2
-    assert cliente_robot.get("/api/robots/v001/versiones?offset=99").json()["items"] == []
+    assert cliente_robot.get("/api/robots/v001/versions?offset=99").json()["items"] == []
 
 
 def test_historial_http_conserva_snapshot_tras_editar_catalogo(cliente_robot, historial_inicial):
-    anterior = cliente_robot.get("/api/robots/v001/versiones").json()
-    assert cliente_robot.patch("/api/componentes/c05", json={"precio": 90}).status_code == 200
-    assert cliente_robot.get("/api/robots/v001/versiones").json() == anterior
+    anterior = cliente_robot.get("/api/robots/v001/versions").json()
+    assert cliente_robot.patch("/api/components/c05", json={"precio": 90}).status_code == 200
+    assert cliente_robot.get("/api/robots/v001/versions").json() == anterior
 
 
 def test_version_de_otro_robot_no_es_accesible(cliente_robot, historial_inicial):
-    version = cliente_robot.get("/api/robots/v001/versiones").json()["items"][0]
+    version = cliente_robot.get("/api/robots/v001/versions").json()["items"][0]
     with Session(bind=historial_inicial, join_transaction_mode="create_savepoint") as session:
         session.add(Robot(id="otro", nombre="Otro", codigo_corto="002", tipo="velocista"))
         session.commit()
-    respuesta = cliente_robot.get(f"/api/robots/otro/versiones/{version['id']}")
+    respuesta = cliente_robot.get(f"/api/robots/otro/versions/{version['id']}")
     assert respuesta.status_code == 404
     assert respuesta.json()["detail"]["motivo"] == "version_no_encontrada"
 
@@ -392,16 +392,16 @@ def test_historial_robot_sin_versiones_y_no_existente(cliente_robot, robot_bd):
     with Session(bind=conn, join_transaction_mode="create_savepoint") as session:
         service.cargar_robot_inicial(session)
         session.commit()
-    respuesta = cliente_robot.get("/api/robots/v001/versiones")
+    respuesta = cliente_robot.get("/api/robots/v001/versions")
     assert respuesta.status_code == 200
     assert respuesta.json() == {"items": [], "total": 0, "limite": 50, "offset": 0}
-    assert cliente_robot.get("/api/robots/no-existe/versiones").status_code == 404
-    assert cliente_robot.get("/api/robots/v001/versiones/999").status_code == 404
+    assert cliente_robot.get("/api/robots/no-existe/versions").status_code == 404
+    assert cliente_robot.get("/api/robots/v001/versions/999").status_code == 404
 
 
 def test_historial_robot_archivado_sigue_disponible(cliente_robot, historial_inicial):
     historial_inicial.execute(update(Robot).where(Robot.id == "v001").values(archivado=True))
-    respuesta = cliente_robot.get("/api/robots/v001/versiones")
+    respuesta = cliente_robot.get("/api/robots/v001/versions")
     assert respuesta.status_code == 200
     assert respuesta.json()["total"] == 2
 
@@ -409,13 +409,13 @@ def test_historial_robot_archivado_sigue_disponible(cliente_robot, historial_ini
 @pytest.mark.parametrize(
     "url",
     [
-        "/api/robots/v001/versiones?limite=0",
-        "/api/robots/v001/versiones?limite=201",
-        "/api/robots/v001/versiones?offset=-1",
-        "/api/robots/v001/versiones/0",
-        "/api/robots/v001/versiones/9007199254740992",
-        "/api/robots/v001/versiones/abc",
-        "/api/robots/" + "x" * 41 + "/versiones",
+        "/api/robots/v001/versions?limite=0",
+        "/api/robots/v001/versions?limite=201",
+        "/api/robots/v001/versions?offset=-1",
+        "/api/robots/v001/versions/0",
+        "/api/robots/v001/versions/9007199254740992",
+        "/api/robots/v001/versions/abc",
+        "/api/robots/" + "x" * 41 + "/versions",
     ],
 )
 def test_historial_valida_parametros(cliente, url):
@@ -425,8 +425,8 @@ def test_historial_valida_parametros(cliente, url):
 @pytest.mark.parametrize(
     "url,funcion",
     [
-        ("/api/robots/v001/versiones", "listar_versiones"),
-        ("/api/robots/v001/versiones/1", "obtener_version"),
+        ("/api/robots/v001/versions", "listar_versiones"),
+        ("/api/robots/v001/versions/1", "obtener_version"),
     ],
 )
 def test_historial_con_base_caida(cliente, monkeypatch, url, funcion):
@@ -451,7 +451,7 @@ def test_crear_robot_persiste_sin_versiones(cliente_robot):
     }
     assert cliente_robot.get(f"/api/robots/{robot['id']}").json() == robot
     assert cliente_robot.get("/api/robots").json()["items"] == [robot]
-    historial = cliente_robot.get(f"/api/robots/{robot['id']}/versiones").json()
+    historial = cliente_robot.get(f"/api/robots/{robot['id']}/versions").json()
     assert historial["total"] == 0
     assert historial["items"] == []
 

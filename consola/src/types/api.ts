@@ -14,3 +14,36 @@ export interface ErrorNegocio {
 }
 
 export type EstadoConexion = "revisando" | "ok" | "falla";
+
+/** Resumen de una corrida devuelto por la API (EN-01 · CorridaSalida). */
+export interface CorridaApi {
+  id: number;
+  numero: number;
+  robot_id: string;
+  version_id: number;
+  setup_id: number;
+  perfil_id: string;
+  controlador_id: string;
+  parametros: Record<string, number>;
+  fecha: string;
+  fuente: "sim" | "robot";
+  modo: "prueba" | "competencia";
+  linea: "negra" | "blanca";
+  compensa_bateria: boolean;
+  potencia_turbina_pct: number;
+  tiempo_s: number | null;
+  termino: boolean;
+  error_acumulado: number;
+  bateria_v: number;
+  sectores_s: number[];
+  fuente_tiempo: "meta" | "telemetria";
+  nota: string;
+  j: number;
+}
+
+export interface PaginaCorridas {
+  items: CorridaApi[];
+  total: number;
+  limite: number;
+  offset: number;
+}

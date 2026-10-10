@@ -1798,6 +1798,45 @@ GET {{base}}/api/corridas?limite=50&offset=0&robot_id=v001&version_id=1&controla
 #   "offset": 0
 # }
 
+### crearCorridaSimulada · implementado
+POST {{base}}/api/corridas/simulada
+
+# Respuesta: 201
+# {
+#   "id": 1,
+#   "numero": 1,
+#   "robot_id": "v001",
+#   "version_id": 1,
+#   "setup_id": 1,
+#   "perfil_id": "mr4s",
+#   "controlador_id": "pid",
+#   "parametros": {
+#     "kp": 0.6,
+#     "ki": 0,
+#     "kd": 2.5,
+#     "base": 45,
+#     "max": 86
+#   },
+#   "fecha": "2026-10-06T15:00:00Z",
+#   "fuente": "sim",
+#   "modo": "prueba",
+#   "linea": "negra",
+#   "compensa_bateria": true,
+#   "potencia_turbina_pct": 0,
+#   "tiempo_s": 10.2,
+#   "termino": true,
+#   "error_acumulado": 0.8,
+#   "bateria_v": 7.8,
+#   "sectores_s": [
+#     3.4,
+#     3.2,
+#     3.6
+#   ],
+#   "fuente_tiempo": "meta",
+#   "nota": "Corrida generada para pruebas",
+#   "j": 11.8
+# }
+
 ### obtenerCorrida · implementado
 GET {{base}}/api/corridas/1
 

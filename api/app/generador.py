@@ -107,14 +107,25 @@ def _sectores_y_segmentos(rng: random.Random, vuelta_id: int, tiempo: float, err
     return objetos
 
 
-def _crear_corrida(session, rng: random.Random, robot, setup, perfil, ctrl: ControladorSalida):
-    fecha = datetime.now(UTC) - timedelta(
-        days=rng.randint(0, 30), minutes=rng.randint(0, 24 * 60)
+def _crear_corrida(
+    session,
+    rng: random.Random,
+    robot,
+    setup,
+    perfil,
+    ctrl: ControladorSalida,
+    marca: str = MARCA,
+    reciente: bool = False,
+):
+    fecha = (
+        datetime.now(UTC)
+        if reciente
+        else datetime.now(UTC) - timedelta(days=rng.randint(0, 30), minutes=rng.randint(0, 24 * 60))
     )
     modo = rng.choice(["prueba", "prueba", "competencia"])
     parametros = ctrl.presets["Base"]
     contexto = {
-        "generador": MARCA,
+        "generador": marca,
         "firmware": robot.firmware,
         "manifiesto": None,
         "controlador": ctrl.model_dump(mode="json"),
@@ -166,6 +177,30 @@ def generar(session, objetivo: int, rng: random.Random) -> int:
     for _ in range(faltan):
         _crear_corrida(session, rng, robot, setup, perfil, ctrl)
     return faltan
+
+
+MARCA_CONSOLA = "consola-v1"
+
+
+def crear_una_simulada(session, rng: random.Random | None = None) -> int:
+    """Crea UNA corrida simulada nueva y la devuelve (id). La usa la consola al ARRANCAR.
+
+    A diferencia de `generar`, no es idempotente: cada llamada crea una corrida. Queda
+    marcada con `contexto_snapshot["generador"] = MARCA_CONSOLA` y fecha actual, para no
+    confundirla con las sembradas y para que aparezca al principio del historial.
+    """
+    rng = rng or random.Random()
+    robot = armador.robot_para_escritura(session, "v001")
+    armador.comprobar_detenido(session, robot.id)
+    controlador = session.get(Controlador, "pid")
+    perfil = session.get(PerfilReglamento, "club")
+    if robot.version_actual_id is None or controlador is None or perfil is None:
+        raise ValueError("Ejecuta python -m app.semillas primero")
+    ctrl = ControladorSalida.model_validate(controlador)
+    setup = _setup_para_generador(session, robot, ctrl)
+    return _crear_corrida(
+        session, rng, robot, setup, perfil, ctrl, marca=MARCA_CONSOLA, reciente=True
+    )
 
 
 def main() -> int:

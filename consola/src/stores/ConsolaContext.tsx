@@ -38,6 +38,7 @@ import {
   type StatsMapa,
 } from "../logica/simulador";
 import { HIST, NB, RATE, resetEncuadre, robotOn } from "../logica/lienzos";
+import { api, ErrorApi } from "../services/api";
 
 export type Tab =
   | "control"
@@ -799,6 +800,22 @@ export function ProveedorConsola({ children }: { children: ReactNode }) {
       "good",
     );
     setRunning(true);
+    // Persistencia (EN-05/DO-03): al arrancar en Simulado, la corrida se genera y se guarda
+    // en la base de datos vía la API. No hay copia en memoria: la fuente es la base.
+    if (live.current.source === "sim") {
+      api.corridas
+        .crearSimulada()
+        .then((cor) =>
+          registrar("Corridas", `Guardada en la base de datos · #${cor.numero} (J ${fmt(cor.j, 2)})`),
+        )
+        .catch((e) =>
+          registrar(
+            "Corridas",
+            `No se pudo guardar en la base de datos: ${e instanceof ErrorApi ? e.message : "sin conexión"}`,
+            "bad",
+          ),
+        );
+    }
   }, [calibrated, registrar, mostrarToast]);
 
   // Setup

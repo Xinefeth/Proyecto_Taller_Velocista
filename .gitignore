@@ -29,3 +29,7 @@ Thumbs.db
 # Datos locales
 respaldos/
 *.log
+
+# Respaldos del rename a inglés
+backup_pre_english.patch
+*.patch

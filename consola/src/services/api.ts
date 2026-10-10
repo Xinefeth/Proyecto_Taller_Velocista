@@ -1,5 +1,5 @@
 // Única capa que hace llamadas HTTP a la API (DO-02, sección 6).
-import type { ErrorNegocio, Salud } from "../types/api";
+import type { CorridaApi, ErrorNegocio, PaginaCorridas, Salud } from "../types/api";
 
 export class ErrorApi extends Error {
   constructor(
@@ -35,5 +35,11 @@ export async function pedir<T>(ruta: string, opciones: RequestInit = {}): Promis
 }
 
 export const api = {
-  salud: () => pedir<Salud>("/salud"),
+  salud: () => pedir<Salud>("/health"),
+  corridas: {
+    /** Crea y persiste una corrida simulada (la consola la invoca al ARRANCAR). */
+    crearSimulada: () => pedir<CorridaApi>("/runs/simulated", { method: "POST" }),
+    /** Historial de corridas desde la base de datos. `query` es la cadena ?a=b opcional. */
+    listar: (query = "") => pedir<PaginaCorridas>(`/runs${query}`),
+  },
 };

@@ -20,6 +20,49 @@ from app.modulos.reglamento.router import router as reglamento
 
 ROUTERS_MODULOS = [auth, catalogo, armador, reglamento, corridas, optimizacion, eventos]
 
+OPENAPI_TAGS = [
+    {"name": "system", "description": "Health of the API, the database and the connected devices."},
+    {
+        "name": "devices",
+        "description": (
+            "Bridge between the console and the robot/timer. The console requests commands here "
+            "(HU-16) and reads the robot manifest (HU-13); the API validates and forwards them "
+            "over WebSocket."
+        ),
+    },
+    {
+        "name": "builder",
+        "description": "Robots and their versions. Source of the list for selecting a robot (HU-13).",
+    },
+    {"name": "runs", "description": "Saved runs, their laps, and run notes."},
+]
+
+DESCRIPTION = """\
+Local API of the competition robotics management and optimization system.
+
+## WebSocket messages
+
+Swagger only documents REST. Real time goes over WebSocket, and the message contract
+travels in an envelope `{tipo, seq, ts, datos}`. Channels:
+
+- **`/ws/robot`**: the line follower. Mandatory first message: `manifiesto`. Then:
+  - `estado` (~1 Hz): `estado` (listo/calibrando/corriendo/detenido/error), `calibrado`,
+    `modo`, `linea`, `controlador`, `lazo_hz`, `rssi_dbm` and `canales` (includes `bateria_v`).
+    It is the base of **querying the robot status (HU-14)**: connection, state, battery, firmware.
+  - `senales` (~20 Hz, only while running): samples of the `senales` channel group, e.g. the
+    16 channels of the **sensor bar (HU-15, 2x QTR-8A)**.
+  - `vuelta` / `sync`, `evento`, `ack`.
+- **`/ws/cronometro`**: the timer (official lap times).
+- **`/ws/consola`**: listen-only. Receives `hola` (initial device state), `enlace`
+  (a device connected/disconnected) and the rebroadcast of the messages above, plus the `ack`
+  of every command sent through `POST /api/dispositivos/{dispositivo}/comandos` (**HU-16**).
+
+Message and field names on the wire are still the Spanish ones of the EN-02 contract; their
+English rename is planned.
+
+The connection of each device is also visible in `GET /api/health` (field `dispositivos`).
+"""
+
 
 def create_app() -> FastAPI:
     actividad.robot_corriendo = ws.robot_corriendo
@@ -27,7 +70,8 @@ def create_app() -> FastAPI:
     app = FastAPI(
         title="APAEC Lab API",
         version="0.1.0",
-        description="API local del Sistema de gestión y optimización para competencia robótica.",
+        description=DESCRIPTION,
+        openapi_tags=OPENAPI_TAGS,
     )
     app.add_middleware(
         CORSMiddleware,
@@ -39,7 +83,7 @@ def create_app() -> FastAPI:
     registrar_middleware(app)
     registrar_manejadores(app)
 
-    @app.get("/api/salud", tags=["sistema"])
+    @app.get("/api/health", tags=["system"], operation_id="getHealth")
     def salud() -> dict:
         """Estado de la API, de la base de datos y de los dispositivos conectados."""
         return {

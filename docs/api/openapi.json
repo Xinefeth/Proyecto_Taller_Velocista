@@ -5358,6 +5358,169 @@
         ]
       }
     },
+    "/api/corridas/simulada": {
+      "post": {
+        "operationId": "crearCorridaSimulada",
+        "summary": "Crear y guardar una corrida simulada",
+        "description": "La consola la invoca al ARRANCAR en modo Simulado: genera una corrida simulada con sus vueltas y la guarda en PostgreSQL (fuente=sim, fecha actual). No es idempotente: cada llamada crea una corrida. 409 si el robot está corriendo; 422 si faltan semillas.",
+        "tags": [
+          "corridas"
+        ],
+        "x-estado": "implementado",
+        "x-ejemplo-peticion": {
+          "metodo": "POST",
+          "url": "/api/corridas/simulada"
+        },
+        "responses": {
+          "201": {
+            "description": "Resultado correcto",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Corrida"
+                },
+                "example": {
+                  "id": 1,
+                  "numero": 1,
+                  "robot_id": "v001",
+                  "version_id": 1,
+                  "setup_id": 1,
+                  "perfil_id": "mr4s",
+                  "controlador_id": "pid",
+                  "parametros": {
+                    "kp": 0.6,
+                    "ki": 0,
+                    "kd": 2.5,
+                    "base": 45,
+                    "max": 86
+                  },
+                  "fecha": "2026-10-06T15:00:00Z",
+                  "fuente": "sim",
+                  "modo": "prueba",
+                  "linea": "negra",
+                  "compensa_bateria": true,
+                  "potencia_turbina_pct": 0,
+                  "tiempo_s": 10.2,
+                  "termino": true,
+                  "error_acumulado": 0.8,
+                  "bateria_v": 7.8,
+                  "sectores_s": [
+                    3.4,
+                    3.2,
+                    3.6
+                  ],
+                  "fuente_tiempo": "meta",
+                  "nota": "Corrida generada para pruebas",
+                  "j": 11.8
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "La revisión o el estado del recurso cambió",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNegocio"
+                },
+                "examples": {
+                  "negocio": {
+                    "value": {
+                      "detail": {
+                        "motivo": "conflicto",
+                        "detalle": "La revisión o el estado del recurso cambió"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "El dato no cumple las reglas del dominio",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorNegocio"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorValidacion"
+                    }
+                  ]
+                },
+                "examples": {
+                  "negocio": {
+                    "value": {
+                      "detail": {
+                        "motivo": "validacion",
+                        "detalle": "El dato no cumple las reglas del dominio"
+                      }
+                    }
+                  },
+                  "formato": {
+                    "value": {
+                      "detail": [
+                        {
+                          "loc": [
+                            "query",
+                            "limite"
+                          ],
+                          "msg": "Input should be greater than or equal to 1",
+                          "type": "greater_than_equal",
+                          "input": 0
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "La base de datos no está disponible",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNegocio"
+                },
+                "examples": {
+                  "negocio": {
+                    "value": {
+                      "detail": {
+                        "motivo": "base_no_disponible",
+                        "detalle": "La base de datos no está disponible"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ocurrió un error inesperado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNegocio"
+                },
+                "examples": {
+                  "negocio": {
+                    "value": {
+                      "detail": {
+                        "motivo": "error_interno",
+                        "detalle": "Ocurrió un error inesperado"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/corridas/{corrida_id}": {
       "get": {
         "operationId": "obtenerCorrida",

@@ -9,6 +9,7 @@ import logging
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.exc import IntegrityError, OperationalError
 
 log = logging.getLogger("apaec.errores")
@@ -22,6 +23,60 @@ class ErrorDeNegocio(Exception):
         self.codigo_http = codigo_http
         self.motivo = motivo
         self.detalle = detalle
+
+
+# ---- Error documentation in OpenAPI/Swagger ----
+
+
+class ErrorDetail(BaseModel):
+    """Body of `detail` in a business error."""
+
+    motivo: str = Field(
+        description="Short, stable reason code; the console decides the final message.",
+        examples=["no_calibrado"],
+    )
+    detalle: str = Field(
+        description="Human-readable text to show or log (in Spanish, it is user-facing).",
+        examples=["Calibra el robot antes de arrancar"],
+    )
+
+
+class BusinessError(BaseModel):
+    """Standard business error format of the API (DO-02 §8.4)."""
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {"detail": {"motivo": "no_calibrado", "detalle": "Calibra el robot antes de arrancar"}}
+        }
+    )
+
+    detail: ErrorDetail
+
+
+def error_responses(*cases: tuple[int, str, str, str]) -> dict:
+    """Build the OpenAPI `responses` dict for business errors.
+
+    Each case is (http_code, reason, example_detail, case_description). Cases that share an
+    HTTP code are merged into one response with several named examples, so none is lost.
+    """
+    grouped: dict[int, list[tuple[str, str, str]]] = {}
+    for code, reason, detail, description in cases:
+        grouped.setdefault(code, []).append((reason, detail, description))
+    out: dict[int, dict] = {}
+    for code, items in grouped.items():
+        examples = {
+            reason: {
+                "summary": description,
+                "value": {"detail": {"motivo": reason, "detalle": detail}},
+            }
+            for reason, detail, description in items
+        }
+        out[code] = {
+            "model": BusinessError,
+            "description": " / ".join(description for _, _, description in items),
+            "content": {"application/json": {"examples": examples}},
+        }
+    return out
 
 
 def _respuesta(codigo: int, motivo: str, detalle: str) -> JSONResponse:

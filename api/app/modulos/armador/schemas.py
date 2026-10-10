@@ -15,15 +15,38 @@ class RobotCrear(BaseModel):
 
 
 class RobotSalida(BaseModel):
-    model_config = ConfigDict(from_attributes=True, extra="forbid")
+    model_config = ConfigDict(
+        from_attributes=True,
+        extra="forbid",
+        json_schema_extra={
+            "example": {
+                "id": "rbt_velo_01",
+                "nombre": "Relámpago",
+                "codigo_corto": "VELO-01",
+                "tipo": "velocista",
+                "firmware": "1.4.2",
+                "version_actual_id": 7,
+                "archivado": False,
+            }
+        },
+    )
 
-    id: str
-    nombre: str
-    codigo_corto: str
-    tipo: Literal["velocista", "minisumo"]
-    firmware: str | None
-    version_actual_id: int | None = Field(ge=1, le=9007199254740991)
-    archivado: bool
+    id: str = Field(description="ID interno del robot.", examples=["rbt_velo_01"])
+    nombre: str = Field(description="Nombre visible del robot.", examples=["Relámpago"])
+    codigo_corto: str = Field(description="Código corto único para la pista.", examples=["VELO-01"])
+    tipo: Literal["velocista", "minisumo"] = Field(
+        description="Categoría del robot.", examples=["velocista"]
+    )
+    firmware: str | None = Field(
+        description="Versión de firmware declarada, si se conoce.", examples=["1.4.2"]
+    )
+    version_actual_id: int | None = Field(
+        ge=1,
+        le=9007199254740991,
+        description="ID de la versión marcada como actual, o null si no hay.",
+        examples=[7],
+    )
+    archivado: bool = Field(description="True si el robot está archivado.", examples=[False])
 
 
 class RobotEditar(BaseModel):
@@ -69,10 +92,10 @@ class RanuraSalida(BaseModel):
 class PaginaRobots(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    items: list[RobotSalida]
-    total: int = Field(ge=0)
-    limite: int = Field(ge=1, le=200)
-    offset: int = Field(ge=0)
+    items: list[RobotSalida] = Field(description="Robots de esta página.")
+    total: int = Field(ge=0, description="Total de robots que cumplen el filtro.", examples=[3])
+    limite: int = Field(ge=1, le=200, description="Límite aplicado.", examples=[50])
+    offset: int = Field(ge=0, description="Offset aplicado.", examples=[0])
 
 
 class ComponenteHistorico(BaseModel):
@@ -97,21 +120,40 @@ class PiezaHistoricaSalida(BaseModel):
 
 
 class VersionSalida(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(
+        extra="forbid",
+        json_schema_extra={
+            "example": {
+                "id": 7,
+                "robot_id": "rbt_velo_01",
+                "etiqueta": "v7",
+                "fecha": "2026-10-01T15:30:00Z",
+                "nota": "Nuevos sensores QTR y PID afinado.",
+                "estado": "Actual",
+                "piezas": {},
+            }
+        },
+    )
 
-    id: int = Field(ge=1, le=9007199254740991)
-    robot_id: str
-    etiqueta: str = Field(pattern=r"^v[0-9]+$")
-    fecha: AwareDatetime
-    nota: str
-    estado: Literal["Actual", "Anterior", "Descartada", "Concepto", "Borrador"]
-    piezas: dict[str, PiezaHistoricaSalida]
+    id: int = Field(ge=1, le=9007199254740991, description="ID de la versión.", examples=[7])
+    robot_id: str = Field(description="Robot al que pertenece la versión.", examples=["rbt_velo_01"])
+    etiqueta: str = Field(
+        pattern=r"^v[0-9]+$", description="Etiqueta derivada del ordinal (v1, v2, …).", examples=["v7"]
+    )
+    fecha: AwareDatetime = Field(description="Fecha de creación de la versión (con zona).")
+    nota: str = Field(description="Nota libre de la versión.", examples=["PID afinado."])
+    estado: Literal["Actual", "Anterior", "Descartada", "Concepto", "Borrador"] = Field(
+        description="Estado de la versión en el historial.", examples=["Actual"]
+    )
+    piezas: dict[str, PiezaHistoricaSalida] = Field(
+        description="Piezas de la versión, indexadas por ranura, con su instantánea."
+    )
 
 
 class PaginaVersiones(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    items: list[VersionSalida]
-    total: int = Field(ge=0)
-    limite: int = Field(ge=1, le=200)
-    offset: int = Field(ge=0)
+    items: list[VersionSalida] = Field(description="Versiones de esta página.")
+    total: int = Field(ge=0, description="Total de versiones del robot.", examples=[7])
+    limite: int = Field(ge=1, le=200, description="Límite aplicado.", examples=[50])
+    offset: int = Field(ge=0, description="Offset aplicado.", examples=[0])

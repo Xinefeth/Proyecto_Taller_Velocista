@@ -120,35 +120,35 @@ def test_flujo_robot_version_edicion_archivado(entorno):
     )
     assert c.patch(f"/api/robots/{rid}", json={"codigo_corto": "001"}).status_code == 409
     assert c.patch(f"/api/robots/{rid}", json={"nombre": None}).status_code == 422
-    ranuras = c.get("/api/ranuras")
+    ranuras = c.get("/api/slots")
     assert ranuras.status_code == 200 and len(ranuras.json()) == 14
-    piezas = c.get("/api/robots/v001/versiones").json()["items"][-1]["piezas"]
+    piezas = c.get("/api/robots/v001/versions").json()["items"][-1]["piezas"]
     piezas = {
         k: {"componente_id": v["componente_id"], "cantidad": v["cantidad"]}
         for k, v in piezas.items()
     }
     cuerpo = {"version_base_id": None, "estado": "Actual", "nota": "Primera", "piezas": piezas}
-    primera = c.post(f"/api/robots/{rid}/versiones", json=cuerpo)
+    primera = c.post(f"/api/robots/{rid}/versions", json=cuerpo)
     assert primera.status_code == 201, primera.text
     v0 = primera.json()
     assert v0["etiqueta"] == "v0"
-    assert c.post(f"/api/robots/{rid}/versiones", json=cuerpo).status_code == 409
-    assert c.patch("/api/componentes/c05", json={"precio": 90}).status_code == 200
+    assert c.post(f"/api/robots/{rid}/versions", json=cuerpo).status_code == 409
+    assert c.patch("/api/components/c05", json={"precio": 90}).status_code == 200
     cuerpo["version_base_id"] = v0["id"]
-    v1 = c.post(f"/api/robots/{rid}/versiones", json=cuerpo).json()
+    v1 = c.post(f"/api/robots/{rid}/versions", json=cuerpo).json()
     assert v1["etiqueta"] == "v1"
-    historial = c.get(f"/api/robots/{rid}/versiones").json()["items"]
+    historial = c.get(f"/api/robots/{rid}/versions").json()["items"]
     assert [v["estado"] for v in historial] == ["Anterior", "Actual"]
     assert historial[0]["piezas"]["linea"]["componente_snapshot"]["precio"] == 62
     assert historial[1]["piezas"]["linea"]["componente_snapshot"]["precio"] == 90
-    inventario = {i["componente_id"]: i for i in c.get("/api/inventario").json()["items"]}
+    inventario = {i["componente_id"]: i for i in c.get("/api/inventory").json()["items"]}
     assert inventario["c05"]["en_robots"] == 4
     for _ in range(2):
         r = c.delete(f"/api/robots/{rid}")
         assert r.status_code == 204 and r.content == b""
     assert c.get(f"/api/robots/{rid}").json()["archivado"]
     assert c.patch(f"/api/robots/{rid}", json={"nombre": "Otro"}).status_code == 409
-    inventario = {i["componente_id"]: i for i in c.get("/api/inventario").json()["items"]}
+    inventario = {i["componente_id"]: i for i in c.get("/api/inventory").json()["items"]}
     assert inventario["c05"]["en_robots"] == 2
 
 
@@ -167,11 +167,11 @@ def test_version_valida_piezas(entorno, piezas, estado, codigo):
     c, _, _ = entorno
     rid = robot_nuevo(c)
     r = c.post(
-        f"/api/robots/{rid}/versiones",
+        f"/api/robots/{rid}/versions",
         json={"version_base_id": None, "nota": "", "estado": estado, "piezas": piezas},
     )
     assert r.status_code == codigo, r.text
-    assert c.get(f"/api/robots/{rid}/versiones").json()["total"] == int(codigo == 201)
+    assert c.get(f"/api/robots/{rid}/versions").json()["total"] == int(codigo == 201)
 
 
 def test_version_rechaza_pieza_archivada_y_robot_corriendo(entorno, monkeypatch):
@@ -183,16 +183,16 @@ def test_version_rechaza_pieza_archivada_y_robot_corriendo(entorno, monkeypatch)
         "estado": "Concepto",
         "piezas": {"mcu": {"componente_id": "c01", "cantidad": 1}},
     }
-    assert c.delete("/api/componentes/c01").status_code == 204
-    assert c.post(f"/api/robots/{rid}/versiones", json=datos).status_code == 409
+    assert c.delete("/api/components/c01").status_code == 204
+    assert c.post(f"/api/robots/{rid}/versions", json=datos).status_code == 409
     monkeypatch.setattr("app.core.actividad.robot_corriendo", lambda robot_id: robot_id == rid)
     assert c.delete(f"/api/robots/{rid}").status_code == 409
 
 
 def test_controladores_perfiles_y_setups(entorno):
     c, _, _ = entorno
-    assert len(c.get("/api/controladores").json()) == 3
-    perfiles = {p["id"]: p for p in c.get("/api/perfiles").json()}
+    assert len(c.get("/api/controllers").json()) == 3
+    perfiles = {p["id"]: p for p in c.get("/api/profiles").json()}
     assert len(perfiles) == 4 and perfiles["mr4s"]["reglas"]["sensMax"] is None
     s = setup_nuevo(c)
     assert c.get(f"/api/setups/{s['id']}").json() == s
@@ -256,8 +256,8 @@ def test_corridas_resumen_filtros_nota_vueltas_y_bloqueos(entorno):
         db.add(corrida)
         db.flush()
         cid = corrida.id
-    assert c.get("/api/corridas").json()["total"] == 0
-    assert c.get(f"/api/corridas/{cid}").status_code == 409
+    assert c.get("/api/runs").json()["total"] == 0
+    assert c.get(f"/api/runs/{cid}").status_code == 409
     assert c.delete("/api/robots/v001").status_code == 409
     assert c.delete(f"/api/setups/{s['id']}").status_code == 409
     with factory.begin() as db:
@@ -287,22 +287,22 @@ def test_corridas_resumen_filtros_nota_vueltas_y_bloqueos(entorno):
                     error_acumulado=0.1,
                 )
             )
-    r = c.get(f"/api/corridas/{cid}")
+    r = c.get(f"/api/runs/{cid}")
     assert r.status_code == 200, r.text
     assert r.json()["j"] == 12 and r.json()["tiempo_s"] == 10
-    assert c.get("/api/corridas?fuente=robot").json()["total"] == 0
-    assert c.get("/api/corridas?fuente=sim&robot_id=v001&controlador_id=pid").json()["total"] == 1
-    assert c.get("/api/corridas?offset=99").json()["items"] == []
+    assert c.get("/api/runs?fuente=robot").json()["total"] == 0
+    assert c.get("/api/runs?fuente=sim&robot_id=v001&controlador_id=pid").json()["total"] == 1
+    assert c.get("/api/runs?offset=99").json()["items"] == []
     assert (
-        c.patch(f"/api/corridas/{cid}", json={"nota": "Buen agarre"}).json()["nota"]
+        c.patch(f"/api/runs/{cid}", json={"nota": "Buen agarre"}).json()["nota"]
         == "Buen agarre"
     )
-    vueltas = c.get(f"/api/corridas/{cid}/vueltas?limite=2").json()
+    vueltas = c.get(f"/api/runs/{cid}/laps?limite=2").json()
     assert vueltas["total"] == 3 and len(vueltas["items"]) == 2
     assert vueltas["items"][0]["sectores_s"] == [3]
     assert vueltas["items"][0]["segmentos"][0]["tipo"] == "recta"
     assert c.delete(f"/api/setups/{s['id']}").status_code == 204
-    assert c.get(f"/api/corridas/{cid}").json()["parametros"] == P
+    assert c.get(f"/api/runs/{cid}").json()["parametros"] == P
 
 
 def test_dos_guardados_simultaneos_una_sola_version(entorno):
@@ -327,7 +327,7 @@ def test_dos_guardados_simultaneos_una_sola_version(entorno):
     with ThreadPoolExecutor(max_workers=2) as ejecutor:
         resultados = list(ejecutor.map(lambda _: guardar(), range(2)))
     assert sorted(resultados) == [201, 409]
-    assert c.get(f"/api/robots/{rid}/versiones").json()["total"] == 1
+    assert c.get(f"/api/robots/{rid}/versions").json()["total"] == 1
 
 
 def test_dos_actualizaciones_simultaneas_un_solo_stock(entorno):
@@ -363,10 +363,26 @@ def test_demo_simulada_es_repetible_y_compatible_con_corridas(entorno):
         assert nueva
     with factory.begin() as db:
         assert cargar_demo(db) == (cid, False)
-    r = c.get(f"/api/corridas/{cid}")
+    r = c.get(f"/api/runs/{cid}")
     assert r.status_code == 200, r.text
     assert r.json()["fuente"] == "sim" and r.json()["j"] == 11.8
-    assert c.get(f"/api/corridas/{cid}/vueltas").json()["total"] == 2
+    assert c.get(f"/api/runs/{cid}/laps").json()["total"] == 2
+
+
+def test_post_corrida_simulada_crea_y_persiste(entorno):
+    c, _, _ = entorno
+    antes = c.get("/api/runs").json()["total"]
+    r1 = c.post("/api/runs/simulated")
+    assert r1.status_code == 201, r1.text
+    uno = r1.json()
+    assert uno["fuente"] == "sim" and uno["j"] >= 0
+    r2 = c.post("/api/runs/simulated")
+    assert r2.status_code == 201, r2.text
+    assert r2.json()["id"] != uno["id"]  # cada ARRANCAR crea una corrida nueva
+    lista = c.get("/api/runs").json()
+    assert lista["total"] == antes + 2
+    assert c.get(f"/api/runs/{uno['id']}").status_code == 200
+    assert c.get(f"/api/runs/{uno['id']}/laps").json()["total"] >= 3
 
 
 def test_contrato_completo_registrado_en_fastapi(entorno):
@@ -381,4 +397,4 @@ def test_contrato_completo_registrado_en_fastapi(entorno):
     esperado = {(ruta, m) for ruta, ops in diseno["paths"].items() for m in ops if m in metodos}
     real = {(ruta, m) for ruta, ops in servido["paths"].items() for m in ops if m in metodos}
     assert real == esperado
-    assert len(real) == 32
+    assert len(real) == 33

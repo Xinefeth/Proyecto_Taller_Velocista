@@ -37,7 +37,7 @@ def test_consola_recibe_estado_inicial_y_enlaces(cliente):
                 "dispositivo": "cronometro",
                 "conectado": True,
             }
-            assert cliente.get("/api/salud").json()["dispositivos"]["cronometro"] is True
+            assert cliente.get("/api/health").json()["dispositivos"]["cronometro"] is True
         assert consola.receive_json()["datos"]["conectado"] is False
 
 
@@ -61,7 +61,7 @@ def test_estado_se_redistribuye_sin_ack(cliente, ejemplo):
             and reenviado["datos"]["canales"]["bateria_v"] == 8.12
         )
         assert (
-            cliente.get("/api/dispositivos/velocista/manifiesto").json()["controlador_activo"]
+            cliente.get("/api/devices/velocista/manifest").json()["controlador_activo"]
             == "pid"
         )
         robot.__exit__(None, None, None)
@@ -131,13 +131,13 @@ def test_comandos_validados_y_enviados(cliente, ejemplo):
         consola.receive_json()
 
         r = cliente.post(
-            "/api/dispositivos/velocista/comandos",
+            "/api/devices/velocista/commands",
             json={"tipo": "setup", "datos": {"controlador": "pid", "parametros": {"kp": 9}}},
         )
         assert r.status_code == 422 and r.json()["detail"]["motivo"] == "fuera_de_rango"
 
         r = cliente.post(
-            "/api/dispositivos/velocista/comandos",
+            "/api/devices/velocista/commands",
             json={"tipo": "setup", "datos": {"controlador": "pid", "parametros": {"kp": 0.4}}},
         )
         assert r.status_code == 202
@@ -147,5 +147,5 @@ def test_comandos_validados_y_enviados(cliente, ejemplo):
 
 
 def test_comando_a_dispositivo_desconectado(cliente):
-    r = cliente.post("/api/dispositivos/velocista/comandos", json={"tipo": "detener"})
+    r = cliente.post("/api/devices/velocista/commands", json={"tipo": "detener"})
     assert r.status_code == 409 and r.json()["detail"]["motivo"] == "desconectado"

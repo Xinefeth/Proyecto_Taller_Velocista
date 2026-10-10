@@ -7,27 +7,55 @@ lo envía. La confirmación del dispositivo llega a la consola por /ws/consola c
 from typing import Any, Literal
 
 from fastapi import APIRouter
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.contrato import Manifiesto, MensajeInvalido, validar_datos
 from app.contrato.robot import Estado, Setup
 from app.contrato.validacion import revisar_setup
-from app.core.errores import ErrorDeNegocio
+from app.core.errores import ErrorDeNegocio, error_responses
 from app.gateway import ws
 
-router = APIRouter(prefix="/api/dispositivos", tags=["dispositivos"])
+router = APIRouter(prefix="/api/devices", tags=["devices"])
 
-Dispositivo = Literal["velocista", "cronometro"]
-
-
-class Comando(BaseModel):
-    tipo: str = Field(examples=["arrancar"])
-    datos: dict[str, Any] = Field(default_factory=dict, examples=[{}])
+Device = Literal["velocista", "cronometro"]
 
 
-class ComandoEnviado(BaseModel):
-    seq: int
-    mensaje: str = "Enviado. La confirmación del dispositivo llega a la consola como ack."
+class Command(BaseModel):
+    """Command that the console asks to send to a device (HU-16)."""
+
+    model_config = ConfigDict(json_schema_extra={"example": {"tipo": "arrancar", "datos": {}}})
+
+    tipo: str = Field(
+        description=(
+            "Command type. For the line follower it must be declared in its manifest: "
+            "calibrar, arrancar, detener, setup, modo, linea, cierre_vuelta."
+        ),
+        examples=["calibrar", "arrancar", "detener"],
+    )
+    datos: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Command data. Empty for calibrar/arrancar/detener; with fields for setup/modo/linea.",
+        examples=[{}],
+    )
+
+
+class CommandAccepted(BaseModel):
+    """Confirmation that the API accepted the command and sent it to the device."""
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "seq": 42,
+                "mensaje": "Enviado. La confirmación del dispositivo llega a la consola como ack.",
+            }
+        }
+    )
+
+    seq: int = Field(description="Sequence number of the sent message; the robot's ack repeats it.")
+    mensaje: str = Field(
+        default="Enviado. La confirmación del dispositivo llega a la consola como ack.",
+        description="Message for the user (in Spanish).",
+    )
 
 
 def validar_comando(
@@ -60,23 +88,74 @@ def validar_comando(
     return modelo
 
 
-@router.get("/velocista/manifiesto")
-def manifiesto_velocista() -> dict:
-    conexion = ws.conexiones.get("velocista")
-    if conexion is None or conexion.manifiesto is None:
+@router.get(
+    "/velocista/manifest",
+    response_model=Manifiesto,
+    operation_id="getRacerManifest",
+    summary="Get the line follower manifest",
+    description=(
+        "Returns what the robot declared about itself when it connected: sensors, actuators, "
+        "channels, controllers and parameters. The console uses it to draw the panels of the "
+        "selected robot (HU-13). It requires the line follower to be connected and to have sent "
+        "its manifest over `/ws/robot`."
+    ),
+    responses=error_responses(
+        (
+            404,
+            "sin_manifiesto",
+            "El robot no está conectado o aún no envió su manifiesto",
+            "The line follower is not connected or has not sent its manifest yet.",
+        ),
+    ),
+)
+def get_racer_manifest() -> dict:
+    connection = ws.conexiones.get("velocista")
+    if connection is None or connection.manifiesto is None:
         raise ErrorDeNegocio(
             404, "sin_manifiesto", "El robot no está conectado o aún no envió su manifiesto"
         )
-    return conexion.manifiesto.model_dump()
+    return connection.manifiesto.model_dump()
 
 
-@router.post("/{dispositivo}/comandos", status_code=202)
-async def enviar_comando(dispositivo: Dispositivo, comando: Comando) -> ComandoEnviado:
-    conexion = ws.conexiones.get(dispositivo)
-    if conexion is None:
-        raise ErrorDeNegocio(409, "desconectado", f"{dispositivo} no está conectado")
-    modelo = validar_comando(
-        dispositivo, comando.tipo, comando.datos, conexion.manifiesto, conexion.ultimo_estado
+@router.post(
+    "/{device}/commands",
+    status_code=202,
+    response_model=CommandAccepted,
+    operation_id="sendCommand",
+    summary="Send a command to a device",
+    description=(
+        "The console never talks to the robot directly: it requests the command here, the API "
+        "validates it against the manifest and the current state, and the gateway forwards it "
+        "over WebSocket. The device confirmation (ack) reaches the console through "
+        "`/ws/consola`, not in this response. It covers calibrate and start/stop (HU-16)."
+    ),
+    responses=error_responses(
+        (
+            409,
+            "desconectado",
+            "velocista no está conectado",
+            "The target device is not connected.",
+        ),
+        (
+            409,
+            "no_calibrado",
+            "Calibra el robot antes de arrancar",
+            "Invalid state for the command (not calibrated, locked in competition, or no manifest).",
+        ),
+        (
+            422,
+            "comando_desconocido",
+            "El robot no declara ese comando",
+            "Invalid command or data: not declared in the manifest, malformed or out of range.",
+        ),
+    ),
+)
+async def send_command(device: Device, command: Command) -> CommandAccepted:
+    connection = ws.conexiones.get(device)
+    if connection is None:
+        raise ErrorDeNegocio(409, "desconectado", f"{device} no está conectado")
+    model = validar_comando(
+        device, command.tipo, command.datos, connection.manifiesto, connection.ultimo_estado
     )
-    seq = await ws.enviar(dispositivo, comando.tipo, modelo.model_dump(exclude_none=True))
-    return ComandoEnviado(seq=seq)
+    seq = await ws.enviar(device, command.tipo, model.model_dump(exclude_none=True))
+    return CommandAccepted(seq=seq)

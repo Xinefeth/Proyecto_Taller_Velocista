@@ -15,49 +15,49 @@ from app.modulos.optimizacion.schemas import (
 )
 
 router = APIRouter(prefix="/api", tags=["control"])
-Sesion = Annotated[Session, Depends(get_session)]
-IdRobot = Annotated[str, Path(min_length=1, max_length=40)]
-IdSetup = Annotated[int, Path(ge=1, le=9007199254740991)]
-Limite = Annotated[int, Query(ge=1, le=200)]
-Offset = Annotated[int, Query(ge=0, le=9007199254740991)]
+DbSession = Annotated[Session, Depends(get_session)]
+RobotId = Annotated[str, Path(min_length=1, max_length=40)]
+SetupId = Annotated[int, Path(ge=1, le=9007199254740991)]
+PageLimit = Annotated[int, Query(ge=1, le=200)]
+PageOffset = Annotated[int, Query(ge=0, le=9007199254740991)]
 
 
 @router.get(
-    "/controladores", response_model=list[ControladorSalida], operation_id="listarControladores"
+    "/controllers", response_model=list[ControladorSalida], operation_id="listControllers"
 )
-def listar_controladores(session: Sesion):
+def list_controllers(session: DbSession):
     return service.listar_controladores(session)
 
 
-@router.get("/robots/{robot_id}/setups", response_model=PaginaSetups, operation_id="listarSetups")
-def listar_setups(
-    robot_id: IdRobot,
-    session: Sesion,
-    limite: Limite = 50,
-    offset: Offset = 0,
+@router.get("/robots/{robot_id}/setups", response_model=PaginaSetups, operation_id="listSetups")
+def list_setups(
+    robot_id: RobotId,
+    session: DbSession,
+    limit: PageLimit = 50,
+    offset: PageOffset = 0,
     version_id: Annotated[int | None, Query(ge=1, le=9007199254740991)] = None,
 ):
-    return service.listar_setups(session, robot_id, limite, offset, version_id)
+    return service.listar_setups(session, robot_id, limit, offset, version_id)
 
 
 @router.post(
     "/robots/{robot_id}/setups",
     response_model=SetupSalida,
     status_code=201,
-    operation_id="crearSetup",
+    operation_id="createSetup",
 )
-def crear_setup(robot_id: IdRobot, datos: SetupCrear, session: Sesion):
-    return service.crear_setup(session, robot_id, datos)
+def create_setup(robot_id: RobotId, data: SetupCrear, session: DbSession):
+    return service.crear_setup(session, robot_id, data)
 
 
-@router.get("/setups/{setup_id}", response_model=SetupSalida, operation_id="obtenerSetup")
-def obtener_setup(setup_id: IdSetup, session: Sesion):
+@router.get("/setups/{setup_id}", response_model=SetupSalida, operation_id="getSetup")
+def get_setup(setup_id: SetupId, session: DbSession):
     return service.obtener_setup(session, setup_id)
 
 
 @router.delete(
-    "/setups/{setup_id}", status_code=204, response_class=Response, operation_id="archivarSetup"
+    "/setups/{setup_id}", status_code=204, response_class=Response, operation_id="archiveSetup"
 )
-def archivar_setup(setup_id: IdSetup, session: Sesion):
+def archive_setup(setup_id: SetupId, session: DbSession):
     service.archivar_setup(session, setup_id)
     return Response(status_code=204)

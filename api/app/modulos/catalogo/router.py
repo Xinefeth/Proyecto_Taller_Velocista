@@ -19,19 +19,19 @@ from app.modulos.catalogo.schemas import (
     TipoComponenteSalida,
 )
 
-router = APIRouter(prefix="/api", tags=["catálogo"])
-SesionBD = Annotated[Session, Depends(get_session)]
+router = APIRouter(prefix="/api", tags=["catalog"])
+DbSession = Annotated[Session, Depends(get_session)]
 
 
 @router.get(
-    "/inventario",
+    "/inventory",
     response_model=PaginaInventario,
-    operation_id="listarInventario",
-    summary="Consultar inventario",
+    operation_id="listInventory",
+    summary="List inventory",
 )
-def listar_inventario(
-    session: SesionBD,
-    limite: Annotated[int, Query(ge=1, le=200)] = 50,
+def list_inventory(
+    session: DbSession,
+    limit: Annotated[int, Query(ge=1, le=200)] = 50,
     offset: Annotated[int, Query(ge=0, le=9007199254740991)] = 0,
 ):
     """Stock, revisión y demanda de la última versión de cada robot activo.
@@ -39,113 +39,113 @@ def listar_inventario(
     Incluye archivados con stock o demanda. disponible puede ser negativo;
     faltante=max(0, -disponible). No refleja robots simulados de la consola.
     """
-    return service.listar_inventario(session, limite=limite, offset=offset)
+    return service.listar_inventario(session, limite=limit, offset=offset)
 
 
 @router.put(
-    "/inventario/{componente_id}",
+    "/inventory/{component_id}",
     response_model=InventarioSalida,
-    operation_id="actualizarInventario",
-    summary="Actualizar existencias con control de concurrencia",
+    operation_id="updateInventory",
+    summary="Update stock with concurrency control",
 )
-def actualizar_inventario(
-    componente_id: Annotated[str, Path(min_length=1, max_length=40)],
-    datos: InventarioActualizar,
-    session: SesionBD,
+def update_inventory(
+    component_id: Annotated[str, Path(min_length=1, max_length=40)],
+    data: InventarioActualizar,
+    session: DbSession,
 ):
     """Fija stock total y aumenta revisión; revisión obsoleta responde 409.
 
     Admite archivados. Calcula asignaciones desde las versiones persistidas de robots activos.
     """
-    return service.actualizar_inventario(session, componente_id, datos)
+    return service.actualizar_inventario(session, component_id, data)
 
 
 @router.post(
-    "/componentes",
+    "/components",
     status_code=201,
     response_model=ComponenteSalida,
-    operation_id="crearComponente",
-    summary="Registrar componente e inventario inicial",
+    operation_id="createComponent",
+    summary="Register a component and its initial inventory",
 )
-def crear_componente(datos: ComponenteCrear, session: SesionBD):
+def create_component(data: ComponenteCrear, session: DbSession):
     """Genera un ID y guarda la ficha y su stock inicial en una transacción."""
-    return service.crear_componente(session, datos)
+    return service.crear_componente(session, data)
 
 
 @router.get(
-    "/componentes/{componente_id}",
+    "/components/{component_id}",
     response_model=ComponenteSalida,
-    operation_id="obtenerComponente",
-    summary="Consultar ficha de componente",
+    operation_id="getComponent",
+    summary="Get a component",
 )
-def obtener_componente(
-    componente_id: Annotated[str, Path(min_length=1, max_length=40)], session: SesionBD
+def get_component(
+    component_id: Annotated[str, Path(min_length=1, max_length=40)], session: DbSession
 ):
     """Devuelve la ficha y el stock actual; un ID inexistente responde 404."""
-    return service.obtener_componente(session, componente_id)
+    return service.obtener_componente(session, component_id)
 
 
 @router.patch(
-    "/componentes/{componente_id}",
+    "/components/{component_id}",
     response_model=ComponenteSalida,
-    operation_id="editarComponente",
-    summary="Editar ficha de componente",
+    operation_id="updateComponent",
+    summary="Edit a component",
 )
-def editar_componente(
-    componente_id: Annotated[str, Path(min_length=1, max_length=40)],
-    datos: ComponenteEditar,
-    session: SesionBD,
+def update_component(
+    component_id: Annotated[str, Path(min_length=1, max_length=40)],
+    data: ComponenteEditar,
+    session: DbSession,
 ):
     """Edita campos enviados; especificaciones reemplaza el objeto completo.
 
     El tipo, ID y stock no son editables aquí. consumo_a admite null.
     """
-    return service.editar_componente(session, componente_id, datos)
+    return service.editar_componente(session, component_id, data)
 
 
 @router.delete(
-    "/componentes/{componente_id}",
+    "/components/{component_id}",
     status_code=204,
     response_class=Response,
-    operation_id="archivarComponente",
-    summary="Archivar componente",
+    operation_id="archiveComponent",
+    summary="Archive a component",
 )
-def archivar_componente(
-    componente_id: Annotated[str, Path(min_length=1, max_length=40)], session: SesionBD
+def archive_component(
+    component_id: Annotated[str, Path(min_length=1, max_length=40)], session: DbSession
 ):
     """Conserva la ficha y stock; repetir devuelve 204. Un ID inexistente responde 404."""
-    service.archivar_componente(session, componente_id)
+    service.archivar_componente(session, component_id)
     return Response(status_code=204)
 
 
 @router.get(
-    "/tipos-componentes",
+    "/component-types",
     response_model=list[TipoComponenteSalida],
     response_model_exclude_none=True,
-    operation_id="listarTipos",
-    summary="Tipos, campos y capacidades",
+    operation_id="listComponentTypes",
+    summary="Component types, fields and capabilities",
 )
-def listar_tipos(session: SesionBD):
+def list_component_types(session: DbSession):
     """Catálogo completo ordenado por ID; una base sin semillas devuelve []."""
     return service.listar_tipos(session)
 
 
 @router.get(
-    "/componentes",
+    "/components",
     response_model=PaginaComponentes,
-    operation_id="listarComponentes",
-    summary="Buscar componentes del catálogo",
+    operation_id="listComponents",
+    summary="Search catalog components",
 )
-def listar_componentes(
-    session: SesionBD,
-    limite: Annotated[int, Query(ge=1, le=200)] = 50,
+def list_components(
+    session: DbSession,
+    limit: Annotated[int, Query(ge=1, le=200)] = 50,
     offset: Annotated[int, Query(ge=0, le=9007199254740991)] = 0,
     q: Annotated[str | None, Query(max_length=120)] = None,
-    tipo_id: Annotated[TipoComponenteId | None, Query()] = None,
+    type_id: Annotated[TipoComponenteId | None, Query()] = None,
 ):
     """Fichas con stock; búsqueda sin tildes en nombre, tipo, tienda y especificaciones.
 
     Excluye archivados. Los filtros se combinan y total cuenta todos los
     resultados filtrados, independientemente de la página pedida.
     """
-    return service.listar_componentes(session, limite=limite, offset=offset, q=q, tipo_id=tipo_id)
+    return service.listar_componentes(session, limite=limit, offset=offset, q=q, tipo_id=type_id)
