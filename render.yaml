@@ -4,7 +4,7 @@
 
 databases:
   - name: apaec-lab-db
-    plan: free          # el Postgres gratuito de Render caduca a los ~30 días
+    plan: free          # el Postgres gratuito de Render
     databaseName: apaec_lab
     user: apaec_app
 
