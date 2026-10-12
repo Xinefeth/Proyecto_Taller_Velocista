@@ -15,7 +15,7 @@ services:
     plan: free          # el servicio gratis se duerme tras inactividad
     dockerfilePath: ./Dockerfile
     dockerContext: .
-    healthCheckPath: /api/salud
+    healthCheckPath: /api/health
     envVars:
       # La base llega en una sola variable; config.py la normaliza al driver psycopg.
       - key: DATABASE_URL
