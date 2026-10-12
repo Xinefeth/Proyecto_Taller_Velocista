@@ -65,7 +65,7 @@ La conexión de cada dispositivo también se ve en `GET /api/health` (campo `dis
 
 
 def create_app() -> FastAPI:
-    actividad.robot_corriendo = ws.robot_corriendo
+    actividad.robot_running = ws.robot_running
     configurar_logging(settings.log_level)
     app = FastAPI(
         title="APAEC Lab API",
@@ -98,7 +98,7 @@ def create_app() -> FastAPI:
             "api": "ok",
             "base_de_datos": "ok" if db_disponible() else "sin conexión",
             "entorno": settings.app_env,
-            "dispositivos": ws.estado_dispositivos(),
+            "dispositivos": ws.device_status(),
         }
 
     # Canales de entrada

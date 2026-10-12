@@ -4,19 +4,19 @@ from typing import Literal
 
 from pydantic import Field, field_validator
 
-from app.contrato.base import PATRON_NOMBRE, Estricto, misma_version_mayor
+from app.contract.base import NAME_PATTERN, Strict, same_major_version
 
 
-class Hola(Estricto):
-    id: str = Field(pattern=PATRON_NOMBRE)
+class Hello(Strict):
+    id: str = Field(pattern=NAME_PATTERN)
     firmware: str = Field(max_length=20)
     contrato: str = Field(pattern=r"^\d+\.\d+$")
     antirrebote_ms: int = Field(ge=0)
 
-    _version = field_validator("contrato")(misma_version_mayor)
+    _version = field_validator("contrato")(same_major_version)
 
 
-class Corte(Estricto):
+class Crossing(Strict):
     n_corte: int = Field(ge=1, description="Correlativo de cortes desde el último rearmar")
     tiempo_vuelta_ms: int | None = Field(
         ge=0,
@@ -25,11 +25,11 @@ class Corte(Estricto):
     marca_us: int = Field(ge=0, description="Instante del corte en microsegundos")
 
 
-class EstadoCronometro(Estricto):
+class TimerStatus(Strict):
     barrera: Literal["ok", "bloqueada", "sin_senal"]
     rssi_dbm: int = Field(ge=-120, le=0)
     pendientes: int = Field(ge=0, description="Cortes guardados sin ack")
 
 
-class Rearmar(Estricto):
+class Rearm(Strict):
     """API -> cronómetro: el próximo corte es una salida nueva."""

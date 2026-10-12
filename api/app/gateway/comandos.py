@@ -10,9 +10,9 @@ from typing import Any, Literal
 from fastapi import APIRouter
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.contrato import Manifiesto, MensajeInvalido, validar_datos
-from app.contrato.robot import Estado, Setup
-from app.contrato.validacion import revisar_setup
+from app.contract import InvalidMessage, Manifest, validate_data
+from app.contract.robot import Setup, Status
+from app.contract.validation import check_setup
 from app.core.config import RAIZ_REPO
 from app.core.errores import ErrorDeNegocio, error_responses
 from app.gateway import ws
@@ -84,15 +84,15 @@ def validar_comando(
     dispositivo: str,
     tipo: str,
     datos: dict,
-    manifiesto: Manifiesto | None,
-    ultimo_estado: Estado | None,
+    manifiesto: Manifest | None,
+    ultimo_estado: Status | None,
 ) -> BaseModel:
     """Devuelve el comando validado o lanza ErrorDeNegocio con el motivo del rechazo."""
     if tipo == "ack":
         raise ErrorDeNegocio(422, "comando_invalido", "ack no es un comando")
     try:
-        modelo = validar_datos(f"api->{dispositivo}", tipo, datos)
-    except MensajeInvalido as e:
+        modelo = validate_data(f"api->{dispositivo}", tipo, datos)
+    except InvalidMessage as e:
         raise ErrorDeNegocio(422, "comando_invalido", str(e)[:300]) from e
     if dispositivo != "velocista":
         return modelo
@@ -105,7 +105,7 @@ def validar_comando(
         raise ErrorDeNegocio(409, "bloqueado_competencia", "En competencia solo se puede detener")
     if tipo == "start" and (e is None or not e.calibrado):
         raise ErrorDeNegocio(409, "no_calibrado", "Calibra el robot antes de arrancar")
-    if isinstance(modelo, Setup) and (problema := revisar_setup(manifiesto, modelo)):
+    if isinstance(modelo, Setup) and (problema := check_setup(manifiesto, modelo)):
         raise ErrorDeNegocio(422, problema[0], problema[1])
     return modelo
 
@@ -113,7 +113,7 @@ def validar_comando(
 @router.get(
     "/velocista/manifest",
     status_code=200,
-    response_model=Manifiesto,
+    response_model=Manifest,
     operation_id="getRacerManifest",
     summary="Consultar el manifiesto del velocista",
     description=(
@@ -135,12 +135,12 @@ def validar_comando(
     },
 )
 def get_racer_manifest() -> dict:
-    connection = ws.conexiones.get("velocista")
-    if connection is None or connection.manifiesto is None:
+    connection = ws.connections.get("velocista")
+    if connection is None or connection.manifest is None:
         raise ErrorDeNegocio(
             404, "sin_manifiesto", "El robot no está conectado o aún no envió su manifiesto"
         )
-    return connection.manifiesto.model_dump()
+    return connection.manifest.model_dump()
 
 
 @router.post(
@@ -189,14 +189,14 @@ def get_racer_manifest() -> dict:
     ),
 )
 async def send_command(device: Device, command: Command) -> CommandAccepted:
-    connection = ws.conexiones.get(device)
+    connection = ws.connections.get(device)
     if connection is None:
         raise ErrorDeNegocio(409, "desconectado", f"{device} no está conectado")
     model = validar_comando(
-        device, command.tipo, command.datos, connection.manifiesto, connection.ultimo_estado
+        device, command.tipo, command.datos, connection.manifest, connection.last_status
     )
     try:
-        seq = await ws.enviar(device, command.tipo, model.model_dump(exclude_none=True))
+        seq = await ws.send(device, command.tipo, model.model_dump(exclude_none=True))
     except (KeyError, RuntimeError, OSError) as e:
         # El enlace se cayó entre el pre-chequeo y el envío: el dispositivo ya no recibe.
         raise ErrorDeNegocio(

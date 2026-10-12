@@ -185,7 +185,7 @@ def test_version_rechaza_pieza_archivada_y_robot_corriendo(entorno, monkeypatch)
     }
     assert c.delete("/api/components/c01").status_code == 204
     assert c.post(f"/api/robots/{rid}/versions", json=datos).status_code == 409
-    monkeypatch.setattr("app.core.actividad.robot_corriendo", lambda robot_id: robot_id == rid)
+    monkeypatch.setattr("app.core.actividad.robot_running", lambda robot_id: robot_id == rid)
     assert c.delete(f"/api/robots/{rid}").status_code == 409
 
 

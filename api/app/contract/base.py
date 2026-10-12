@@ -4,29 +4,29 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-VERSION_CONTRATO = "2.0"
+CONTRACT_VERSION = "2.0"
 
 
-def misma_version_mayor(version: str) -> str:
+def same_major_version(version: str) -> str:
     """Valida que el dispositivo hable la misma versión mayor del contrato."""
-    if version.split(".")[0] != VERSION_CONTRATO.split(".")[0]:
-        raise ValueError(f"contrato {version} incompatible con {VERSION_CONTRATO}")
+    if version.split(".")[0] != CONTRACT_VERSION.split(".")[0]:
+        raise ValueError(f"contrato {version} incompatible con {CONTRACT_VERSION}")
     return version
 
 
 # Nombres de canales, parámetros y sensores: minúsculas, dígitos y guion bajo.
-PATRON_NOMBRE = r"^[a-z][a-z0-9_]{0,31}$"
+NAME_PATTERN = r"^[a-z][a-z0-9_]{0,31}$"
 
-Emisor = Literal["velocista", "cronometro", "api"]
+Sender = Literal["velocista", "cronometro", "api"]
 
 
-class Estricto(BaseModel):
+class Strict(BaseModel):
     """Rechaza campos no declarados: un error de tipeo en el firmware se detecta enseguida."""
 
     model_config = ConfigDict(extra="forbid")
 
 
-class Sobre(Estricto):
+class Envelope(Strict):
     """Envoltorio de todo mensaje WebSocket."""
 
     tipo: str = Field(pattern=r"^[a-z_]{2,24}$")

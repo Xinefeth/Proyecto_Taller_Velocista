@@ -161,7 +161,7 @@ def test_comando_con_enlace_caido_al_enviar_devuelve_503(cliente, ejemplo, monke
         def enlace_caido(*_a, **_k):
             raise RuntimeError("el socket del dispositivo ya está cerrado")
 
-        monkeypatch.setattr(ws, "enviar", enlace_caido)
+        monkeypatch.setattr(ws, "send", enlace_caido)
         r = cliente.post("/api/devices/velocista/commands", json={"tipo": "stop"})
         assert r.status_code == 503
         assert r.json()["detail"]["motivo"] == "dispositivo_no_disponible"

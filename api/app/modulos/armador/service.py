@@ -200,7 +200,7 @@ def robot_para_escritura(session, robot_id):
 
 
 def comprobar_detenido(session, robot_id):
-    if actividad.robot_corriendo(robot_id) or robot_en_curso(session, robot_id):
+    if actividad.robot_running(robot_id) or robot_en_curso(session, robot_id):
         raise ErrorDeNegocio(
             409, "corrida_en_curso", "Detén y cierra la corrida antes de modificar el armado"
         )

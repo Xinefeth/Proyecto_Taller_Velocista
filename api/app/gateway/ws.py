@@ -17,17 +17,17 @@ from dataclasses import dataclass, field
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, status
 from pydantic import ValidationError
 
-from app.contrato import Manifiesto, MensajeInvalido, Sobre, requiere_ack, validar_datos
-from app.contrato.robot import Estado, Senales
-from app.contrato.validacion import revisar_canales
+from app.contract import Envelope, InvalidMessage, Manifest, requires_ack, validate_data
+from app.contract.robot import Signals, Status
+from app.contract.validation import check_channels
 from app.core.config import settings
 from app.core.seguridad import token_valido
 
 log = logging.getLogger("apaec.gateway")
 router = APIRouter()
 
-DISPOSITIVOS = ("velocista", "cronometro")
-SEQ_RECORDADOS = 256
+DEVICES = ("velocista", "cronometro")
+SEQ_REMEMBERED = 256
 
 
 def _ms() -> int:
@@ -35,27 +35,27 @@ def _ms() -> int:
 
 
 @dataclass
-class Conexion:
+class Connection:
     ws: WebSocket
-    manifiesto: Manifiesto | None = None
-    ultimo_estado: Estado | None = None
-    ultimo_t_ms: int = -1
-    seq_salida: int = 0
-    seq_recibidos: deque = field(default_factory=lambda: deque(maxlen=SEQ_RECORDADOS))
-    avisos_vistos: set[str] = field(default_factory=set)
+    manifest: Manifest | None = None
+    last_status: Status | None = None
+    last_t_ms: int = -1
+    seq_out: int = 0
+    seq_received: deque = field(default_factory=lambda: deque(maxlen=SEQ_REMEMBERED))
+    warnings_seen: set[str] = field(default_factory=set)
 
-    def siguiente_seq(self) -> int:
-        self.seq_salida = (self.seq_salida + 1) % 2**32
-        return self.seq_salida
+    def next_seq(self) -> int:
+        self.seq_out = (self.seq_out + 1) % 2**32
+        return self.seq_out
 
 
-class Consolas:
+class Consoles:
     """Consolas conectadas a /ws/consola; solo reciben."""
 
     def __init__(self) -> None:
-        self.activas: set[WebSocket] = set()
+        self.active: set[WebSocket] = set()
 
-    async def difundir(
+    async def broadcast(
         self, origen: str, tipo: str, datos: dict, seq: int = 0, ts: int = 0
     ) -> None:
         mensaje = {
@@ -66,131 +66,131 @@ class Consolas:
             "datos": datos,
             "recibido_ms": _ms(),
         }
-        for ws in list(self.activas):
+        for ws in list(self.active):
             try:
                 await ws.send_json(mensaje)
             except Exception:
-                self.activas.discard(ws)
+                self.active.discard(ws)
 
-    async def evento(self, codigo: str, nivel: str, mensaje: str, **datos) -> None:
-        await self.difundir(
+    async def event(self, codigo: str, nivel: str, mensaje: str, **datos) -> None:
+        await self.broadcast(
             "api", "evento", {"codigo": codigo, "nivel": nivel, "mensaje": mensaje, "datos": datos}
         )
 
 
-consolas = Consolas()
-conexiones: dict[str, Conexion] = {}
+consoles = Consoles()
+connections: dict[str, Connection] = {}
 
 
-def estado_dispositivos() -> dict[str, bool]:
-    return {nombre: nombre in conexiones for nombre in DISPOSITIVOS}
+def device_status() -> dict[str, bool]:
+    return {name: name in connections for name in DEVICES}
 
 
-async def enviar(nombre: str, tipo: str, datos: dict) -> int:
+async def send(name: str, tipo: str, datos: dict) -> int:
     """Envía un mensaje de la API a un dispositivo conectado. Devuelve el seq usado."""
-    conexion = conexiones[nombre]
-    seq = conexion.siguiente_seq()
-    await conexion.ws.send_json({"tipo": tipo, "seq": seq, "ts": _ms() % 2**32, "datos": datos})
+    connection = connections[name]
+    seq = connection.next_seq()
+    await connection.ws.send_json({"tipo": tipo, "seq": seq, "ts": _ms() % 2**32, "datos": datos})
     return seq
 
 
-async def _ack(conexion: Conexion, seq: int) -> None:
-    await conexion.ws.send_json(
+async def _ack(connection: Connection, seq: int) -> None:
+    await connection.ws.send_json(
         {"tipo": "ack", "seq": seq, "ts": _ms() % 2**32, "datos": {"ok": True}}
     )
 
 
-async def _procesar(nombre: str, conexion: Conexion, crudo: str) -> None:
+async def _process(name: str, connection: Connection, raw: str) -> None:
     try:
-        sobre = Sobre.model_validate(json.loads(crudo))
-        modelo = validar_datos(nombre, sobre.tipo, sobre.datos)
-    except (json.JSONDecodeError, ValidationError, MensajeInvalido) as e:
-        log.warning("Mensaje inválido de %s: %s", nombre, e)
-        await consolas.evento(
-            "mensaje_invalido", "aviso", f"Mensaje inválido de {nombre}", detalle=str(e)[:300]
+        envelope = Envelope.model_validate(json.loads(raw))
+        model = validate_data(name, envelope.tipo, envelope.datos)
+    except (json.JSONDecodeError, ValidationError, InvalidMessage) as e:
+        log.warning("Mensaje inválido de %s: %s", name, e)
+        await consoles.event(
+            "mensaje_invalido", "aviso", f"Mensaje inválido de {name}", detalle=str(e)[:300]
         )
         return
 
-    con_ack = requiere_ack(nombre, sobre.tipo)
-    if con_ack and sobre.seq in conexion.seq_recibidos:
-        await _ack(conexion, sobre.seq)  # duplicado: se vuelve a confirmar, no se reprocesa
+    with_ack = requires_ack(name, envelope.tipo)
+    if with_ack and envelope.seq in connection.seq_received:
+        await _ack(connection, envelope.seq)  # duplicado: se vuelve a confirmar, no se reprocesa
         return
 
-    if nombre == "velocista":
-        if isinstance(modelo, Manifiesto):
-            conexion.manifiesto = modelo
-            conexion.avisos_vistos.clear()
-            conexion.ultimo_t_ms = -1
-        elif conexion.manifiesto is None:
-            await consolas.evento(
+    if name == "velocista":
+        if isinstance(model, Manifest):
+            connection.manifest = model
+            connection.warnings_seen.clear()
+            connection.last_t_ms = -1
+        elif connection.manifest is None:
+            await consoles.event(
                 "manifiesto_faltante", "aviso", "El robot envió datos antes del manifiesto"
             )
             return
         else:
-            if isinstance(modelo, Senales):
-                if modelo.t_ms <= conexion.ultimo_t_ms:
+            if isinstance(model, Signals):
+                if model.t_ms <= connection.last_t_ms:
                     return  # fuera de orden: la siguiente muestra la reemplaza
-                conexion.ultimo_t_ms = modelo.t_ms
-            if isinstance(modelo, Estado):
-                conexion.ultimo_estado = modelo
-            if isinstance(modelo, Estado | Senales):
-                grupo = "estado" if isinstance(modelo, Estado) else "senales"
-                for aviso in revisar_canales(conexion.manifiesto, grupo, modelo.canales):
-                    if aviso not in conexion.avisos_vistos:  # cada aviso una vez por conexión
-                        conexion.avisos_vistos.add(aviso)
-                        await consolas.evento("canal_invalido", "aviso", aviso)
+                connection.last_t_ms = model.t_ms
+            if isinstance(model, Status):
+                connection.last_status = model
+            if isinstance(model, Status | Signals):
+                grupo = "estado" if isinstance(model, Status) else "senales"
+                for warning in check_channels(connection.manifest, grupo, model.canales):
+                    if warning not in connection.warnings_seen:  # cada aviso una vez por conexión
+                        connection.warnings_seen.add(warning)
+                        await consoles.event("canal_invalido", "aviso", warning)
 
-    if con_ack:
-        conexion.seq_recibidos.append(sobre.seq)
-        await _ack(conexion, sobre.seq)
-    await consolas.difundir(nombre, sobre.tipo, sobre.datos, sobre.seq, sobre.ts)
+    if with_ack:
+        connection.seq_received.append(envelope.seq)
+        await _ack(connection, envelope.seq)
+    await consoles.broadcast(name, envelope.tipo, envelope.datos, envelope.seq, envelope.ts)
 
 
-async def _atender(ws: WebSocket, nombre: str, token_esperado: str) -> None:
+async def _serve(ws: WebSocket, name: str, expected_token: str) -> None:
     if not token_valido(
-        ws.headers.get("x-device-token") or ws.query_params.get("token"), token_esperado
+        ws.headers.get("x-device-token") or ws.query_params.get("token"), expected_token
     ):
         await ws.close(code=status.WS_1008_POLICY_VIOLATION)
-        log.warning("Conexión rechazada de %s: token inválido", nombre)
+        log.warning("Conexión rechazada de %s: token inválido", name)
         return
     await ws.accept()
-    conexion = Conexion(ws)
-    conexiones[nombre] = conexion
-    log.info("%s conectado", nombre)
-    await consolas.difundir("api", "enlace", {"dispositivo": nombre, "conectado": True})
+    connection = Connection(ws)
+    connections[name] = connection
+    log.info("%s conectado", name)
+    await consoles.broadcast("api", "enlace", {"dispositivo": name, "conectado": True})
     try:
         while True:
-            await _procesar(nombre, conexion, await ws.receive_text())
+            await _process(name, connection, await ws.receive_text())
     except WebSocketDisconnect:
         pass
     finally:
-        if conexiones.get(nombre) is conexion:
-            del conexiones[nombre]
-        log.info("%s desconectado", nombre)
-        await consolas.difundir("api", "enlace", {"dispositivo": nombre, "conectado": False})
+        if connections.get(name) is connection:
+            del connections[name]
+        log.info("%s desconectado", name)
+        await consoles.broadcast("api", "enlace", {"dispositivo": name, "conectado": False})
 
 
 @router.websocket("/ws/robot")
 async def ws_robot(ws: WebSocket) -> None:
-    await _atender(ws, "velocista", settings.device_token_velocista)
+    await _serve(ws, "velocista", settings.device_token_velocista)
 
 
 @router.websocket("/ws/cronometro")
 async def ws_cronometro(ws: WebSocket) -> None:
-    await _atender(ws, "cronometro", settings.device_token_cronometro)
+    await _serve(ws, "cronometro", settings.device_token_cronometro)
 
 
 @router.websocket("/ws/consola")
 async def ws_consola(ws: WebSocket) -> None:
     await ws.accept()
-    consolas.activas.add(ws)
+    consoles.active.add(ws)
     await ws.send_json(
         {
             "origen": "api",
             "tipo": "hola",
             "seq": 0,
             "ts": 0,
-            "datos": {"dispositivos": estado_dispositivos()},
+            "datos": {"dispositivos": device_status()},
             "recibido_ms": _ms(),
         }
     )
@@ -198,15 +198,15 @@ async def ws_consola(ws: WebSocket) -> None:
         while True:
             await ws.receive_text()  # la consola solo escucha; sus acciones van por REST
     except WebSocketDisconnect:
-        consolas.activas.discard(ws)
+        consoles.active.discard(ws)
 
 
-def robot_corriendo(robot_id: str) -> bool:
-    conexion = conexiones.get("velocista")
+def robot_running(robot_id: str) -> bool:
+    connection = connections.get("velocista")
     return bool(
-        conexion
-        and conexion.manifiesto
-        and conexion.manifiesto.id == robot_id
-        and conexion.ultimo_estado
-        and conexion.ultimo_estado.estado == "running"
+        connection
+        and connection.manifest
+        and connection.manifest.id == robot_id
+        and connection.last_status
+        and connection.last_status.estado == "running"
     )

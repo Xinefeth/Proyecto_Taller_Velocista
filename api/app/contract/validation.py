@@ -2,11 +2,11 @@
 
 from typing import Literal
 
-from app.contrato.manifiesto import Canal, Manifiesto
-from app.contrato.robot import Setup, ValorCanal
+from app.contract.manifest import Channel, Manifest
+from app.contract.robot import ChannelValue, Setup
 
 
-def _valor_valido(canal: Canal, valor: ValorCanal) -> str | None:
+def _valor_valido(canal: Channel, valor: ChannelValue) -> str | None:
     base = canal.tipo.removesuffix("[]")
     valores = valor if isinstance(valor, list) else [valor]
     if canal.tipo.endswith("[]"):
@@ -30,8 +30,8 @@ def _valor_valido(canal: Canal, valor: ValorCanal) -> str | None:
     return None
 
 
-def revisar_canales(
-    manifiesto: Manifiesto, grupo: Literal["estado", "senales"], canales: dict[str, ValorCanal]
+def check_channels(
+    manifiesto: Manifest, grupo: Literal["estado", "senales"], canales: dict[str, ChannelValue]
 ) -> list[str]:
     """Devuelve avisos; nunca descarta la muestra completa por un canal raro."""
     avisos = []
@@ -46,7 +46,7 @@ def revisar_canales(
     return avisos
 
 
-def revisar_setup(manifiesto: Manifiesto, setup: Setup) -> tuple[str, str] | None:
+def check_setup(manifiesto: Manifest, setup: Setup) -> tuple[str, str] | None:
     """Devuelve (motivo, detalle) si el setup no cabe en lo que el robot declaró."""
     controlador = manifiesto.controlador(setup.controlador)
     if controlador is None:

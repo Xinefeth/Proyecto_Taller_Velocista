@@ -2,18 +2,18 @@
 
 import pytest
 
-from app.contrato import Manifiesto
-from app.contrato.robot import Estado
+from app.contract import Manifest
+from app.contract.robot import Status
 from app.core.errores import ErrorDeNegocio
 from app.gateway.comandos import validar_comando
 
 
 @pytest.fixture()
 def manifiesto(ejemplo):
-    return Manifiesto.model_validate(ejemplo("velocista.manifiesto.json")["datos"])
+    return Manifest.model_validate(ejemplo("velocista.manifiesto.json")["datos"])
 
 
-def estado(**cambios) -> Estado:
+def estado(**cambios) -> Status:
     base = dict(
         estado="ready",
         calibrado=True,
@@ -24,7 +24,7 @@ def estado(**cambios) -> Estado:
         rssi_dbm=-50,
         canales={"bateria_v": 8.0},
     )
-    return Estado.model_validate(base | cambios)
+    return Status.model_validate(base | cambios)
 
 
 def motivo(*args) -> str | None:

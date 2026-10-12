@@ -128,7 +128,7 @@ def archivar_setup(session, setup_id):
             raise ErrorDeNegocio(404, "setup_no_encontrado", "El setup no existe")
         if not setup.archivado:
             robot_id = obtener_setup(session, setup_id)["robot_id"]
-            if actividad.robot_corriendo(robot_id) or setup_en_curso(session, setup_id):
+            if actividad.robot_running(robot_id) or setup_en_curso(session, setup_id):
                 raise ErrorDeNegocio(
                     409, "corrida_en_curso", "El setup está en uso por una corrida activa"
                 )
