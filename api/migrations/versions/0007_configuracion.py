@@ -26,7 +26,9 @@ def upgrade() -> None:
             server_default=sa.text("now()"),
         ),
         sa.ForeignKeyConstraint(["robot_id"], ["robot.id"], ondelete="CASCADE"),
-        sa.CheckConstraint("modo IS NULL OR modo IN ('prueba', 'competencia')", name="ck_config_modo"),
+        sa.CheckConstraint(
+            "modo IS NULL OR modo IN ('prueba', 'competencia')", name="ck_config_modo"
+        ),
         sa.CheckConstraint("linea IS NULL OR linea IN ('negra', 'blanca')", name="ck_config_linea"),
     )
 

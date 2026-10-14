@@ -73,7 +73,9 @@ class CommandAccepted(BaseModel):
         }
     )
 
-    seq: int = Field(description="Número de secuencia del mensaje enviado; el ack del robot lo repite.")
+    seq: int = Field(
+        description="Número de secuencia del mensaje enviado; el ack del robot lo repite."
+    )
     mensaje: str = Field(
         default="Enviado. La confirmación del dispositivo llega a la consola como ack.",
         description="Mensaje para el usuario.",

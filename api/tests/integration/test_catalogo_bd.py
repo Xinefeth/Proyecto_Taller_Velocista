@@ -457,9 +457,7 @@ def test_editar_especificaciones_reemplaza_objeto(cliente_catalogo, catalogo_ini
 
 
 def test_editar_consumo_admite_null(cliente_catalogo, catalogo_inicial):
-    assert (
-        cliente_catalogo.patch("/api/components/c22", json={"consumo_a": 0.1}).status_code == 200
-    )
+    assert cliente_catalogo.patch("/api/components/c22", json={"consumo_a": 0.1}).status_code == 200
     respuesta = cliente_catalogo.patch("/api/components/c22", json={"consumo_a": None})
     assert respuesta.status_code == 200
     assert respuesta.json()["consumo_a"] is None

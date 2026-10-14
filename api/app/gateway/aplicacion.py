@@ -74,7 +74,9 @@ async def aplicar_config_velocista(robot_id: str, tipo: str, datos: dict) -> int
     envía. Devuelve el seq. Guardas, en orden: comando_invalido → sin_manifiesto →
     comando_desconocido → bloqueado_competencia → ocupado → dispositivo_no_disponible."""
     conexion = ws.connections.get("velocista")
-    coincide = conexion is not None and conexion.manifest is not None and conexion.manifest.id == robot_id
+    coincide = (
+        conexion is not None and conexion.manifest is not None and conexion.manifest.id == robot_id
+    )
     manifiesto = conexion.manifest if coincide else None
     ultimo_estado = conexion.last_status if coincide else None
     modelo = validar_comando("velocista", tipo, datos, manifiesto, ultimo_estado)

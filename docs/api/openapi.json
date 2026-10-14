@@ -6474,7 +6474,7 @@
                   "$ref": "#/components/schemas/Manifiesto"
                 },
                 "example": {
-                  "contrato": "1.0",
+                  "contrato": "2.0",
                   "id": "v001",
                   "tipo_robot": "velocista",
                   "firmware": "0.2.0",
@@ -6696,9 +6696,9 @@
                   ],
                   "controlador_activo": "pid",
                   "comandos": [
-                    "calibrar",
-                    "arrancar",
-                    "detener",
+                    "calibrate",
+                    "start",
+                    "stop",
                     "setup",
                     "modo",
                     "linea",
@@ -10761,6 +10761,294 @@
         "required": [
           "seq",
           "mensaje"
+        ]
+      },
+      "ComandoAceptado": {
+        "type": "object",
+        "properties": {
+          "seq": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "mensaje": {
+            "type": "string",
+            "maxLength": 300
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "seq",
+          "mensaje"
+        ]
+      },
+      "ConfiguracionGuardada": {
+        "type": "object",
+        "properties": {
+          "modo": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "prueba",
+                  "competencia"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "linea": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "negra",
+                  "blanca"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "actualizado_en": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "modo",
+          "linea",
+          "actualizado_en"
+        ]
+      },
+      "CambioModo": {
+        "type": "object",
+        "properties": {
+          "modo": {}
+        },
+        "additionalProperties": false,
+        "required": [],
+        "description": "modo es libre a propósito: un valor inválido se rechaza con comando_invalido."
+      },
+      "CambioLinea": {
+        "type": "object",
+        "properties": {
+          "color": {}
+        },
+        "additionalProperties": false,
+        "required": [],
+        "description": "color es libre a propósito: un valor inválido se rechaza con comando_invalido."
+      },
+      "PresetAplicar": {
+        "type": "object",
+        "properties": {
+          "controlador_id": {
+            "type": "string",
+            "maxLength": 40,
+            "minLength": 1,
+            "pattern": "^[a-zA-Z0-9_-]+$"
+          },
+          "preset_id": {
+            "type": "string",
+            "maxLength": 40,
+            "minLength": 1
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "controlador_id",
+          "preset_id"
+        ]
+      },
+      "ParametroReconciliado": {
+        "type": "object",
+        "properties": {
+          "clave": {
+            "type": "string",
+            "maxLength": 40,
+            "minLength": 1,
+            "pattern": "^[a-zA-Z0-9_-]+$"
+          },
+          "nombre": {
+            "type": "string",
+            "maxLength": 120
+          },
+          "descripcion": {
+            "type": "string",
+            "maxLength": 300
+          },
+          "min": {
+            "type": "number"
+          },
+          "max": {
+            "type": "number"
+          },
+          "paso": {
+            "type": "number",
+            "minimum": 0,
+            "exclusiveMinimum": 0
+          },
+          "decimales": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 6
+          },
+          "optimizable": {
+            "type": "boolean"
+          },
+          "valor": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "clave",
+          "nombre",
+          "descripcion",
+          "min",
+          "max",
+          "paso",
+          "decimales",
+          "optimizable"
+        ]
+      },
+      "ControladorReconciliado": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 40,
+            "minLength": 1,
+            "pattern": "^[a-zA-Z0-9_-]+$"
+          },
+          "nombre": {
+            "type": "string",
+            "maxLength": 120
+          },
+          "nombre_corto": {
+            "type": "string",
+            "maxLength": 30
+          },
+          "descripcion": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "parametros": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ParametroReconciliado"
+            },
+            "minItems": 1
+          },
+          "presets": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "minProperties": 1,
+              "additionalProperties": {
+                "type": "number"
+              }
+            }
+          },
+          "activo": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "nombre",
+          "nombre_corto",
+          "descripcion",
+          "parametros",
+          "presets",
+          "activo"
+        ]
+      },
+      "CatalogoReconciliado": {
+        "type": "object",
+        "properties": {
+          "controlador_activo": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 40,
+                "minLength": 1,
+                "pattern": "^[a-zA-Z0-9_-]+$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "controladores": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ControladorReconciliado"
+            }
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "controlador_activo",
+          "controladores"
+        ]
+      },
+      "ParametroVivo": {
+        "type": "object",
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "maxLength": 120
+          },
+          "valor": {
+            "type": "number"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "nombre",
+          "valor"
+        ]
+      },
+      "ConfiguracionViva": {
+        "type": "object",
+        "properties": {
+          "controlador_activo": {
+            "type": "string",
+            "maxLength": 40,
+            "minLength": 1,
+            "pattern": "^[a-zA-Z0-9_-]+$"
+          },
+          "parametros": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ParametroVivo"
+            }
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "controlador_activo",
+          "parametros"
         ]
       },
       "EN02_Actuador": {

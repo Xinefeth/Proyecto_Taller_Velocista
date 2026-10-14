@@ -131,7 +131,10 @@ def test_cambiar_linea_valido_envia_un_comando():
     [
         (None, "sin_manifiesto"),
         (ConexionFalsa(None, None), "sin_manifiesto"),
-        (ConexionFalsa(MANIFIESTO, status(estado="running", modo="competencia")), "bloqueado_competencia"),
+        (
+            ConexionFalsa(MANIFIESTO, status(estado="running", modo="competencia")),
+            "bloqueado_competencia",
+        ),
         (ConexionFalsa(MANIFIESTO, status(estado="running", modo="prueba")), "ocupado"),
     ],
 )
@@ -211,7 +214,9 @@ def test_prop_valor_invalido(valor, estado_):
 
 # Propiedad 4: robot corriendo rechaza con el motivo según el modo y no envía.
 @SIN_FIXTURE
-@given(valor=st.sampled_from(["prueba", "competencia"]), m=st.sampled_from(["prueba", "competencia"]))
+@given(
+    valor=st.sampled_from(["prueba", "competencia"]), m=st.sampled_from(["prueba", "competencia"])
+)
 def test_prop_corriendo_rechaza(valor, m):
     motivo_, _, enviados = modo(valor, ConexionFalsa(MANIFIESTO, status(estado="running", modo=m)))
     assert motivo_ == ("ocupado" if m == "prueba" else "bloqueado_competencia")

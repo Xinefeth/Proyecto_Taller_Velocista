@@ -72,8 +72,11 @@ def entorno(requiere_db, monkeypatch):
             conn.execute(text(f'SET LOCAL search_path TO "{esquema}"'))
             with Operations.context(MigrationContext.configure(conn)):
                 for nombre in [
-                    "0002_catalogo", "0003_robot", "0004_versiones",
-                    "0005_operaciones", "0007_configuracion",
+                    "0002_catalogo",
+                    "0003_robot",
+                    "0004_versiones",
+                    "0005_operaciones",
+                    "0007_configuracion",
                 ]:
                     ruta = Path(__file__).resolve().parents[2] / f"migrations/versions/{nombre}.py"
                     spec = importlib.util.spec_from_file_location(nombre, ruta)
@@ -97,6 +100,7 @@ def entorno(requiere_db, monkeypatch):
         app.dependency_overrides[get_session] = sesion
         try:
             with TestClient(app) as client:
+
                 def conectar(conexion):
                     ws.connections.pop("velocista", None)
                     if conexion is not None:
@@ -159,7 +163,11 @@ def test_valor_invalido_no_envia_ni_persiste(entorno):
     [
         (None, 409, "sin_manifiesto"),
         (ConexionFalsa(None, None), 409, "sin_manifiesto"),
-        (ConexionFalsa(MANIFIESTO, status(estado="running", modo="competencia")), 409, "bloqueado_competencia"),
+        (
+            ConexionFalsa(MANIFIESTO, status(estado="running", modo="competencia")),
+            409,
+            "bloqueado_competencia",
+        ),
         (ConexionFalsa(MANIFIESTO, status(estado="running", modo="prueba")), 409, "ocupado"),
     ],
 )

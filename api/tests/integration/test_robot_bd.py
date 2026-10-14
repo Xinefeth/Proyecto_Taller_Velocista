@@ -32,8 +32,13 @@ def _cargar_migracion(nombre):
 def sembrar_robot(session):
     """Inserta solo la identificación de v001 (sin versiones), como el antiguo seed de robot."""
     session.add(
-        Robot(id="v001", nombre="Velocista 001", codigo_corto="001", tipo="velocista",
-              firmware="0.3.1")
+        Robot(
+            id="v001",
+            nombre="Velocista 001",
+            codigo_corto="001",
+            tipo="velocista",
+            firmware="0.3.1",
+        )
     )
     session.flush()
 

@@ -136,9 +136,13 @@ class VersionSalida(BaseModel):
     )
 
     id: int = Field(ge=1, le=9007199254740991, description="ID de la versión.", examples=[7])
-    robot_id: str = Field(description="Robot al que pertenece la versión.", examples=["rbt_velo_01"])
+    robot_id: str = Field(
+        description="Robot al que pertenece la versión.", examples=["rbt_velo_01"]
+    )
     etiqueta: str = Field(
-        pattern=r"^v[0-9]+$", description="Etiqueta derivada del ordinal (v1, v2, …).", examples=["v7"]
+        pattern=r"^v[0-9]+$",
+        description="Etiqueta derivada del ordinal (v1, v2, …).",
+        examples=["v7"],
     )
     fecha: AwareDatetime = Field(description="Fecha de creación de la versión (con zona).")
     nota: str = Field(description="Nota libre de la versión.", examples=["PID afinado."])
