@@ -43,9 +43,7 @@ def test_arrancar_calibrado_se_acepta(manifiesto):
 
 
 def test_arrancar_sin_calibrar(manifiesto):
-    assert (
-        motivo("velocista", "start", {}, manifiesto, estado(calibrado=False)) == "no_calibrado"
-    )
+    assert motivo("velocista", "start", {}, manifiesto, estado(calibrado=False)) == "no_calibrado"
 
 
 def test_en_competencia_corriendo_solo_detener(manifiesto):

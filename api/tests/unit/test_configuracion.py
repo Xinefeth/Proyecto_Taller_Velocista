@@ -162,7 +162,10 @@ def test_cambiar_linea_valido_envia_un_comando():
     [
         (None, "sin_manifiesto"),
         (ConexionFalsa(None, None), "sin_manifiesto"),
-        (ConexionFalsa(MANIFIESTO, status(estado="running", modo="competencia")), "bloqueado_competencia"),
+        (
+            ConexionFalsa(MANIFIESTO, status(estado="running", modo="competencia")),
+            "bloqueado_competencia",
+        ),
         (ConexionFalsa(MANIFIESTO, status(estado="running", modo="prueba")), "ocupado"),
     ],
 )
@@ -187,7 +190,9 @@ def test_comando_no_declarado_en_manifiesto():
 
 @pytest.mark.parametrize("error", [KeyError("x"), RuntimeError("x"), OSError("x")])
 def test_caida_del_enlace_devuelve_dispositivo_no_disponible(error):
-    motivo, _, enviados = motivo_modo("prueba", ConexionFalsa(MANIFIESTO, status()), al_enviar=error)
+    motivo, _, enviados = motivo_modo(
+        "prueba", ConexionFalsa(MANIFIESTO, status()), al_enviar=error
+    )
     assert motivo == "dispositivo_no_disponible"
     assert enviados == [("velocista", "modo", {"modo": "prueba"})]  # se intentó enviar
 
@@ -261,7 +266,10 @@ def test_prop_valor_invalido(valor, estado_):
 
 # Propiedad 4: robot corriendo rechaza con el motivo según el modo y no envía.
 @SIN_FIXTURE
-@given(valor=st.sampled_from(["prueba", "competencia"]), modo=st.sampled_from(["prueba", "competencia"]))
+@given(
+    valor=st.sampled_from(["prueba", "competencia"]),
+    modo=st.sampled_from(["prueba", "competencia"]),
+)
 def test_prop_corriendo_rechaza(valor, modo):
     conexion = ConexionFalsa(MANIFIESTO, status(estado="running", modo=modo))
     motivo, _, enviados = motivo_modo(valor, conexion)

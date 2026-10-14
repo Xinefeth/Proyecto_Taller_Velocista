@@ -67,9 +67,7 @@ PageLimit = Annotated[int, Query(ge=1, le=200)]
 PageOffset = Annotated[int, Query(ge=0, le=9007199254740991)]
 
 
-@router.get(
-    "/controllers", response_model=list[ControladorSalida], operation_id="listControllers"
-)
+@router.get("/controllers", response_model=list[ControladorSalida], operation_id="listControllers")
 def list_controllers(session: DbSession):
     return service.listar_controladores(session)
 

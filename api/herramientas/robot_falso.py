@@ -121,7 +121,9 @@ class RobotFalso:
                 error = round(0.4 * math.sin(tick / 8) + random.uniform(-0.05, 0.05), 3)
                 self.error_acumulado += abs(error) * 0.05
                 center = 7.5 + error * 7.5
-                strip_readings = [max(0, int(1000 - 350 * abs(i - center) ** 1.5)) for i in range(16)]
+                strip_readings = [
+                    max(0, int(1000 - 350 * abs(i - center) ** 1.5)) for i in range(16)
+                ]
                 senales = {
                     "t_ms": self.ms(),
                     "canales": {
@@ -139,7 +141,9 @@ def main() -> None:
     p.add_argument("--host", default="localhost")
     p.add_argument("--puerto", default=8000, type=int)
     p.add_argument("--tls", action="store_true", help="usar wss:// (TLS); puerto 443 por defecto")
-    p.add_argument("--url", help="URL WebSocket completa (p. ej. wss://host/ws/robot); ignora host/puerto")
+    p.add_argument(
+        "--url", help="URL WebSocket completa (p. ej. wss://host/ws/robot); ignora host/puerto"
+    )
     p.add_argument("--token", default="dev-token-velocista")
     a = p.parse_args()
     if a.url:

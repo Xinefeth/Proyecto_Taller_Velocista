@@ -80,12 +80,7 @@ function Salida() {
         <h2>Salida</h2>
         <span className={calTag[1]}>{calTag[0]}</span>
       </div>
-      <button
-        type="button"
-        className="go"
-        data-running={c.running}
-        onClick={c.arrancarDetener}
-      >
+      <button type="button" className="go" data-running={c.running} onClick={c.arrancarDetener}>
         {c.running ? <Stop /> : <Play />}
         <span>{c.running ? "DETENER" : "ARRANCAR"}</span>
       </button>
@@ -457,7 +452,9 @@ function Cronometraje() {
     return ["", "—"];
   };
   if (!c.robotConectado)
-    return <PanelEnEspera titulo="Cronometraje" className="a-time" pbi="HU-19 · EN-15" sprint="2" />;
+    return (
+      <PanelEnEspera titulo="Cronometraje" className="a-time" pbi="HU-19 · EN-15" sprint="2" />
+    );
   return (
     <Card className="a-time" aria-label="Cronometraje" pbi="HU-19 · EN-15" sprint="2">
       <div className="hd">
@@ -581,7 +578,11 @@ function simulatedStrip(sim: { es: number; p: number }): StripView {
   let active = 0;
   const bars = Array.from({ length: 16 }, (_, i) => {
     const x = -1 + i * (2 / 15);
-    const v = clamp((vis ? Math.exp(-((x - pos) ** 2) / (2 * 0.018)) : 0) + Math.random() * 0.04, 0, 1);
+    const v = clamp(
+      (vis ? Math.exp(-((x - pos) ** 2) / (2 * 0.018)) : 0) + Math.random() * 0.04,
+      0,
+      1,
+    );
     if (v >= ACTIVE_THRESHOLD) active++;
     return v;
   });
@@ -620,7 +621,10 @@ export function Regleta() {
         {v.bars.map((b, i) => (
           <div className="bar" key={i}>
             <div className="tb">
-              <i className={b >= ACTIVE_THRESHOLD ? "hot" : ""} style={{ height: `${8 + b * 92}%` }} />
+              <i
+                className={b >= ACTIVE_THRESHOLD ? "hot" : ""}
+                style={{ height: `${8 + b * 92}%` }}
+              />
             </div>
             <div className="n">{v.digits[i]}</div>
           </div>

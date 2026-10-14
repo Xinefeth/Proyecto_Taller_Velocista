@@ -1,0 +1,31 @@
+{
+  "specifications": {
+    "logica": "logic",
+    "bornes": "terminals",
+    "comercial": "commercial",
+    "canales": "channels",
+    "salida": "output",
+    "paso": "pitch",
+    "tipo": "type",
+    "familia": "family",
+    "celdas": "cells",
+    "ancho": "width",
+    "largo": "length",
+    "ejes": "axes"
+  },
+  "rules": {
+    "dim": "dimensions",
+    "sensMax": "max_sensors",
+    "motores": "motors",
+    "motorFam": "motor_families",
+    "ruedas": "wheels",
+    "turbina": "turbine",
+    "pcbComercial": "commercial_pcb",
+    "montaje": "assembly",
+    "chasis": "chassis",
+    "chasisMat": "chassis_materials",
+    "arranque": "start",
+    "inal": "wireless",
+    "mapaVel": "speed_map"
+  }
+}

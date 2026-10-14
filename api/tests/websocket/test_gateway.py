@@ -61,10 +61,7 @@ def test_estado_se_redistribuye_sin_ack(cliente, ejemplo):
             reenviado["origen"] == "velocista"
             and reenviado["datos"]["canales"]["bateria_v"] == 8.12
         )
-        assert (
-            cliente.get("/api/devices/velocista/manifest").json()["controlador_activo"]
-            == "pid"
-        )
+        assert cliente.get("/api/devices/velocista/manifest").json()["controlador_activo"] == "pid"
         robot.__exit__(None, None, None)
 
 

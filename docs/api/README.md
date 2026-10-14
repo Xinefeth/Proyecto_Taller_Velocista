@@ -11,7 +11,7 @@ Define las operaciones que necesitan la consola, el Catálogo y el Armador, alin
 - [generar_contrato.py](generar_contrato.py): fuente editable del contrato, esquemas y ejemplos; genera también los tipos/capacidades de DO-03.
 - [validar_contrato.py](validar_contrato.py): comprueba OpenAPI, referencias, todos los ejemplos, cobertura de campos de tipos del prototipo y sincronización de archivos generados.
 
-`x-estado: implementado` identifica las 32 operaciones del contrato, disponibles en el backend. La guía [pruebas-crud.md](pruebas-crud.md) reúne la preparación y una secuencia de pruebas manuales. **Este archivo no sustituye el `/openapi.json` servido por FastAPI**: `/docs` solo muestra lo implementado. Los ejemplos usan IDs ilustrativos; no son un script de carga ni una secuencia que deba ejecutarse sobre una base vacía.
+`x-estado: implementado` identifica las 40 operaciones del contrato, disponibles en el backend. La guía [pruebas-crud.md](pruebas-crud.md) reúne la preparación y una secuencia de pruebas manuales. **Este archivo no sustituye el `/openapi.json` servido por FastAPI**: `/docs` solo muestra lo implementado. Los ejemplos usan IDs ilustrativos; no son un script de carga ni una secuencia que deba ejecutarse sobre una base vacía.
 
 ## Operaciones
 
@@ -19,35 +19,50 @@ Todos los paths incluyen `/api`. Los IDs de robot/componente son cadenas; versi�
 
 | Recurso | Método y ruta | Uso en consola | Estado |
 | --- | --- | --- | --- |
-| Tipos | GET `/api/tipos-componentes` | Formulario dinámico y capacidades | Implementado |
-| Ranuras | GET `/api/ranuras` | Filas, tipos y cantidades del Armador | Implementado |
-| Componentes | GET `/api/componentes` | Buscar y listar | Implementado |
-| Registro | POST `/api/componentes` | Registrar componente | Implementado |
-| Ficha | GET `/api/componentes/{componente_id}` | Ficha y stock, incluidos archivados | Implementado |
-| Edición | PATCH `/api/componentes/{componente_id}` | Edición parcial de ficha | Implementado |
-| Archivado | DELETE `/api/componentes/{componente_id}` | Baja lógica, conserva ficha y stock | Implementado |
-| Inventario | GET `/api/inventario` | Stock, revisión y demanda de la última versión de robots activos | Implementado |
-| Existencias | PUT `/api/inventario/{componente_id}` | Ajustar stock total con revisión | Implementado |
+| Tipos | GET `/api/component-types` | Formulario dinámico y capacidades | Implementado |
+| Ranuras | GET `/api/slots` | Filas, tipos y cantidades del Armador | Implementado |
+| Componentes | GET `/api/components` | Buscar y listar | Implementado |
+| Registro | POST `/api/components` | Registrar componente | Implementado |
+| Ficha | GET `/api/components/{component_id}` | Ficha y stock, incluidos archivados | Implementado |
+| Edición | PATCH `/api/components/{component_id}` | Edición parcial de ficha | Implementado |
+| Archivado | DELETE `/api/components/{component_id}` | Baja lógica, conserva ficha y stock | Implementado |
+| Inventario | GET `/api/inventory` | Stock, revisión y demanda de la última versión de robots activos | Implementado |
+| Existencias | PUT `/api/inventory/{component_id}` | Ajustar stock total con revisión | Implementado |
 | Robots | GET `/api/robots` | Selector paginado de robots activos | Implementado |
 | Registro de robot | POST `/api/robots` | Registro sin versiones | Implementado |
 | Ficha de robot | GET `/api/robots/{robot_id}` | Identificación, incluidos archivados | Implementado |
 | Robot | PATCH, DELETE `/api/robots/{robot_id}` | Edición y archivado | Implementado |
-| Versiones | GET `/api/robots/{robot_id}/versiones` | Historial y piezas con snapshots | Implementado |
-| Nuevo armado | POST `/api/robots/{robot_id}/versiones` | Crear versión | Implementado |
-| Versión | GET `/api/robots/{robot_id}/versiones/{version_id}` | Ver armado histórico y sus snapshots | Implementado |
-| Controladores | GET `/api/controladores` | Rangos, presets y parámetros optimizables | Implementado |
-| Reglamento | GET `/api/perfiles` | Categoría y restricciones | Implementado |
+| Versiones | GET `/api/robots/{robot_id}/versions` | Historial y piezas con snapshots | Implementado |
+| Nuevo armado | POST `/api/robots/{robot_id}/versions` | Crear versión | Implementado |
+| Versión | GET `/api/robots/{robot_id}/versions/{version_id}` | Ver armado histórico y sus snapshots | Implementado |
+| Controladores | GET `/api/controllers` | Rangos, presets y parámetros optimizables | Implementado |
+| Reglamento | GET `/api/profiles` | Categoría y restricciones | Implementado |
 | Setups | GET, POST `/api/robots/{robot_id}/setups` | Listar y guardar en PostgreSQL | Implementado |
 | Setup | GET, DELETE `/api/setups/{setup_id}` | Recuperar o archivar | Implementado |
-| Corridas | GET `/api/corridas` | Historial, comparación y exportación | Implementado |
-| Corrida | GET, PATCH `/api/corridas/{corrida_id}` | Detalle y nota | Implementado |
-| Vueltas | GET `/api/corridas/{corrida_id}/vueltas` | Sectores y segmentos | Implementado |
-| Salud | GET `/api/salud` | Franja de estado y Sistema | Implementado |
+| Corridas | GET `/api/runs` | Historial, comparación y exportación | Implementado |
+| Corrida | GET, PATCH `/api/runs/{run_id}` | Detalle y nota | Implementado |
+| Vueltas | GET `/api/runs/{run_id}/laps` | Sectores y segmentos | Implementado |
+| Salud | GET `/api/health` | Franja de estado y Sistema | Implementado |
 | Eventos | GET, POST `/api/eventos` | Registro del sistema | Implementado |
-| Manifiesto | GET `/api/dispositivos/velocista/manifiesto` | Capacidades del robot conectado | Implementado |
-| Comandos | POST `/api/dispositivos/{dispositivo}/comandos` | Calibrar, arrancar, detener, setup, modo, línea y rearmar meta | Implementado |
+| Manifiesto | GET `/api/devices/velocista/manifest` | Capacidades del robot conectado | Implementado |
+| Comandos | POST `/api/devices/{device}/commands` | Calibrar, arrancar, detener, setup, modo, línea y rearmar meta | Implementado |
 
 Los mensajes de telemetría y ack permanecen en `/ws/consola` según EN-02. La persistencia automática de corridas y vueltas físicas desde esos mensajes queda pendiente de la integración de adquisición; los endpoints históricos consultan PostgreSQL y `python -m app.demo` permite probarlos con datos explícitamente simulados; no se define un POST manual que pueda suplantar un tiempo del cronómetro. La importación por enlace, autenticación, persistencia de mapas y ejecución de optimizadores requieren sus historias; sus datos están cubiertos por DO-03 sin inventar rutas ya operativas.
+
+## HU-17 y HU-18
+
+También están implementadas las consultas `/api/robots/{robot_id}/controllers`,
+`/api/robots/{robot_id}/configuracion`, la aplicación de setups/presets con `POST`
+en `/api/robots/{robot_id}/setups/{setup_id}/apply` y `/api/robots/{robot_id}/presets/apply`,
+y la configuración de modo/línea en `/api/devices/velocista/config` (GET),
+`/api/devices/velocista/config/modo` y `/api/devices/velocista/config/linea` (POST).
+`POST /api/runs/simulated` crea una corrida simulada persistida.
+
+Las rutas han cambiado a inglés, pero los campos JSON siguen siendo los consumidos
+actualmente por la consola, en español. Los filtros de componentes son `type_id`, `q`,
+`limit`, `offset`; los de corridas incluyen `controller_id`, `source`, `limit`, `offset`.
+Inventario y setups también reciben `limit`. Robots, versiones y eventos aún reciben
+`limite`. El campo de paginación en las respuestas permanece `limite`.
 
 ## Convenciones
 
@@ -85,7 +100,7 @@ La validación de forma de FastAPI devuelve `detail` como arreglo de `{loc,msg,t
 
 1. GET controladores y GET manifiesto para conocer parámetros y capacidades disponibles.
 2. POST `/api/robots/v001/setups` con `{version_id,nombre,controlador_id,parametros}` guarda una nueva configuración y devuelve su ID.
-3. Para aplicarla, POST `/api/dispositivos/velocista/comandos` con tipo `setup`, datos `{controlador,parametros,id_setup}` y la identidad del robot conectado comprobada desde el manifiesto.
+3. Para aplicarla, POST `/api/devices/velocista/commands` con tipo `setup`, datos `{controlador,parametros,id_setup}` y la identidad del robot conectado comprobada desde el manifiesto.
 4. 202 solo indica envío. La consola actualiza el setup aplicado cuando llega el ack con ok=true; muestra rechazo si ok=false. Persistencia en flash no se deduce de un registro en PostgreSQL.
 
 ## Validación y mantenimiento
