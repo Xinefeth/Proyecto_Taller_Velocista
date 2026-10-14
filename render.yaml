@@ -1,4 +1,4 @@
-# Blueprint de Render: aplicación (API + consola + WebSocket), Postgres y Adminer.
+# Blueprint de Render: un servicio web (API + consola + WebSocket) y un Postgres.
 # Desplegar: en Render -> New -> Blueprint, apuntando a este repo.
 # Doc completa: docs/despliegue-render.md
 
@@ -34,21 +34,3 @@ services:
         generateValue: true
       - key: DEVICE_TOKEN_CRONOMETRO
         generateValue: true
-
-  # Visor de tablas: abrir la URL de este servicio e iniciar sesión con PostgreSQL.
-  # Usuario, contraseña y base se toman de Render al entrar; no se guardan aquí.
-  - type: web
-    name: apaec-lab-adminer
-    runtime: image
-    plan: free
-    region: oregon
-    image:
-      url: docker.io/library/adminer:latest
-    healthCheckPath: /
-    envVars:
-      - key: PORT
-        value: "8080"
-      - key: ADMINER_DEFAULT_SERVER
-        fromDatabase:
-          name: apaec-lab-db
-          property: host
