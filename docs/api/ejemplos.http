@@ -3,7 +3,7 @@
 @base = http://localhost:8000
 
 ### listarTipos · implementado
-GET {{base}}/api/tipos-componentes
+GET {{base}}/api/component-types
 
 # Respuesta: 200
 # [
@@ -484,7 +484,7 @@ GET {{base}}/api/tipos-componentes
 # ]
 
 ### listarRanuras · implementado
-GET {{base}}/api/ranuras
+GET {{base}}/api/slots
 
 # Respuesta: 200
 # [
@@ -603,7 +603,7 @@ GET {{base}}/api/ranuras
 # ]
 
 ### listarComponentes · implementado
-GET {{base}}/api/componentes?limite=50&offset=0&q=QTR&tipo_id=linea
+GET {{base}}/api/components?limit=50&offset=0&q=QTR&tipo_id=linea
 
 # Respuesta: 200
 # {
@@ -632,7 +632,7 @@ GET {{base}}/api/componentes?limite=50&offset=0&q=QTR&tipo_id=linea
 # }
 
 ### crearComponente · implementado
-POST {{base}}/api/componentes
+POST {{base}}/api/components
 Content-Type: application/json
 
 {
@@ -671,7 +671,7 @@ Content-Type: application/json
 # }
 
 ### obtenerComponente · implementado
-GET {{base}}/api/componentes/c05
+GET {{base}}/api/components/c05
 
 # Respuesta: 200
 # {
@@ -693,7 +693,7 @@ GET {{base}}/api/componentes/c05
 # }
 
 ### editarComponente · implementado
-PATCH {{base}}/api/componentes/c05
+PATCH {{base}}/api/components/c05
 Content-Type: application/json
 
 {
@@ -720,13 +720,13 @@ Content-Type: application/json
 # }
 
 ### archivarComponente · implementado
-DELETE {{base}}/api/componentes/c05
+DELETE {{base}}/api/components/c05
 
 # Respuesta: 204
 # Sin cuerpo.
 
 ### listarInventario · implementado
-GET {{base}}/api/inventario?limite=50&offset=0
+GET {{base}}/api/inventory?limit=50&offset=0
 
 # Respuesta: 200
 # {
@@ -746,7 +746,7 @@ GET {{base}}/api/inventario?limite=50&offset=0
 # }
 
 ### actualizarInventario · implementado
-PUT {{base}}/api/inventario/c05
+PUT {{base}}/api/inventory/c05
 Content-Type: application/json
 
 {
@@ -765,7 +765,7 @@ Content-Type: application/json
 # }
 
 ### listarRobots · implementado
-GET {{base}}/api/robots?limite=50&offset=0
+GET {{base}}/api/robots?limit=50&offset=0
 
 # Respuesta: 200
 # {
@@ -846,7 +846,7 @@ DELETE {{base}}/api/robots/v001
 # Sin cuerpo.
 
 ### listarVersiones · implementado
-GET {{base}}/api/robots/v001/versiones?limite=50&offset=0
+GET {{base}}/api/robots/v001/versions?limit=50&offset=0
 
 # Respuesta: 200
 # {
@@ -1069,7 +1069,7 @@ GET {{base}}/api/robots/v001/versiones?limite=50&offset=0
 # }
 
 ### crearVersion · implementado
-POST {{base}}/api/robots/v001/versiones
+POST {{base}}/api/robots/v001/versions
 Content-Type: application/json
 
 {
@@ -1338,7 +1338,7 @@ Content-Type: application/json
 # }
 
 ### obtenerVersion · implementado
-GET {{base}}/api/robots/v001/versiones/1
+GET {{base}}/api/robots/v001/versions/1
 
 # Respuesta: 200
 # {
@@ -1554,7 +1554,7 @@ GET {{base}}/api/robots/v001/versiones/1
 # }
 
 ### listarControladores · implementado
-GET {{base}}/api/controladores
+GET {{base}}/api/controllers
 
 # Respuesta: 200
 # [
@@ -1628,7 +1628,7 @@ GET {{base}}/api/controladores
 # ]
 
 ### listarPerfiles · implementado
-GET {{base}}/api/perfiles
+GET {{base}}/api/profiles
 
 # Respuesta: 200
 # [
@@ -1663,7 +1663,7 @@ GET {{base}}/api/perfiles
 # ]
 
 ### listarSetups · implementado
-GET {{base}}/api/robots/v001/setups?limite=50&offset=0&version_id=1
+GET {{base}}/api/robots/v001/setups?limit=50&offset=0&version_id=1
 
 # Respuesta: 200
 # {
@@ -1753,7 +1753,7 @@ DELETE {{base}}/api/setups/1
 # Sin cuerpo.
 
 ### listarCorridas · implementado
-GET {{base}}/api/corridas?limite=50&offset=0&robot_id=v001&version_id=1&controlador_id=pid&fuente=robot
+GET {{base}}/api/runs?limit=50&offset=0&robot_id=v001&version_id=1&controller_id=pid&source=robot
 
 # Respuesta: 200
 # {
@@ -1799,7 +1799,7 @@ GET {{base}}/api/corridas?limite=50&offset=0&robot_id=v001&version_id=1&controla
 # }
 
 ### crearCorridaSimulada · implementado
-POST {{base}}/api/corridas/simulada
+POST {{base}}/api/runs/simulated?robot_id=v001
 
 # Respuesta: 201
 # {
@@ -1838,7 +1838,7 @@ POST {{base}}/api/corridas/simulada
 # }
 
 ### obtenerCorrida · implementado
-GET {{base}}/api/corridas/1
+GET {{base}}/api/runs/1
 
 # Respuesta: 200
 # {
@@ -1877,7 +1877,7 @@ GET {{base}}/api/corridas/1
 # }
 
 ### anotarCorrida · implementado
-PATCH {{base}}/api/corridas/1
+PATCH {{base}}/api/runs/1
 Content-Type: application/json
 
 {
@@ -1921,7 +1921,7 @@ Content-Type: application/json
 # }
 
 ### listarVueltas · implementado
-GET {{base}}/api/corridas/1/vueltas?limite=50&offset=0
+GET {{base}}/api/runs/1/laps?limit=50&offset=0
 
 # Respuesta: 200
 # {
@@ -1960,7 +1960,7 @@ GET {{base}}/api/corridas/1/vueltas?limite=50&offset=0
 # }
 
 ### consultarSalud · implementado
-GET {{base}}/api/salud
+GET {{base}}/api/health
 
 # Respuesta: 200
 # {
@@ -2007,7 +2007,7 @@ Content-Type: application/json
 # }
 
 ### consultarManifiesto · implementado
-GET {{base}}/api/dispositivos/velocista/manifiesto
+GET {{base}}/api/devices/velocista/manifest
 
 # Respuesta: 200
 # {
@@ -2251,7 +2251,7 @@ GET {{base}}/api/dispositivos/velocista/manifiesto
 # }
 
 ### enviarComando · implementado
-POST {{base}}/api/dispositivos/velocista/comandos
+POST {{base}}/api/devices/velocista/commands
 Content-Type: application/json
 
 {
@@ -2273,5 +2273,180 @@ Content-Type: application/json
 # {
 #   "seq": 2,
 #   "mensaje": "Enviado. La confirmación del dispositivo llega a la consola como ack."
+# }
+
+### listReconciledControllers · implementado
+GET {{base}}/api/robots/v001/controllers
+
+# Respuesta: 200
+# {
+#   "controlador_activo": "pid",
+#   "controladores": [
+#     {
+#       "id": "pid",
+#       "nombre": "PID",
+#       "nombre_corto": "PID",
+#       "descripcion": "Con Ki = 0 funciona como PD.",
+#       "parametros": [
+#         {
+#           "clave": "kp",
+#           "nombre": "KP",
+#           "descripcion": "kp",
+#           "min": 0,
+#           "max": 2,
+#           "paso": 0.01,
+#           "decimales": 2,
+#           "optimizable": true,
+#           "valor": 0.6
+#         },
+#         {
+#           "clave": "ki",
+#           "nombre": "KI",
+#           "descripcion": "ki",
+#           "min": 0,
+#           "max": 0.3,
+#           "paso": 0.005,
+#           "decimales": 3,
+#           "optimizable": false,
+#           "valor": 0
+#         },
+#         {
+#           "clave": "kd",
+#           "nombre": "KD",
+#           "descripcion": "kd",
+#           "min": 0,
+#           "max": 10,
+#           "paso": 0.1,
+#           "decimales": 1,
+#           "optimizable": true,
+#           "valor": 2.5
+#         },
+#         {
+#           "clave": "base",
+#           "nombre": "base",
+#           "descripcion": "base",
+#           "min": 10,
+#           "max": 100,
+#           "paso": 1,
+#           "decimales": 0,
+#           "optimizable": false,
+#           "valor": 45
+#         },
+#         {
+#           "clave": "max",
+#           "nombre": "max",
+#           "descripcion": "max",
+#           "min": 20,
+#           "max": 100,
+#           "paso": 1,
+#           "decimales": 0,
+#           "optimizable": false,
+#           "valor": 86
+#         }
+#       ],
+#       "presets": {
+#         "Base": {
+#           "kp": 0.6,
+#           "ki": 0,
+#           "kd": 2.5,
+#           "base": 45,
+#           "max": 86
+#         }
+#       },
+#       "activo": true
+#     }
+#   ]
+# }
+
+### getRobotControllerConfig · implementado
+GET {{base}}/api/robots/v001/configuracion
+
+# Respuesta: 200
+# {
+#   "controlador_activo": "pid",
+#   "parametros": [
+#     {
+#       "nombre": "KP",
+#       "valor": 0.6
+#     },
+#     {
+#       "nombre": "KI",
+#       "valor": 0
+#     },
+#     {
+#       "nombre": "KD",
+#       "valor": 2.5
+#     },
+#     {
+#       "nombre": "base",
+#       "valor": 45
+#     },
+#     {
+#       "nombre": "max",
+#       "valor": 86
+#     }
+#   ]
+# }
+
+### applySetup · implementado
+POST {{base}}/api/robots/v001/setups/1/apply
+
+# Respuesta: 202
+# {
+#   "seq": 7,
+#   "mensaje": "Enviado. La confirmación del robot llega a la consola como ack."
+# }
+
+### applyPreset · implementado
+POST {{base}}/api/robots/v001/presets/apply
+Content-Type: application/json
+
+{
+  "controlador_id": "pid",
+  "preset_id": "Base"
+}
+
+# Respuesta: 202
+# {
+#   "seq": 7,
+#   "mensaje": "Enviado. La confirmación del robot llega a la consola como ack."
+# }
+
+### getRobotModeLine · implementado
+GET {{base}}/api/robots/v001/modo-linea
+
+# Respuesta: 200
+# {
+#   "modo": "prueba",
+#   "linea": "negra",
+#   "actualizado_en": "2026-10-06T15:00:00Z"
+# }
+
+### setMode · implementado
+POST {{base}}/api/robots/v001/modo-linea/modo
+Content-Type: application/json
+
+{
+  "modo": "prueba"
+}
+
+# Respuesta: 202
+# {
+#   "seq": 7,
+#   "mensaje": "Enviado. La confirmación del robot llega a la consola como ack."
+# }
+
+### setLine · implementado
+POST {{base}}/api/robots/v001/modo-linea/linea
+Content-Type: application/json
+
+{
+  "color": "negra"
+}
+
+# Respuesta: 202
+# {
+#   "seq": 7,
+#   "mensaje": "Enviado. La confirmación del robot llega a la consola como ack."
 # }
 

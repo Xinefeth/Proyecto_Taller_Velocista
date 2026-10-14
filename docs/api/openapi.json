@@ -16,18 +16,18 @@
     }
   ],
   "paths": {
-    "/api/tipos-componentes": {
+    "/api/component-types": {
       "get": {
         "operationId": "listarTipos",
         "summary": "Tipos, campos y capacidades",
         "description": "Catálogo completo ordenado por ID, consultado en PostgreSQL. Sin semillas devuelve un arreglo vacío; base no disponible devuelve 503.",
         "tags": [
-          "tipos-componentes"
+          "component-types"
         ],
         "x-estado": "implementado",
         "x-ejemplo-peticion": {
           "metodo": "GET",
-          "url": "/api/tipos-componentes"
+          "url": "/api/component-types"
         },
         "responses": {
           "200": {
@@ -604,18 +604,18 @@
         }
       }
     },
-    "/api/ranuras": {
+    "/api/slots": {
       "get": {
         "operationId": "listarRanuras",
         "summary": "Ranuras del armador",
         "description": "Ranuras del armador",
         "tags": [
-          "ranuras"
+          "slots"
         ],
         "x-estado": "implementado",
         "x-ejemplo-peticion": {
           "metodo": "GET",
-          "url": "/api/ranuras"
+          "url": "/api/slots"
         },
         "responses": {
           "200": {
@@ -830,18 +830,18 @@
         }
       }
     },
-    "/api/componentes": {
+    "/api/components": {
       "get": {
         "operationId": "listarComponentes",
         "summary": "Buscar componentes del catálogo",
         "description": "Orden por nombre e id; búsqueda sin distinguir mayúsculas ni tildes españolas en nombre, tipo, tienda y especificaciones. % y _ se buscan como texto literal. Excluye archivados. total es el conteo después de filtros y antes de paginar. Sin resultados responde una página con items vacíos.",
         "tags": [
-          "componentes"
+          "components"
         ],
         "x-estado": "implementado",
         "x-ejemplo-peticion": {
           "metodo": "GET",
-          "url": "/api/componentes?limite=50&offset=0&q=QTR&tipo_id=linea"
+          "url": "/api/components?limit=50&offset=0&q=QTR&tipo_id=linea"
         },
         "responses": {
           "200": {
@@ -963,7 +963,7 @@
         },
         "parameters": [
           {
-            "name": "limite",
+            "name": "limit",
             "in": "query",
             "required": false,
             "schema": {
@@ -1028,12 +1028,12 @@
         "summary": "Registrar componente e inventario inicial",
         "description": "Genera un ID único y valida las especificaciones contra los campos del tipo. Precio admite hasta 2 decimales, masa 3 y consumo 4 (12 dígitos totales); stock admite hasta 2147483647. Crea componente e inventario en una transacción. La unidad de stock coincide con la unidad del catálogo: un par de ruedas cuenta como una unidad.",
         "tags": [
-          "componentes"
+          "components"
         ],
         "x-estado": "implementado",
         "x-ejemplo-peticion": {
           "metodo": "POST",
-          "url": "/api/componentes",
+          "url": "/api/components",
           "cuerpo": {
             "tipo_id": "linea",
             "nombre": "Pololu QTR-8A",
@@ -1208,18 +1208,18 @@
         }
       }
     },
-    "/api/componentes/{componente_id}": {
+    "/api/components/{component_id}": {
       "get": {
         "operationId": "obtenerComponente",
         "summary": "Consultar ficha de componente",
         "description": "Devuelve ficha y stock actual por ID, incluidos archivados. Un ID inexistente responde 404.",
         "tags": [
-          "componentes"
+          "components"
         ],
         "x-estado": "implementado",
         "x-ejemplo-peticion": {
           "metodo": "GET",
-          "url": "/api/componentes/c05"
+          "url": "/api/components/c05"
         },
         "responses": {
           "200": {
@@ -1354,7 +1354,7 @@
         },
         "parameters": [
           {
-            "name": "componente_id",
+            "name": "component_id",
             "in": "path",
             "required": true,
             "schema": {
@@ -1372,12 +1372,12 @@
         "summary": "Editar ficha sin alterar versiones históricas",
         "description": "PATCH parcial: conserva campos omitidos. especificaciones reemplaza el objeto completo y se valida contra el tipo existente. Solo consumo_a admite null. Tipo, ID, archivado y stock no se editan aquí. Archivado responde 409; inexistente 404. Bloquea la ficha durante la edición y no modifica inventario. Las instantáneas de versiones existentes se conservan.",
         "tags": [
-          "componentes"
+          "components"
         ],
         "x-estado": "implementado",
         "x-ejemplo-peticion": {
           "metodo": "PATCH",
-          "url": "/api/componentes/c05",
+          "url": "/api/components/c05",
           "cuerpo": {
             "precio": 65
           }
@@ -1535,7 +1535,7 @@
         },
         "parameters": [
           {
-            "name": "componente_id",
+            "name": "component_id",
             "in": "path",
             "required": true,
             "schema": {
@@ -1566,12 +1566,12 @@
         "summary": "Archivar componente",
         "description": "Baja lógica con bloqueo de fila; conserva ficha, stock y revisión de inventario. Excluye del listado; la consulta por ID sigue disponible. Las versiones conservan sus instantáneas y referencias. Repetir sobre un archivado devuelve 204. Un id inexistente devuelve 404.",
         "tags": [
-          "componentes"
+          "components"
         ],
         "x-estado": "implementado",
         "x-ejemplo-peticion": {
           "metodo": "DELETE",
-          "url": "/api/componentes/c05"
+          "url": "/api/components/c05"
         },
         "responses": {
           "204": {
@@ -1702,7 +1702,7 @@
         },
         "parameters": [
           {
-            "name": "componente_id",
+            "name": "component_id",
             "in": "path",
             "required": true,
             "schema": {
@@ -1716,18 +1716,18 @@
         ]
       }
     },
-    "/api/inventario": {
+    "/api/inventory": {
       "get": {
         "operationId": "listarInventario",
         "summary": "Inventario total, asignado y faltante",
         "description": "No refleja robots simulados de la consola. Orden por componente_id; página vacía si no hay resultados. Incluye activos sin stock. en_robots suma cantidades en la última versión de cada robot activo, incluidos Concepto y Borrador como en el prototipo. disponible = stock - en_robots (puede ser negativo); faltante = max(0, -disponible). Incluye componentes archivados con stock o asignaciones.",
         "tags": [
-          "inventario"
+          "inventory"
         ],
         "x-estado": "implementado",
         "x-ejemplo-peticion": {
           "metodo": "GET",
-          "url": "/api/inventario?limite=50&offset=0"
+          "url": "/api/inventory?limit=50&offset=0"
         },
         "responses": {
           "200": {
@@ -1840,7 +1840,7 @@
         },
         "parameters": [
           {
-            "name": "limite",
+            "name": "limit",
             "in": "query",
             "required": false,
             "schema": {
@@ -1866,18 +1866,18 @@
         ]
       }
     },
-    "/api/inventario/{componente_id}": {
+    "/api/inventory/{component_id}": {
       "put": {
         "operationId": "actualizarInventario",
         "summary": "Actualizar existencias con control de concurrencia",
         "description": "Fija stock total y compara e incrementa revisión en un único UPDATE. Revisión obsoleta responde 409 revision_obsoleta; inventario inexistente 404. Admite componentes archivados. Stock entre 0 y 2147483647; revisión entre 1 y 2147483647, límite alcanzado responde 409 revision_agotada. Calcula en_robots desde la última versión de cada robot activo, disponible=stock-en_robots y faltante=max(0,-disponible). No modifica la ficha del componente.",
         "tags": [
-          "inventario"
+          "inventory"
         ],
         "x-estado": "implementado",
         "x-ejemplo-peticion": {
           "metodo": "PUT",
-          "url": "/api/inventario/c05",
+          "url": "/api/inventory/c05",
           "cuerpo": {
             "stock": 4,
             "revision": 1
@@ -2027,7 +2027,7 @@
         },
         "parameters": [
           {
-            "name": "componente_id",
+            "name": "component_id",
             "in": "path",
             "required": true,
             "schema": {
@@ -2066,7 +2066,7 @@
         "x-estado": "implementado",
         "x-ejemplo-peticion": {
           "metodo": "GET",
-          "url": "/api/robots?limite=50&offset=0"
+          "url": "/api/robots?limit=50&offset=0"
         },
         "responses": {
           "200": {
@@ -2180,7 +2180,7 @@
         },
         "parameters": [
           {
-            "name": "limite",
+            "name": "limit",
             "in": "query",
             "required": false,
             "schema": {
@@ -2854,7 +2854,7 @@
         ]
       }
     },
-    "/api/robots/{robot_id}/versiones": {
+    "/api/robots/{robot_id}/versions": {
       "get": {
         "operationId": "listarVersiones",
         "summary": "Historial de versiones del robot",
@@ -2865,7 +2865,7 @@
         "x-estado": "implementado",
         "x-ejemplo-peticion": {
           "metodo": "GET",
-          "url": "/api/robots/v001/versiones?limite=50&offset=0"
+          "url": "/api/robots/v001/versions?limit=50&offset=0"
         },
         "responses": {
           "200": {
@@ -3213,7 +3213,7 @@
             "example": "v001"
           },
           {
-            "name": "limite",
+            "name": "limit",
             "in": "query",
             "required": false,
             "schema": {
@@ -3248,7 +3248,7 @@
         "x-estado": "implementado",
         "x-ejemplo-peticion": {
           "metodo": "POST",
-          "url": "/api/robots/v001/versiones",
+          "url": "/api/robots/v001/versions",
           "cuerpo": {
             "version_base_id": null,
             "nota": "Primer armado",
@@ -3723,7 +3723,7 @@
         }
       }
     },
-    "/api/robots/{robot_id}/versiones/{version_id}": {
+    "/api/robots/{robot_id}/versions/{version_id}": {
       "get": {
         "operationId": "obtenerVersion",
         "summary": "Consultar una versión del robot",
@@ -3734,7 +3734,7 @@
         "x-estado": "implementado",
         "x-ejemplo-peticion": {
           "metodo": "GET",
-          "url": "/api/robots/v001/versiones/1"
+          "url": "/api/robots/v001/versions/1"
         },
         "responses": {
           "200": {
@@ -4088,18 +4088,18 @@
         ]
       }
     },
-    "/api/controladores": {
+    "/api/controllers": {
       "get": {
         "operationId": "listarControladores",
         "summary": "Controladores, parámetros y presets",
         "description": "Catálogo PID, adaptativo y difuso del prototipo. La disponibilidad real y rangos permitidos al enviar se confirman con EN-02.",
         "tags": [
-          "controladores"
+          "controllers"
         ],
         "x-estado": "implementado",
         "x-ejemplo-peticion": {
           "metodo": "GET",
-          "url": "/api/controladores"
+          "url": "/api/controllers"
         },
         "responses": {
           "200": {
@@ -4269,18 +4269,18 @@
         }
       }
     },
-    "/api/perfiles": {
+    "/api/profiles": {
       "get": {
         "operationId": "listarPerfiles",
         "summary": "Perfiles de reglamento",
         "description": "Perfiles de reglamento",
         "tags": [
-          "perfiles"
+          "profiles"
         ],
         "x-estado": "implementado",
         "x-ejemplo-peticion": {
           "metodo": "GET",
-          "url": "/api/perfiles"
+          "url": "/api/profiles"
         },
         "responses": {
           "200": {
@@ -4422,7 +4422,7 @@
         "x-estado": "implementado",
         "x-ejemplo-peticion": {
           "metodo": "GET",
-          "url": "/api/robots/v001/setups?limite=50&offset=0&version_id=1"
+          "url": "/api/robots/v001/setups?limit=50&offset=0&version_id=1"
         },
         "responses": {
           "200": {
@@ -4575,7 +4575,7 @@
             "example": "v001"
           },
           {
-            "name": "limite",
+            "name": "limit",
             "in": "query",
             "required": false,
             "schema": {
@@ -4614,7 +4614,7 @@
       "post": {
         "operationId": "crearSetup",
         "summary": "Guardar setup en PostgreSQL",
-        "description": "Valida pertenencia de versión al robot y parámetros del controlador. Cada guardado crea un id nuevo; no cambia corridas previas ni envía comandos. La consola aplica luego mediante POST /api/dispositivos/{dispositivo}/comandos.",
+        "description": "Valida pertenencia de versión al robot y parámetros del controlador. Cada guardado crea un id nuevo; no cambia corridas previas ni envía comandos. La consola aplica luego mediante POST /api/devices/{device}/commands.",
         "tags": [
           "robots"
         ],
@@ -5134,18 +5134,18 @@
         ]
       }
     },
-    "/api/corridas": {
+    "/api/runs": {
       "get": {
         "operationId": "listarCorridas",
         "summary": "Historial para tiempos, comparación y CSV",
         "description": "Orden por fecha e id descendentes. En competencia una corrida contiene un intento de una vuelta; en pruebas se selecciona la mejor vuelta terminada por J, desempate por número. J se calcula en servidor: tiempo_s + 2 × error_acumulado, o 120 si ninguna termina. CSV se construye en la consola, recorriendo páginas.",
         "tags": [
-          "corridas"
+          "runs"
         ],
         "x-estado": "implementado",
         "x-ejemplo-peticion": {
           "metodo": "GET",
-          "url": "/api/corridas?limite=50&offset=0&robot_id=v001&version_id=1&controlador_id=pid&fuente=robot"
+          "url": "/api/runs?limit=50&offset=0&robot_id=v001&version_id=1&controller_id=pid&source=robot"
         },
         "responses": {
           "200": {
@@ -5284,7 +5284,7 @@
         },
         "parameters": [
           {
-            "name": "limite",
+            "name": "limit",
             "in": "query",
             "required": false,
             "schema": {
@@ -5331,7 +5331,7 @@
             "example": 1
           },
           {
-            "name": "controlador_id",
+            "name": "controller_id",
             "in": "query",
             "required": false,
             "schema": {
@@ -5343,7 +5343,7 @@
             "example": "pid"
           },
           {
-            "name": "fuente",
+            "name": "source",
             "in": "query",
             "required": false,
             "schema": {
@@ -5358,18 +5358,18 @@
         ]
       }
     },
-    "/api/corridas/simulada": {
+    "/api/runs/simulated": {
       "post": {
         "operationId": "crearCorridaSimulada",
         "summary": "Crear y guardar una corrida simulada",
-        "description": "La consola la invoca al ARRANCAR en modo Simulado: genera una corrida simulada con sus vueltas y la guarda en PostgreSQL (fuente=sim, fecha actual). No es idempotente: cada llamada crea una corrida. 409 si el robot está corriendo; 422 si faltan semillas.",
+        "description": "La consola la invoca al ARRANCAR en modo Simulado: genera una corrida simulada con sus vueltas y la guarda en PostgreSQL (fuente=sim, fecha actual). No es idempotente: cada llamada crea una corrida. 409 si el robot está corriendo; Usa el robot seleccionado mediante robot_id.",
         "tags": [
-          "corridas"
+          "runs"
         ],
         "x-estado": "implementado",
         "x-ejemplo-peticion": {
           "metodo": "POST",
-          "url": "/api/corridas/simulada"
+          "url": "/api/runs/simulated?robot_id=v001"
         },
         "responses": {
           "201": {
@@ -5518,21 +5518,35 @@
               }
             }
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "robot_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 40,
+              "minLength": 1,
+              "pattern": "^[a-zA-Z0-9_-]+$"
+            },
+            "example": "v001"
+          }
+        ]
       }
     },
-    "/api/corridas/{corrida_id}": {
+    "/api/runs/{run_id}": {
       "get": {
         "operationId": "obtenerCorrida",
         "summary": "Consultar corrida y snapshot del setup aplicado",
         "description": "Resumen de una corrida cerrada. Si sigue activa devuelve 409 corrida_en_curso; el progreso se consulta por WebSocket.",
         "tags": [
-          "corridas"
+          "runs"
         ],
         "x-estado": "implementado",
         "x-ejemplo-peticion": {
           "metodo": "GET",
-          "url": "/api/corridas/1"
+          "url": "/api/runs/1"
         },
         "responses": {
           "200": {
@@ -5704,7 +5718,7 @@
         },
         "parameters": [
           {
-            "name": "corrida_id",
+            "name": "run_id",
             "in": "path",
             "required": true,
             "schema": {
@@ -5721,12 +5735,12 @@
         "summary": "Guardar nota de pista",
         "description": "Guardar nota de pista",
         "tags": [
-          "corridas"
+          "runs"
         ],
         "x-estado": "implementado",
         "x-ejemplo-peticion": {
           "metodo": "PATCH",
-          "url": "/api/corridas/1",
+          "url": "/api/runs/1",
           "cuerpo": {
             "nota": "Mejor agarre"
           }
@@ -5901,7 +5915,7 @@
         },
         "parameters": [
           {
-            "name": "corrida_id",
+            "name": "run_id",
             "in": "path",
             "required": true,
             "schema": {
@@ -5927,18 +5941,18 @@
         }
       }
     },
-    "/api/corridas/{corrida_id}/vueltas": {
+    "/api/runs/{run_id}/laps": {
       "get": {
         "operationId": "listarVueltas",
         "summary": "Vueltas, sectores y segmentos",
         "description": "Vueltas, sectores y segmentos",
         "tags": [
-          "corridas"
+          "runs"
         ],
         "x-estado": "implementado",
         "x-ejemplo-peticion": {
           "metodo": "GET",
-          "url": "/api/corridas/1/vueltas?limite=50&offset=0"
+          "url": "/api/runs/1/laps?limit=50&offset=0"
         },
         "responses": {
           "200": {
@@ -6090,7 +6104,7 @@
         },
         "parameters": [
           {
-            "name": "corrida_id",
+            "name": "run_id",
             "in": "path",
             "required": true,
             "schema": {
@@ -6101,7 +6115,7 @@
             "example": 1
           },
           {
-            "name": "limite",
+            "name": "limit",
             "in": "query",
             "required": false,
             "schema": {
@@ -6127,18 +6141,18 @@
         ]
       }
     },
-    "/api/salud": {
+    "/api/health": {
       "get": {
         "operationId": "consultarSalud",
         "summary": "Estado de API, base y enlaces",
         "description": "200 incluso si la BD no está disponible; consultar base_de_datos. No implica que el manifiesto ya esté recibido.",
         "tags": [
-          "salud"
+          "health"
         ],
         "x-estado": "implementado",
         "x-ejemplo-peticion": {
           "metodo": "GET",
-          "url": "/api/salud"
+          "url": "/api/health"
         },
         "responses": {
           "200": {
@@ -6452,18 +6466,18 @@
         }
       }
     },
-    "/api/dispositivos/velocista/manifiesto": {
+    "/api/devices/velocista/manifest": {
       "get": {
         "operationId": "consultarManifiesto",
         "summary": "Manifiesto del dispositivo conectado",
         "description": "Manifiesto del dispositivo conectado",
         "tags": [
-          "dispositivos"
+          "devices"
         ],
         "x-estado": "implementado",
         "x-ejemplo-peticion": {
           "metodo": "GET",
-          "url": "/api/dispositivos/velocista/manifiesto"
+          "url": "/api/devices/velocista/manifest"
         },
         "responses": {
           "200": {
@@ -6758,18 +6772,18 @@
         }
       }
     },
-    "/api/dispositivos/{dispositivo}/comandos": {
+    "/api/devices/{device}/commands": {
       "post": {
         "operationId": "enviarComando",
         "summary": "Enviar un comando al dispositivo",
         "description": "202 confirma envío, no ejecución ni guardado en flash. El ack de EN-02 llega por /ws/consola. Sin enlace: 409 desconectado; en competencia corriendo solo detener; para arrancar requiere calibración. Los comandos para cronometro son los definidos por EN-02.",
         "tags": [
-          "dispositivos"
+          "devices"
         ],
         "x-estado": "implementado",
         "x-ejemplo-peticion": {
           "metodo": "POST",
-          "url": "/api/dispositivos/velocista/comandos",
+          "url": "/api/devices/velocista/commands",
           "cuerpo": {
             "tipo": "setup",
             "datos": {
@@ -6885,7 +6899,7 @@
         },
         "parameters": [
           {
-            "name": "dispositivo",
+            "name": "device",
             "in": "path",
             "required": true,
             "schema": {
@@ -6918,6 +6932,1212 @@
                   },
                   "id_setup": 1
                 }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/robots/{robot_id}/controllers": {
+      "get": {
+        "operationId": "listReconciledControllers",
+        "summary": "Controladores reconciliados con el manifiesto",
+        "description": "Controladores reconciliados con el manifiesto",
+        "tags": [
+          "robots"
+        ],
+        "x-estado": "implementado",
+        "x-ejemplo-peticion": {
+          "metodo": "GET",
+          "url": "/api/robots/v001/controllers"
+        },
+        "responses": {
+          "200": {
+            "description": "Resultado correcto",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogoReconciliado"
+                },
+                "example": {
+                  "controlador_activo": "pid",
+                  "controladores": [
+                    {
+                      "id": "pid",
+                      "nombre": "PID",
+                      "nombre_corto": "PID",
+                      "descripcion": "Con Ki = 0 funciona como PD.",
+                      "parametros": [
+                        {
+                          "clave": "kp",
+                          "nombre": "KP",
+                          "descripcion": "kp",
+                          "min": 0,
+                          "max": 2,
+                          "paso": 0.01,
+                          "decimales": 2,
+                          "optimizable": true,
+                          "valor": 0.6
+                        },
+                        {
+                          "clave": "ki",
+                          "nombre": "KI",
+                          "descripcion": "ki",
+                          "min": 0,
+                          "max": 0.3,
+                          "paso": 0.005,
+                          "decimales": 3,
+                          "optimizable": false,
+                          "valor": 0
+                        },
+                        {
+                          "clave": "kd",
+                          "nombre": "KD",
+                          "descripcion": "kd",
+                          "min": 0,
+                          "max": 10,
+                          "paso": 0.1,
+                          "decimales": 1,
+                          "optimizable": true,
+                          "valor": 2.5
+                        },
+                        {
+                          "clave": "base",
+                          "nombre": "base",
+                          "descripcion": "base",
+                          "min": 10,
+                          "max": 100,
+                          "paso": 1,
+                          "decimales": 0,
+                          "optimizable": false,
+                          "valor": 45
+                        },
+                        {
+                          "clave": "max",
+                          "nombre": "max",
+                          "descripcion": "max",
+                          "min": 20,
+                          "max": 100,
+                          "paso": 1,
+                          "decimales": 0,
+                          "optimizable": false,
+                          "valor": 86
+                        }
+                      ],
+                      "presets": {
+                        "Base": {
+                          "kp": 0.6,
+                          "ki": 0,
+                          "kd": 2.5,
+                          "base": 45,
+                          "max": 86
+                        }
+                      },
+                      "activo": true
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "El dato no cumple las reglas del dominio",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorNegocio"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorValidacion"
+                    }
+                  ]
+                },
+                "examples": {
+                  "negocio": {
+                    "value": {
+                      "detail": {
+                        "motivo": "validacion",
+                        "detalle": "El dato no cumple las reglas del dominio"
+                      }
+                    }
+                  },
+                  "formato": {
+                    "value": {
+                      "detail": [
+                        {
+                          "loc": [
+                            "query",
+                            "limite"
+                          ],
+                          "msg": "Input should be greater than or equal to 1",
+                          "type": "greater_than_equal",
+                          "input": 0
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "La base de datos no está disponible",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNegocio"
+                },
+                "examples": {
+                  "negocio": {
+                    "value": {
+                      "detail": {
+                        "motivo": "base_no_disponible",
+                        "detalle": "La base de datos no está disponible"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ocurrió un error inesperado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNegocio"
+                },
+                "examples": {
+                  "negocio": {
+                    "value": {
+                      "detail": {
+                        "motivo": "error_interno",
+                        "detalle": "Ocurrió un error inesperado"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "robot_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 40,
+              "minLength": 1,
+              "pattern": "^[a-zA-Z0-9_-]+$"
+            },
+            "example": "v001"
+          }
+        ]
+      }
+    },
+    "/api/robots/{robot_id}/configuracion": {
+      "get": {
+        "operationId": "getRobotControllerConfig",
+        "summary": "Configuración cargada en el robot",
+        "description": "Configuración cargada en el robot",
+        "tags": [
+          "robots"
+        ],
+        "x-estado": "implementado",
+        "x-ejemplo-peticion": {
+          "metodo": "GET",
+          "url": "/api/robots/v001/configuracion"
+        },
+        "responses": {
+          "200": {
+            "description": "Resultado correcto",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfiguracionViva"
+                },
+                "example": {
+                  "controlador_activo": "pid",
+                  "parametros": [
+                    {
+                      "nombre": "KP",
+                      "valor": 0.6
+                    },
+                    {
+                      "nombre": "KI",
+                      "valor": 0
+                    },
+                    {
+                      "nombre": "KD",
+                      "valor": 2.5
+                    },
+                    {
+                      "nombre": "base",
+                      "valor": 45
+                    },
+                    {
+                      "nombre": "max",
+                      "valor": 86
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe el recurso solicitado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNegocio"
+                },
+                "examples": {
+                  "negocio": {
+                    "value": {
+                      "detail": {
+                        "motivo": "no_encontrado",
+                        "detalle": "No existe el recurso solicitado"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "El dato no cumple las reglas del dominio",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorNegocio"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorValidacion"
+                    }
+                  ]
+                },
+                "examples": {
+                  "negocio": {
+                    "value": {
+                      "detail": {
+                        "motivo": "validacion",
+                        "detalle": "El dato no cumple las reglas del dominio"
+                      }
+                    }
+                  },
+                  "formato": {
+                    "value": {
+                      "detail": [
+                        {
+                          "loc": [
+                            "query",
+                            "limite"
+                          ],
+                          "msg": "Input should be greater than or equal to 1",
+                          "type": "greater_than_equal",
+                          "input": 0
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "La base de datos no está disponible",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNegocio"
+                },
+                "examples": {
+                  "negocio": {
+                    "value": {
+                      "detail": {
+                        "motivo": "base_no_disponible",
+                        "detalle": "La base de datos no está disponible"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ocurrió un error inesperado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNegocio"
+                },
+                "examples": {
+                  "negocio": {
+                    "value": {
+                      "detail": {
+                        "motivo": "error_interno",
+                        "detalle": "Ocurrió un error inesperado"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "robot_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 40,
+              "minLength": 1,
+              "pattern": "^[a-zA-Z0-9_-]+$"
+            },
+            "example": "v001"
+          }
+        ]
+      }
+    },
+    "/api/robots/{robot_id}/setups/{setup_id}/apply": {
+      "post": {
+        "operationId": "applySetup",
+        "summary": "Aplicar un setup guardado al robot",
+        "description": "Valida el setup contra el manifiesto vivo y lo envía al robot. El ack llega por /ws/consola.",
+        "tags": [
+          "robots"
+        ],
+        "x-estado": "implementado",
+        "x-ejemplo-peticion": {
+          "metodo": "POST",
+          "url": "/api/robots/v001/setups/1/apply"
+        },
+        "responses": {
+          "202": {
+            "description": "Resultado correcto",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComandoAceptado"
+                },
+                "example": {
+                  "seq": 7,
+                  "mensaje": "Enviado. La confirmación del robot llega a la consola como ack."
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe el recurso solicitado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNegocio"
+                },
+                "examples": {
+                  "negocio": {
+                    "value": {
+                      "detail": {
+                        "motivo": "no_encontrado",
+                        "detalle": "No existe el recurso solicitado"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "La revisión o el estado del recurso cambió",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNegocio"
+                },
+                "examples": {
+                  "negocio": {
+                    "value": {
+                      "detail": {
+                        "motivo": "conflicto",
+                        "detalle": "La revisión o el estado del recurso cambió"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "El dato no cumple las reglas del dominio",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorNegocio"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorValidacion"
+                    }
+                  ]
+                },
+                "examples": {
+                  "negocio": {
+                    "value": {
+                      "detail": {
+                        "motivo": "validacion",
+                        "detalle": "El dato no cumple las reglas del dominio"
+                      }
+                    }
+                  },
+                  "formato": {
+                    "value": {
+                      "detail": [
+                        {
+                          "loc": [
+                            "query",
+                            "limite"
+                          ],
+                          "msg": "Input should be greater than or equal to 1",
+                          "type": "greater_than_equal",
+                          "input": 0
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "La base de datos no está disponible",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNegocio"
+                },
+                "examples": {
+                  "negocio": {
+                    "value": {
+                      "detail": {
+                        "motivo": "base_no_disponible",
+                        "detalle": "La base de datos no está disponible"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ocurrió un error inesperado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNegocio"
+                },
+                "examples": {
+                  "negocio": {
+                    "value": {
+                      "detail": {
+                        "motivo": "error_interno",
+                        "detalle": "Ocurrió un error inesperado"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "setup_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "example": 1
+          },
+          {
+            "name": "robot_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 40,
+              "minLength": 1,
+              "pattern": "^[a-zA-Z0-9_-]+$"
+            },
+            "example": "v001"
+          }
+        ]
+      }
+    },
+    "/api/robots/{robot_id}/presets/apply": {
+      "post": {
+        "operationId": "applyPreset",
+        "summary": "Aplicar un preset del catálogo al robot",
+        "description": "Valida el preset contra el manifiesto vivo y lo envía con id_setup nulo. El ack llega por /ws/consola.",
+        "tags": [
+          "robots"
+        ],
+        "x-estado": "implementado",
+        "x-ejemplo-peticion": {
+          "metodo": "POST",
+          "url": "/api/robots/v001/presets/apply",
+          "cuerpo": {
+            "controlador_id": "pid",
+            "preset_id": "Base"
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Resultado correcto",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComandoAceptado"
+                },
+                "example": {
+                  "seq": 7,
+                  "mensaje": "Enviado. La confirmación del robot llega a la consola como ack."
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe el recurso solicitado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNegocio"
+                },
+                "examples": {
+                  "negocio": {
+                    "value": {
+                      "detail": {
+                        "motivo": "no_encontrado",
+                        "detalle": "No existe el recurso solicitado"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "La revisión o el estado del recurso cambió",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNegocio"
+                },
+                "examples": {
+                  "negocio": {
+                    "value": {
+                      "detail": {
+                        "motivo": "conflicto",
+                        "detalle": "La revisión o el estado del recurso cambió"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "El dato no cumple las reglas del dominio",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorNegocio"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorValidacion"
+                    }
+                  ]
+                },
+                "examples": {
+                  "negocio": {
+                    "value": {
+                      "detail": {
+                        "motivo": "validacion",
+                        "detalle": "El dato no cumple las reglas del dominio"
+                      }
+                    }
+                  },
+                  "formato": {
+                    "value": {
+                      "detail": [
+                        {
+                          "loc": [
+                            "query",
+                            "limite"
+                          ],
+                          "msg": "Input should be greater than or equal to 1",
+                          "type": "greater_than_equal",
+                          "input": 0
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "La base de datos no está disponible",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNegocio"
+                },
+                "examples": {
+                  "negocio": {
+                    "value": {
+                      "detail": {
+                        "motivo": "base_no_disponible",
+                        "detalle": "La base de datos no está disponible"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ocurrió un error inesperado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNegocio"
+                },
+                "examples": {
+                  "negocio": {
+                    "value": {
+                      "detail": {
+                        "motivo": "error_interno",
+                        "detalle": "Ocurrió un error inesperado"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "robot_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 40,
+              "minLength": 1,
+              "pattern": "^[a-zA-Z0-9_-]+$"
+            },
+            "example": "v001"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PresetAplicar"
+              },
+              "example": {
+                "controlador_id": "pid",
+                "preset_id": "Base"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/robots/{robot_id}/modo-linea": {
+      "get": {
+        "operationId": "getRobotModeLine",
+        "summary": "Consultar modo y línea guardados",
+        "description": "Consultar modo y línea guardados",
+        "tags": [
+          "robots"
+        ],
+        "x-estado": "implementado",
+        "x-ejemplo-peticion": {
+          "metodo": "GET",
+          "url": "/api/robots/v001/modo-linea"
+        },
+        "responses": {
+          "200": {
+            "description": "Resultado correcto",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfiguracionGuardada"
+                },
+                "example": {
+                  "modo": "prueba",
+                  "linea": "negra",
+                  "actualizado_en": "2026-10-06T15:00:00Z"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe el recurso solicitado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNegocio"
+                },
+                "examples": {
+                  "negocio": {
+                    "value": {
+                      "detail": {
+                        "motivo": "no_encontrado",
+                        "detalle": "No existe el recurso solicitado"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "El dato no cumple las reglas del dominio",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorNegocio"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorValidacion"
+                    }
+                  ]
+                },
+                "examples": {
+                  "negocio": {
+                    "value": {
+                      "detail": {
+                        "motivo": "validacion",
+                        "detalle": "El dato no cumple las reglas del dominio"
+                      }
+                    }
+                  },
+                  "formato": {
+                    "value": {
+                      "detail": [
+                        {
+                          "loc": [
+                            "query",
+                            "limite"
+                          ],
+                          "msg": "Input should be greater than or equal to 1",
+                          "type": "greater_than_equal",
+                          "input": 0
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "La base de datos no está disponible",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNegocio"
+                },
+                "examples": {
+                  "negocio": {
+                    "value": {
+                      "detail": {
+                        "motivo": "base_no_disponible",
+                        "detalle": "La base de datos no está disponible"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ocurrió un error inesperado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNegocio"
+                },
+                "examples": {
+                  "negocio": {
+                    "value": {
+                      "detail": {
+                        "motivo": "error_interno",
+                        "detalle": "Ocurrió un error inesperado"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "robot_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 40,
+              "minLength": 1,
+              "pattern": "^[a-zA-Z0-9_-]+$"
+            },
+            "example": "v001"
+          }
+        ]
+      }
+    },
+    "/api/robots/{robot_id}/modo-linea/modo": {
+      "post": {
+        "operationId": "setMode",
+        "summary": "Configurar el modo del robot",
+        "description": "Valida contra el estado vivo, envía al robot y guarda el modo. Rechaza cambios mientras corre; el ack llega por /ws/consola.",
+        "tags": [
+          "robots"
+        ],
+        "x-estado": "implementado",
+        "x-ejemplo-peticion": {
+          "metodo": "POST",
+          "url": "/api/robots/v001/modo-linea/modo",
+          "cuerpo": {
+            "modo": "prueba"
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Resultado correcto",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComandoAceptado"
+                },
+                "example": {
+                  "seq": 7,
+                  "mensaje": "Enviado. La confirmación del robot llega a la consola como ack."
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "La revisión o el estado del recurso cambió",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNegocio"
+                },
+                "examples": {
+                  "negocio": {
+                    "value": {
+                      "detail": {
+                        "motivo": "conflicto",
+                        "detalle": "La revisión o el estado del recurso cambió"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "El dato no cumple las reglas del dominio",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorNegocio"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorValidacion"
+                    }
+                  ]
+                },
+                "examples": {
+                  "negocio": {
+                    "value": {
+                      "detail": {
+                        "motivo": "validacion",
+                        "detalle": "El dato no cumple las reglas del dominio"
+                      }
+                    }
+                  },
+                  "formato": {
+                    "value": {
+                      "detail": [
+                        {
+                          "loc": [
+                            "query",
+                            "limite"
+                          ],
+                          "msg": "Input should be greater than or equal to 1",
+                          "type": "greater_than_equal",
+                          "input": 0
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "La base de datos no está disponible",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNegocio"
+                },
+                "examples": {
+                  "negocio": {
+                    "value": {
+                      "detail": {
+                        "motivo": "base_no_disponible",
+                        "detalle": "La base de datos no está disponible"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ocurrió un error inesperado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNegocio"
+                },
+                "examples": {
+                  "negocio": {
+                    "value": {
+                      "detail": {
+                        "motivo": "error_interno",
+                        "detalle": "Ocurrió un error inesperado"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "robot_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 40,
+              "minLength": 1,
+              "pattern": "^[a-zA-Z0-9_-]+$"
+            },
+            "example": "v001"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CambioModo"
+              },
+              "example": {
+                "modo": "prueba"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/robots/{robot_id}/modo-linea/linea": {
+      "post": {
+        "operationId": "setLine",
+        "summary": "Configurar el color de línea",
+        "description": "Valida contra el estado vivo, envía al robot y guarda el color. Rechaza cambios mientras corre; el ack llega por /ws/consola.",
+        "tags": [
+          "robots"
+        ],
+        "x-estado": "implementado",
+        "x-ejemplo-peticion": {
+          "metodo": "POST",
+          "url": "/api/robots/v001/modo-linea/linea",
+          "cuerpo": {
+            "color": "negra"
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Resultado correcto",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComandoAceptado"
+                },
+                "example": {
+                  "seq": 7,
+                  "mensaje": "Enviado. La confirmación del robot llega a la consola como ack."
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "La revisión o el estado del recurso cambió",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNegocio"
+                },
+                "examples": {
+                  "negocio": {
+                    "value": {
+                      "detail": {
+                        "motivo": "conflicto",
+                        "detalle": "La revisión o el estado del recurso cambió"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "El dato no cumple las reglas del dominio",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorNegocio"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorValidacion"
+                    }
+                  ]
+                },
+                "examples": {
+                  "negocio": {
+                    "value": {
+                      "detail": {
+                        "motivo": "validacion",
+                        "detalle": "El dato no cumple las reglas del dominio"
+                      }
+                    }
+                  },
+                  "formato": {
+                    "value": {
+                      "detail": [
+                        {
+                          "loc": [
+                            "query",
+                            "limite"
+                          ],
+                          "msg": "Input should be greater than or equal to 1",
+                          "type": "greater_than_equal",
+                          "input": 0
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "La base de datos no está disponible",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNegocio"
+                },
+                "examples": {
+                  "negocio": {
+                    "value": {
+                      "detail": {
+                        "motivo": "base_no_disponible",
+                        "detalle": "La base de datos no está disponible"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ocurrió un error inesperado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNegocio"
+                },
+                "examples": {
+                  "negocio": {
+                    "value": {
+                      "detail": {
+                        "motivo": "error_interno",
+                        "detalle": "Ocurrió un error inesperado"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "robot_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 40,
+              "minLength": 1,
+              "pattern": "^[a-zA-Z0-9_-]+$"
+            },
+            "example": "v001"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CambioLinea"
+              },
+              "example": {
+                "color": "negra"
               }
             }
           }

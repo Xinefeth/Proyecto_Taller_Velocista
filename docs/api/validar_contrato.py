@@ -97,7 +97,7 @@ def ejecutar():
             for d in nodo.decorator_list:
                 if isinstance(d, ast.Call) and isinstance(d.func, ast.Attribute) and d.func.attr in ["get", "post", "patch", "put", "delete"]:
                     existentes.add((d.func.attr, prefijo + d.args[0].value))
-    exigir(implementadas == existentes, "Actualizar x-estado: las rutas existentes cambiaron")
+    exigir(implementadas == existentes, f"Actualizar x-estado: solo contrato={sorted(implementadas - existentes)}; solo API={sorted(existentes - implementadas)}")
 
     # Asegura cobertura del catálogo real: todos los tipos, todas sus specs y tipos n/t.
     ts = (RAIZ / "consola/src/datos/tipos.ts").read_text(encoding="utf-8")
@@ -122,7 +122,7 @@ def ejecutar():
 
     # Casos negativos útiles: stock negativo/fraccionario, campos de otro tipo,
     # tipo desconocido, cantidad cero, modificación de J y PATCH vacío.
-    crear = spec["paths"]["/api/componentes"]["post"]["requestBody"]["content"]["application/json"]["example"]
+    crear = spec["paths"]["/api/components"]["post"]["requestBody"]["content"]["application/json"]["example"]
     casos = []
     for cambio in [{"stock": -1}, {"stock": 1.5}, {"tipo_id": "desconocido"}, {"especificaciones": {"cpr": 12}}, {"especificaciones": {"canales": "ocho"}}]:
         casos.append(("ComponenteCrear", {**deepcopy(crear), **cambio}))
