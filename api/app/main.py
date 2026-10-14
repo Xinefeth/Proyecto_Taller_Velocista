@@ -9,7 +9,7 @@ from app.core.config import RAIZ_REPO, settings
 from app.core.db import db_disponible
 from app.core.errores import registrar_manejadores
 from app.core.registro import configurar_logging, registrar_middleware
-from app.gateway import comandos, ws
+from app.gateway import aplicacion, comandos, ws
 from app.modulos.armador.router import router as armador
 from app.modulos.auth.router import router as auth
 from app.modulos.catalogo.router import router as catalogo
@@ -66,6 +66,8 @@ La conexión de cada dispositivo también se ve en `GET /api/health` (campo `dis
 
 def create_app() -> FastAPI:
     actividad.robot_running = ws.robot_running
+    actividad.manifiesto_velocista = aplicacion.manifiesto_velocista
+    actividad.aplicar_setup_velocista = aplicacion.aplicar_setup_velocista
     configurar_logging(settings.log_level)
     app = FastAPI(
         title="APAEC Lab API",

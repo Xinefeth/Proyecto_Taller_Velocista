@@ -11,7 +11,15 @@ from app.modulos.armador import service as armador
 from app.modulos.armador.puertos import versiones_robot
 from app.modulos.corridas.puertos import setup_en_curso
 from app.modulos.optimizacion.models import Controlador, Setup
-from app.modulos.optimizacion.schemas import ControladorSalida
+from app.modulos.optimizacion.schemas import (
+    CatalogoReconciliado,
+    ComandoAceptado,
+    ConfiguracionViva,
+    ControladorReconciliado,
+    ControladorSalida,
+    ParametroReconciliado,
+    ParametroVivo,
+)
 
 
 def listar_controladores(session):
@@ -119,6 +127,70 @@ def crear_setup(session, robot_id, datos):
     except Exception:
         session.rollback()
         raise
+
+
+def reconciliar_catalogo(session, robot_id):
+    """Catálogo de la BD (fuente de la lista) superpuesto con el manifiesto vivo (HU-17, Req 1)."""
+    manifiesto = actividad.manifiesto_velocista(robot_id)
+    activo = manifiesto.controlador_activo if manifiesto else None
+    controladores = []
+    for ctrl in listar_controladores(session):
+        definicion = ControladorSalida.model_validate(ctrl)
+        m_ctrl = manifiesto.controlador(definicion.id) if manifiesto else None
+        parametros = [
+            ParametroReconciliado(
+                **p.model_dump(),
+                valor=m_param.valor if m_ctrl and (m_param := m_ctrl.parametro(p.clave)) else None,
+            )
+            for p in definicion.parametros
+        ]
+        controladores.append(
+            ControladorReconciliado(
+                id=definicion.id,
+                nombre=definicion.nombre,
+                nombre_corto=definicion.nombre_corto,
+                descripcion=definicion.descripcion,
+                parametros=parametros,
+                presets=definicion.presets,
+                activo=bool(manifiesto) and activo == definicion.id,
+            )
+        )
+    return CatalogoReconciliado(controlador_activo=activo, controladores=controladores)
+
+
+def configuracion_viva(robot_id):
+    """Controlador activo y valores cargados ahora en el robot, desde el manifiesto (Req 2)."""
+    manifiesto = actividad.manifiesto_velocista(robot_id)
+    if manifiesto is None:
+        raise ErrorDeNegocio(
+            404, "sin_manifiesto", "El robot no está conectado o aún no envió su manifiesto"
+        )
+    ctrl = manifiesto.controlador(manifiesto.controlador_activo)
+    return ConfiguracionViva(
+        controlador_activo=manifiesto.controlador_activo,
+        parametros=[ParametroVivo(nombre=p.nombre, valor=p.valor) for p in ctrl.parametros],
+    )
+
+
+async def aplicar_setup(session, robot_id, setup_id):
+    """Carga un setup guardado y lo envía al robot en un solo paso (Req 4)."""
+    setup = obtener_setup(session, setup_id)  # → 404 setup_no_encontrado (Req 3.5)
+    seq = await actividad.aplicar_setup_velocista(
+        robot_id, setup["controlador_id"], setup["parametros"], setup["id"]
+    )
+    return ComandoAceptado(seq=seq)  # id_setup = setup.id (Req 4.1)
+
+
+async def aplicar_preset(session, robot_id, controlador_id, preset_id):
+    """Carga un preset del catálogo y lo envía al robot (Req 5), con id_setup nulo."""
+    ctrl = session.get(Controlador, controlador_id)
+    if ctrl is None:
+        raise ErrorDeNegocio(404, "controlador_no_encontrado", "El controlador no existe")
+    valores = ctrl.presets.get(preset_id)
+    if valores is None:
+        raise ErrorDeNegocio(422, "preset_no_encontrado", "El controlador no tiene ese preset")
+    seq = await actividad.aplicar_setup_velocista(robot_id, controlador_id, valores, None)
+    return ComandoAceptado(seq=seq)  # id_setup = null (Req 5.1)
 
 
 def archivar_setup(session, setup_id):

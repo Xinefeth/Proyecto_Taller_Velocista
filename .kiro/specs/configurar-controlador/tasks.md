@@ -20,8 +20,8 @@ property-based tests (Hypothesis, min 100 iterations) alongside unit and integra
 
 ## Tasks
 
-- [ ] 1. Set up foundation: schemas, contract validation, and test infrastructure
-  - [ ] 1.1 Add new Pydantic schemas to `app/modulos/optimizacion/schemas.py`
+- [x] 1. Set up foundation: schemas, contract validation, and test infrastructure
+  - [x] 1.1 Add new Pydantic schemas to `app/modulos/optimizacion/schemas.py`
     - Add `ParametroReconciliado` (extends `ParametroControlador` with optional `valor: float | None`)
     - Add `ControladorReconciliado` (id, nombre, nombre_corto, descripcion, parametros, presets, activo)
     - Add `CatalogoReconciliado` (controlador_activo: str | None, controladores: list)
@@ -30,7 +30,7 @@ property-based tests (Hypothesis, min 100 iterations) alongside unit and integra
     - All with `ConfigDict(extra="forbid", allow_inf_nan=False)`; `ComandoAceptado` mirrors the gateway `CommandAccepted`
     - _Requirements: 1.1, 1.2, 1.3, 2.1, 4.1, 5.1_
 
-  - [ ] 1.2 Add `check_setup_completo` to `app/contract/validation.py`
+  - [x] 1.2 Add `check_setup_completo` to `app/contract/validation.py`
     - Sibling to existing `check_setup`; does NOT modify `check_setup`
     - First checks controller exists (→ `controlador_no_disponible`)
     - Then checks every controller parameter is present in the setup (→ `parametro_desconocido` for missing)
@@ -38,13 +38,13 @@ property-based tests (Hypothesis, min 100 iterations) alongside unit and integra
     - Returns `tuple[str, str] | None`
     - _Requirements: 4.5_
 
-  - [ ] 1.3 Add Hypothesis to dev dependencies in `api/pyproject.toml`
+  - [x] 1.3 Add Hypothesis to dev dependencies in `api/pyproject.toml`
     - Add `"hypothesis>=6.100"` to `[project.optional-dependencies].dev`
     - Install into the virtual environment (`api/.venv`)
     - _Requirements: 3.3, 3.4_ (enables property-based validation tests)
 
-- [ ] 2. Implement the gateway apply port
-  - [ ] 2.1 Create `app/gateway/aplicacion.py`
+- [x] 2. Implement the gateway apply port
+  - [x] 2.1 Create `app/gateway/aplicacion.py`
     - Implement `manifiesto_velocista(robot_id) -> Manifest | None`: returns the live manifest only if the
       connected velocista's manifest `id` matches `robot_id` (different robot → None)
     - Implement `async aplicar_setup_velocista(robot_id, controlador, parametros, id_setup) -> int`:
@@ -82,8 +82,8 @@ property-based tests (Hypothesis, min 100 iterations) alongside unit and integra
     - Assert: apply that passes validation but whose `ws.send` raises returns `dispositivo_no_disponible`
       (503), allowing retry
 
-- [ ] 3. Implement the reconciled-catalog service
-  - [ ] 3.1 Implement `reconciliar_catalogo(session, robot_id)` in `app/modulos/optimizacion/service.py`
+- [x] 3. Implement the reconciled-catalog service
+  - [x] 3.1 Implement `reconciliar_catalogo(session, robot_id)` in `app/modulos/optimizacion/service.py`
     - Load all DB controllers via existing `listar_controladores(session)` (source of truth for the list)
     - Call `gateway.aplicacion.manifiesto_velocista(robot_id)` (Manifest or None)
     - For each DB controller `c`: match `manifiesto.controlador(c.id)` (DB id == manifest nombre);
@@ -112,8 +112,8 @@ property-based tests (Hypothesis, min 100 iterations) alongside unit and integra
     - Assert `valor` and `activo` appear only when manifest exists and ids/names match; when offline or a
       different robot is connected, no `valor` and `controlador_activo` is null
 
-- [ ] 4. Implement the live-configuration service
-  - [ ] 4.1 Implement `configuracion_viva(robot_id)` in `app/modulos/optimizacion/service.py`
+- [x] 4. Implement the live-configuration service
+  - [x] 4.1 Implement `configuracion_viva(robot_id)` in `app/modulos/optimizacion/service.py`
     - Call `gateway.aplicacion.manifiesto_velocista(robot_id)`
     - If None → raise `ErrorDeNegocio(404, "sin_manifiesto", ...)`
     - `ctrl = manifiesto.controlador(manifiesto.controlador_activo)`
@@ -138,8 +138,8 @@ property-based tests (Hypothesis, min 100 iterations) alongside unit and integra
     - **Validates: Requirements 2.2**
     - For any state where `manifiesto_velocista(robot_id)` is None, assert the endpoint returns `sin_manifiesto`
 
-- [ ] 5. Implement the apply-setup and apply-preset service
-  - [ ] 5.1 Implement `aplicar_setup` and `aplicar_preset` in `app/modulos/optimizacion/service.py`
+- [x] 5. Implement the apply-setup and apply-preset service
+  - [x] 5.1 Implement `aplicar_setup` and `aplicar_preset` in `app/modulos/optimizacion/service.py`
     - `async aplicar_setup(session, robot_id, setup_id)`:
       1. `setup = obtener_setup(session, setup_id)` (→ 404 `setup_no_encontrado`)
       2. `seq = await gateway.aplicacion.aplicar_setup_velocista(robot_id, setup.controlador_id, setup.parametros, setup.id)`
@@ -168,8 +168,8 @@ property-based tests (Hypothesis, min 100 iterations) alongside unit and integra
     - Assert: accepted setup-apply sends `id_setup` = setup.id; accepted preset-apply sends `id_setup` = null;
       both carry the source's `controlador` and `parametros`
 
-- [ ] 6. Wire the four new endpoints in the optimizacion router
-  - [ ] 6.1 Add endpoints to `app/modulos/optimizacion/router.py`
+- [x] 6. Wire the four new endpoints in the optimizacion router
+  - [x] 6.1 Add endpoints to `app/modulos/optimizacion/router.py`
     - `GET /api/robots/{robot_id}/controllers` → `service.reconciliar_catalogo` → `CatalogoReconciliado`
     - `GET /api/robots/{robot_id}/configuracion` → `service.configuracion_viva` → `ConfiguracionViva`
     - `POST /api/robots/{robot_id}/setups/{setup_id}/apply` → `service.aplicar_setup` → `ComandoAceptado` (status 202)
@@ -179,8 +179,10 @@ property-based tests (Hypothesis, min 100 iterations) alongside unit and integra
     - Document error responses via `error_responses(...)` (sin_manifiesto, bloqueado_competencia, etc.)
     - _Requirements: 1.1, 1.2, 1.3, 2.1, 2.2, 4.1, 5.1_
 
-- [ ] 7. Checkpoint - Ensure all tests pass
+- [x] 7. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
+  - Hecho: 69 pruebas sin BD pasan (unit/contract/websocket), incluida la de arquitectura;
+    ruff limpio. Las de integración requieren PostgreSQL (no levantado en este entorno).
 
 - [ ] 8. Add property tests for existing save/list/validation functionality
   - [ ]* 8.1 Write property test for setup create→get round-trip

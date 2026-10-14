@@ -72,14 +72,14 @@ property-based tests (Hypothesis, min 100 iterations) alongside unit and integra
     - Read is sync: it only touches the in-memory `connections` dict, no `await`
     - _Requirements: 1.1, 1.2_
 
-  - [ ]* 2.2 Write unit tests for the read endpoint
+  - [ ] 2.2 Write unit tests for the read endpoint
     - New `tests/unit/test_configuracion.py`; test `get_robot_config` directly with an in-memory
       `ws.connections` fixture (set/restore `ws.connections["velocista"]`)
     - Returns `modo`/`linea` equal to `connection.last_status.modo`/`.linea` when a `Status` exists
     - Raises `sin_estado` when `connection is None` and when `connection.last_status is None` (two cases)
     - _Requirements: 1.1, 1.2_
 
-  - [ ]* 2.3 Write property test for the read projection
+  - [ ] 2.3 Write property test for the read projection
     - **Property 1: Read projects the live status, or returns sin_estado**
     - **Validates: Requirements 1.1, 1.2**
     - Generate arbitrary `velocista` connection states (no connection, connection with no `last_status`,
@@ -111,7 +111,7 @@ property-based tests (Hypothesis, min 100 iterations) alongside unit and integra
     - `return CommandAccepted(seq=seq)`
     - _Requirements: 3.1, 3.2, 4.1, 4.2, 4.3, 4.4, 4.5, 4.6_
 
-  - [ ]* 3.3 Write unit tests for the write endpoints
+  - [ ] 3.3 Write unit tests for the write endpoints
     - In `tests/unit/test_configuracion.py`; call `set_mode`/`set_line` directly with mocked `ws.send`
       (e.g. an `AsyncMock` capturing args) and an in-memory `ws.connections`
     - Valid value sends exactly one command with the right shape `("velocista", "modo", {"modo": <value>})`
@@ -133,39 +133,39 @@ property-based tests (Hypothesis, min 100 iterations) alongside unit and integra
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 6. Add property-based tests for the write endpoints
-  - [ ]* 6.1 Write property test for valid change delivery
+  - [ ] 6.1 Write property test for valid change delivery
     - **Property 2: A valid change sends the matching command and returns its seq, for any non-running estado**
     - **Validates: Requirements 2.1, 3.1, 4.3**
     - Generate valid `modo`/`linea` and `estado` in `ready`/`stopped`/`calibrating`/`error` with a manifest
       declaring the command; assert exactly one `ws.send` with the matching shape and the returned `seq`
       equals the one the gateway assigned
 
-  - [ ]* 6.2 Write property test for invalid value rejection
+  - [ ] 6.2 Write property test for invalid value rejection
     - **Property 3: An invalid value is rejected with comando_invalido and sends nothing, regardless of estado**
     - **Validates: Requirements 2.2, 3.2**
     - Generate invalid values (wrong string, wrong JSON type, `null`, missing field) and any `estado`
       (including `running`); assert rejection with `comando_invalido` and `ws.send` called zero times
 
-  - [ ]* 6.3 Write property test for running-state rejection
+  - [ ] 6.3 Write property test for running-state rejection
     - **Property 4: A running robot rejects every change with the mode-specific reason and sends nothing**
     - **Validates: Requirements 4.1, 4.2**
     - Generate valid values and `estado == running`; assert rejection before send with
       `bloqueado_competencia` when `modo == competencia` and `ocupado` when `modo == prueba`
       (`ws.send` called zero times)
 
-  - [ ]* 6.4 Write property test for no-manifest rejection
+  - [ ] 6.4 Write property test for no-manifest rejection
     - **Property 5: No manifest rejects with sin_manifiesto and sends nothing**
     - **Validates: Requirements 4.4**
     - Generate valid values and any state with no manifest (connection `None` or
       `connection.manifest is None`); assert `sin_manifiesto` and `ws.send` called zero times
 
-  - [ ]* 6.5 Write property test for undeclared-command rejection
+  - [ ] 6.5 Write property test for undeclared-command rejection
     - **Property 6: An undeclared command rejects with comando_desconocido and sends nothing**
     - **Validates: Requirements 4.5**
     - Generate valid values and a manifest that does not list `modo`/`linea` in its `comandos`;
       assert `comando_desconocido` and `ws.send` called zero times
 
-  - [ ]* 6.6 Write property test for link-drop delivery failure
+  - [ ] 6.6 Write property test for link-drop delivery failure
     - **Property 7: A link drop after validation returns dispositivo_no_disponible**
     - **Validates: Requirements 4.6**
     - Generate valid values and an accepting state (manifest present and declaring the command,
@@ -173,14 +173,14 @@ property-based tests (Hypothesis, min 100 iterations) alongside unit and integra
       assert `dispositivo_no_disponible` and no successful `seq` returned
 
 - [ ] 7. Add integration tests for the full guard matrix
-  - [ ]* 7.1 Write integration test for the read endpoint end-to-end
+  - [ ] 7.1 Write integration test for the read endpoint end-to-end
     - Use the `cliente` fixture (real FastAPI `TestClient`); drive `GET /api/devices/velocista/config`
       against an in-memory `velocista` connection with a manifest fixture and a hand-built `Status`
     - Assert `200` with the live `modo`/`linea`; assert `404 sin_estado` when the connection is absent
       or has no `last_status`
     - _Requirements: 1.1, 1.2_
 
-  - [ ]* 7.2 Write integration test for the full write guard matrix end-to-end
+  - [ ] 7.2 Write integration test for the full write guard matrix end-to-end
     - Use the `cliente` fixture; populate `ws.connections["velocista"]` with a manifest fixture and a
       hand-built `Status` (mock `ws.send` or consume a connected robot ws)
     - Verify acceptance on `ready`/`stopped`/`calibrating`/`error`; rejection on `running` with the

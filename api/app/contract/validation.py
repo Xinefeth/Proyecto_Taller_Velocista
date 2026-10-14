@@ -60,3 +60,19 @@ def check_setup(manifiesto: Manifest, setup: Setup) -> tuple[str, str] | None:
         if p.tipo == "int" and not float(valor).is_integer():
             return "fuera_de_rango", f"{nombre} debe ser entero"
     return None
+
+
+def check_setup_completo(manifiesto: Manifest, setup: Setup) -> tuple[str, str] | None:
+    """Como check_setup, pero además exige que estén todos los parámetros del controlador.
+
+    Lo usa el flujo de aplicar (HU-17, Req 4.5): al cargar un setup o preset en el robot, un
+    parámetro que el controlador declara pero el setup omite se rechaza con parametro_desconocido.
+    No modifica check_setup para no alterar el envío de comandos crudos (POST .../commands).
+    """
+    controlador = manifiesto.controlador(setup.controlador)
+    if controlador is None:
+        return "controlador_no_disponible", f"el robot no tiene el controlador {setup.controlador}"
+    for p in controlador.parametros:  # completitud (Req 4.5)
+        if p.nombre not in setup.parametros:
+            return "parametro_desconocido", f"falta el parámetro {p.nombre} del controlador"
+    return check_setup(manifiesto, setup)  # existencia/rango/tipo por valor (Req 4.3/4.4)
