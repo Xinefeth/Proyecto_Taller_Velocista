@@ -72,7 +72,16 @@ export function Armador() {
     c.mostrarToast(`${r.nm} ${nv.v} guardado. Las corridas nuevas se asignan a esta versión.`);
   };
 
-  const nuevoRobot = () => {
+  const nuevoRobot = async () => {
+    if (c.apiMode) {
+      const creado = await c.crearRobot();
+      if (creado) {
+        setAbRobot(creado.id);
+        setAbView(null);
+        setAbDraft(null);
+      }
+      return;
+    }
     const n = c.robots.filter((x) => x.tipo === "velocista").length + 1;
     const id = "v" + String(n).padStart(3, "0");
     const nuevo: RobotDef = {

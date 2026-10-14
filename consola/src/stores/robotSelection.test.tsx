@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { ProveedorConsola, useConsola } from "./ConsolaContext";
 import { api, ErrorApi } from "../services/api";
@@ -50,6 +50,44 @@ it("una respuesta vacía muestra el estado vacío", async () => {
     </ProveedorConsola>,
   );
   expect(await screen.findByText("No hay robots registrados en el armador.")).toBeTruthy();
+});
+
+it("crea el primer robot y lo persiste por la API", async () => {
+  const selection = vi
+    .spyOn(api.robots, "selection")
+    .mockResolvedValueOnce([])
+    .mockResolvedValue([
+      {
+        id: "r_nuevo",
+        nm: "Velocista 001",
+        short: "001",
+        tipo: "velocista",
+        fw: null,
+        ver: [{ v: "Sin versión", fecha: "—", nota: "", estado: "Borrador", parts: {} }],
+      },
+    ]);
+  const crear = vi.spyOn(api.robots, "crear").mockResolvedValue({
+    id: "r_nuevo",
+    nombre: "Velocista 001",
+    codigo_corto: "001",
+    tipo: "velocista",
+    firmware: null,
+    version_actual_id: null,
+    archivado: false,
+  });
+  render(
+    <ProveedorConsola>
+      <Selection />
+    </ProveedorConsola>,
+  );
+  fireEvent.click(await screen.findByRole("button", { name: "Crear primer robot" }));
+  expect(crear).toHaveBeenCalledWith({
+    nombre: "Velocista 001",
+    codigo_corto: "001",
+    tipo: "velocista",
+  });
+  expect(await screen.findByText(/Velocista 001 · velocista/)).toBeTruthy();
+  expect(selection).toHaveBeenCalledTimes(2);
 });
 
 it("el 503 muestra error y ofrece reintentar sin robots locales", async () => {

@@ -5,6 +5,7 @@ import type {
   PaginaCorridas,
   PaginaRobots,
   Salud,
+  RobotApi,
   RobotVersionApi,
 } from "../types/api";
 import type { RobotDef } from "../types/dominio";
@@ -49,6 +50,13 @@ export const api = {
     listar: (query = "") => pedir<PaginaRobots>(`/robots${query}`),
     version: (robotId: string, versionId: number) =>
       pedir<RobotVersionApi>(`/robots/${encodeURIComponent(robotId)}/versions/${versionId}`),
+    /** Registra un robot en la base de datos (POST /robots, HU-06). Sin versiones. */
+    crear: (datos: {
+      nombre: string;
+      codigo_corto: string;
+      tipo: "velocista" | "minisumo";
+      firmware?: string | null;
+    }) => pedir<RobotApi>("/robots", { method: "POST", body: JSON.stringify(datos) }),
     /** Lista completa y versión actual, sin sustituir datos del servidor por prototipos. */
     async selection(): Promise<RobotDef[]> {
       const records: PaginaRobots["items"] = [];

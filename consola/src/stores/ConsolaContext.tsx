@@ -13,6 +13,7 @@ import {
 } from "react";
 import type { Componente, Perfil, RobotDef, Setup } from "../types/dominio";
 import type { Corrida, Vuelta } from "../types/corridas";
+import type { RobotApi } from "../types/api";
 import { CAT, RANURAS } from "../datos/catalogo";
 import { PERFILES } from "../datos/reglamento";
 import { CTRL, PDEF, psum } from "../datos/controladores";
@@ -175,6 +176,10 @@ export interface Consola {
   // catálogo / armador
   setCatalog: (f: (c: Componente[]) => Componente[]) => void;
   setRobots: (f: (r: RobotDef[]) => RobotDef[]) => void;
+  /** True cuando la lista de robots viene de la API (producción), no de fixtures locales. */
+  apiMode: boolean;
+  /** Crea un robot en la base de datos (POST /robots) y refresca la lista. Solo en apiMode. */
+  crearRobot: () => Promise<RobotApi | null>;
   // log
   log: EventoLog[];
   registrar: (sys: string, msg: string, lv?: EventoLog["lv"]) => void;
@@ -213,6 +218,39 @@ export interface Consola {
 }
 
 const Contexto = createContext<Consola | null>(null);
+
+/** Estado vacío del armador: sin robots, ofrece crear el primero (persistido en la BD). */
+function PrimerRobot({ onCrear }: { onCrear: () => Promise<RobotApi | null> }) {
+  const [creando, setCreando] = useState(false);
+  return (
+    <div
+      style={{
+        minHeight: "60vh",
+        display: "grid",
+        gap: 12,
+        placeContent: "center",
+        textAlign: "center",
+      }}
+    >
+      <p role="status">No hay robots registrados en el armador.</p>
+      <button
+        type="button"
+        className="sb"
+        disabled={creando}
+        onClick={async () => {
+          setCreando(true);
+          try {
+            await onCrear();
+          } finally {
+            setCreando(false);
+          }
+        }}
+      >
+        {creando ? "Creando…" : "Crear primer robot"}
+      </button>
+    </div>
+  );
+}
 
 export function ProveedorConsola({
   children,
@@ -1052,6 +1090,29 @@ export function ProveedorConsola({
     [mostrarToast],
   );
 
+  const apiMode = !initialRobots;
+  const crearRobot = useCallback(async (): Promise<RobotApi | null> => {
+    const n = robots.filter((x) => x.tipo === "velocista").length + 1;
+    const etiqueta = String(n).padStart(3, "0");
+    try {
+      const creado = await api.robots.crear({
+        nombre: `Velocista ${etiqueta}`,
+        codigo_corto: etiqueta,
+        tipo: "velocista",
+      });
+      setRobotId(creado.id);
+      setRobotsRequest((value) => value + 1);
+      registrar("Armador", `Robot ${creado.nombre} creado y guardado en la base de datos`, "good");
+      mostrarToast(`Robot creado: ${creado.nombre}. Se guardó en la base de datos.`);
+      return creado;
+    } catch (e) {
+      mostrarToast(
+        `No se pudo crear el robot: ${e instanceof ErrorApi ? e.message : "sin conexión con la API"}`,
+      );
+      return null;
+    }
+  }, [robots, registrar, mostrarToast]);
+
   const valor: Consola = {
     tick,
     tab,
@@ -1117,6 +1178,8 @@ export function ProveedorConsola({
     toggleSenal,
     setCatalog,
     setRobots,
+    apiMode,
+    crearRobot,
     log: logRef.current,
     registrar,
     fichaId,
@@ -1158,7 +1221,7 @@ export function ProveedorConsola({
         </button>
       </div>
     );
-  if (!robot) return <p role="status">No hay robots registrados en el armador.</p>;
+  if (!robot) return <PrimerRobot onCrear={crearRobot} />;
   return <Contexto.Provider value={valor}>{children}</Contexto.Provider>;
 }
 
