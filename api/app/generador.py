@@ -209,8 +209,12 @@ def crear_una_simulada(session, robot_id: str = "v001", rng: random.Random | Non
 
 def main() -> int:
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    p.add_argument("--corridas", type=int, default=40, help="total de corridas simuladas a asegurar")
-    p.add_argument("--semilla", type=int, default=None, help="semilla aleatoria para reproducibilidad")
+    p.add_argument(
+        "--corridas", type=int, default=40, help="total de corridas simuladas a asegurar"
+    )
+    p.add_argument(
+        "--semilla", type=int, default=None, help="semilla aleatoria para reproducibilidad"
+    )
     a = p.parse_args()
     if a.corridas < 0:
         print("--corridas no puede ser negativo.", file=sys.stderr)

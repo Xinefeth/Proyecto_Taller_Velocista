@@ -85,7 +85,5 @@ def annotate_run(run_id: RunId, data: NotaCorrida, session: DbSession):
     summary="Listar las vueltas de una corrida",
     description="Vueltas de una corrida con sus sectores y segmentos.",
 )
-def list_run_laps(
-    run_id: RunId, session: DbSession, limit: PageLimit = 50, offset: PageOffset = 0
-):
+def list_run_laps(run_id: RunId, session: DbSession, limit: PageLimit = 50, offset: PageOffset = 0):
     return service.listar_vueltas(session, run_id, limit, offset)
