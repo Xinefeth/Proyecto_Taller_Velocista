@@ -182,20 +182,24 @@ def generar(session, objetivo: int, rng: random.Random) -> int:
 MARCA_CONSOLA = "consola-v1"
 
 
-def crear_una_simulada(session, rng: random.Random | None = None) -> int:
-    """Crea UNA corrida simulada nueva y la devuelve (id). La usa la consola al ARRANCAR.
+def crear_una_simulada(session, robot_id: str = "v001", rng: random.Random | None = None) -> int:
+    """Crea UNA corrida simulada nueva del robot indicado y la devuelve (id).
 
-    A diferencia de `generar`, no es idempotente: cada llamada crea una corrida. Queda
-    marcada con `contexto_snapshot["generador"] = MARCA_CONSOLA` y fecha actual, para no
-    confundirla con las sembradas y para que aparezca al principio del historial.
+    La usa la consola al ARRANCAR, con el robot seleccionado. A diferencia de `generar`, no es
+    idempotente: cada llamada crea una corrida. Queda marcada con
+    `contexto_snapshot["generador"] = MARCA_CONSOLA` y fecha actual, para no confundirla con las
+    sembradas y para que aparezca al principio del historial.
     """
     rng = rng or random.Random()
-    robot = armador.robot_para_escritura(session, "v001")
+    robot = armador.robot_para_escritura(session, robot_id)
     armador.comprobar_detenido(session, robot.id)
     controlador = session.get(Controlador, "pid")
     perfil = session.get(PerfilReglamento, "club")
     if robot.version_actual_id is None or controlador is None or perfil is None:
-        raise ValueError("Aplica las migraciones primero (alembic upgrade head)")
+        raise ValueError(
+            f"El robot {robot_id} necesita una versión activa, y deben existir el "
+            "controlador 'pid' y el perfil 'club'."
+        )
     ctrl = ControladorSalida.model_validate(controlador)
     setup = _setup_para_generador(session, robot, ctrl)
     return _crear_corrida(

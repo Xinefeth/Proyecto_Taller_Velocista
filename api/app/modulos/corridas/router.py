@@ -49,8 +49,11 @@ def list_runs(
         "una corrida nueva."
     ),
 )
-def create_simulated_run(session: DbSession):
-    return service.crear_corrida_simulada(session)
+def create_simulated_run(
+    session: DbSession,
+    robot_id: Annotated[str, Query(min_length=1, max_length=40)] = "v001",
+):
+    return service.crear_corrida_simulada(session, robot_id)
 
 
 @router.get(

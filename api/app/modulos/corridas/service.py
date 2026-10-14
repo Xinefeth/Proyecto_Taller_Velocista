@@ -152,12 +152,12 @@ def obtener_corrida(session, corrida_id):
     return _resumenes(session, [fila])[0]
 
 
-def crear_corrida_simulada(session):
-    """Crea y guarda una corrida simulada (la consola la invoca al ARRANCAR)."""
+def crear_corrida_simulada(session, robot_id="v001"):
+    """Crea y guarda una corrida simulada del robot indicado (la consola la invoca al ARRANCAR)."""
     from app.generador import crear_una_simulada
 
     try:
-        corrida_id = crear_una_simulada(session)
+        corrida_id = crear_una_simulada(session, robot_id)
         session.flush()
         salida = obtener_corrida(session, corrida_id)
         session.commit()

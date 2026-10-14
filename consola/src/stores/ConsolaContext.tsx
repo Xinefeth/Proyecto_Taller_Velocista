@@ -11,7 +11,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import type { Componente, Perfil, RobotDef, Setup } from "../types/dominio";
+import type { Componente, Perfil, Piezas, RobotDef, Setup, Specs } from "../types/dominio";
 import type { Corrida, Vuelta } from "../types/corridas";
 import type { RobotApi } from "../types/api";
 import { CAT, RANURAS } from "../datos/catalogo";
@@ -180,6 +180,24 @@ export interface Consola {
   apiMode: boolean;
   /** Crea un robot en la base de datos (POST /robots) y refresca la lista. Solo en apiMode. */
   crearRobot: () => Promise<RobotApi | null>;
+  /** Registra un componente en la base de datos (POST /components) y refresca el catálogo. */
+  crearComponente: (datos: {
+    tipo_id: string;
+    nombre: string;
+    precio: number;
+    masa_g: number;
+    tienda: string;
+    consumo_a?: number | null;
+    especificaciones: Specs;
+    stock: number;
+  }) => Promise<Componente | null>;
+  /** Guarda una nueva versión del robot (POST /robots/{id}/versions) y refresca la lista. */
+  guardarVersion: (
+    robotId: string,
+    versionBaseId: number | null,
+    piezas: Piezas,
+    nota: string,
+  ) => Promise<boolean>;
   // log
   log: EventoLog[];
   registrar: (sys: string, msg: string, lv?: EventoLog["lv"]) => void;
@@ -263,18 +281,39 @@ export function ProveedorConsola({
   const bump = useCallback(() => setTick((t) => (t + 1) % 1_000_000), []);
 
   const [tab, setTab] = useState<Tab>("control");
-  // Lo registrado a mano se conserva en el navegador hasta que exista la API (HU-02, HU-06).
-  const [catalog, setCatalogState] = useState<Componente[]>(() => cargarComponentes(CAT));
+  // En modo fixture el catálogo se conserva en el navegador; en producción es la API (GET /components).
+  const [catalog, setCatalogState] = useState<Componente[]>(() =>
+    initialRobots ? cargarComponentes(CAT) : [],
+  );
+  const [catalogRequest, setCatalogRequest] = useState(0);
   const [robots, setRobotsState] = useState<RobotDef[]>(() =>
     initialRobots ? cargarRobots(initialRobots) : [],
   );
   const [robotsLoading, setRobotsLoading] = useState(!initialRobots);
   const [robotsError, setRobotsError] = useState<string | null>(null);
   const [robotsRequest, setRobotsRequest] = useState(0);
-  useEffect(() => guardarComponentes(catalog, CAT), [catalog]);
+  useEffect(() => {
+    if (initialRobots) guardarComponentes(catalog, CAT);
+  }, [catalog, initialRobots]);
   useEffect(() => {
     if (initialRobots) guardarRobots(robots, initialRobots);
   }, [robots, initialRobots]);
+  // En producción el catálogo es la base de datos (GET /components), no archivos del frontend.
+  useEffect(() => {
+    if (initialRobots) return;
+    let vivo = true;
+    api.catalogo
+      .listar()
+      .then((items) => {
+        if (vivo) setCatalogState(items);
+      })
+      .catch(() => {
+        /* si falla, el catálogo queda vacío; el error de robots ya avisa de la caída */
+      });
+    return () => {
+      vivo = false;
+    };
+  }, [initialRobots, catalogRequest]);
   const [perfiles] = useState<Perfil[]>(() => clone(PERFILES));
 
   const [robotId, setRobotId] = useState("v001");
@@ -884,7 +923,7 @@ export function ProveedorConsola({
     // en la base de datos vía la API. No hay copia en memoria: la fuente es la base.
     if (live.current.source === "sim") {
       api.corridas
-        .crearSimulada()
+        .crearSimulada(live.current.robotId)
         .then((cor) =>
           registrar(
             "Corridas",
@@ -1112,6 +1151,63 @@ export function ProveedorConsola({
       return null;
     }
   }, [robots, registrar, mostrarToast]);
+  const crearComponente = useCallback(
+    async (datos: {
+      tipo_id: string;
+      nombre: string;
+      precio: number;
+      masa_g: number;
+      tienda: string;
+      consumo_a?: number | null;
+      especificaciones: Specs;
+      stock: number;
+    }): Promise<Componente | null> => {
+      try {
+        const creado = await api.catalogo.crear(datos);
+        setCatalogRequest((value) => value + 1);
+        registrar("Catálogo", `Componente ${creado.nm} guardado en la base de datos`, "good");
+        mostrarToast(`${creado.nm} quedó guardado en la base de datos.`);
+        return creado;
+      } catch (e) {
+        mostrarToast(
+          `No se pudo guardar el componente: ${e instanceof ErrorApi ? e.message : "sin conexión con la API"}`,
+        );
+        return null;
+      }
+    },
+    [registrar, mostrarToast],
+  );
+  const guardarVersion = useCallback(
+    async (
+      robotId: string,
+      versionBaseId: number | null,
+      piezas: Piezas,
+      nota: string,
+    ): Promise<boolean> => {
+      const apiPiezas: Record<string, { componente_id: string; cantidad: number }> = {};
+      for (const [k, p] of Object.entries(piezas)) {
+        if (p) apiPiezas[k] = { componente_id: p.id, cantidad: p.q };
+      }
+      try {
+        await api.robots.crearVersion(robotId, {
+          version_base_id: versionBaseId,
+          nota: nota || "Cambio de piezas",
+          estado: "Actual",
+          piezas: apiPiezas,
+        });
+        setRobotsRequest((value) => value + 1);
+        registrar("Armador", `Versión guardada en la base de datos · ${robotId}`, "good");
+        mostrarToast("Versión guardada en la base de datos. Las corridas nuevas usan esta versión.");
+        return true;
+      } catch (e) {
+        mostrarToast(
+          `No se pudo guardar la versión: ${e instanceof ErrorApi ? e.message : "sin conexión con la API"}`,
+        );
+        return false;
+      }
+    },
+    [registrar, mostrarToast],
+  );
 
   const valor: Consola = {
     tick,
@@ -1180,6 +1276,8 @@ export function ProveedorConsola({
     setRobots,
     apiMode,
     crearRobot,
+    crearComponente,
+    guardarVersion,
     log: logRef.current,
     registrar,
     fichaId,

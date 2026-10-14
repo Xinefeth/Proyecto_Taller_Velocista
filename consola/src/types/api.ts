@@ -75,3 +75,24 @@ export interface RobotVersionApi {
   estado: string;
   piezas: Record<string, { componente_id: string; cantidad: number }>;
 }
+
+/** Componente del catálogo devuelto por la API (EN-01 · ComponenteSalida). */
+export interface ComponenteApi {
+  id: string;
+  tipo_id: string;
+  nombre: string;
+  precio: number;
+  masa_g: number;
+  tienda: string;
+  consumo_a: number | null;
+  especificaciones: Record<string, string | number>;
+  stock: number;
+  archivado: boolean;
+}
+
+export interface PaginaComponentes {
+  items: ComponenteApi[];
+  total: number;
+  limite: number;
+  offset: number;
+}

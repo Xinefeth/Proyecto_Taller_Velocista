@@ -60,11 +60,17 @@ export function Armador() {
         ? `${sl.nm} ×${d[sl.k]!.q}`
         : `${sl.nm}: ${b ? b.nm : "sin pieza"}`;
     });
-    const { robot: actualizado, version: nv } = guardarPiezas(
-      r,
-      d,
-      diff.join("; ") || "Cambio de piezas",
-    );
+    const nota = diff.join("; ") || "Cambio de piezas";
+    if (c.apiMode) {
+      void c.guardarVersion(r.id, r.verActualId ?? null, d, nota).then((ok) => {
+        if (ok) {
+          setAbDraft(null);
+          setAbView(null);
+        }
+      });
+      return;
+    }
+    const { robot: actualizado, version: nv } = guardarPiezas(r, d, nota);
     c.setRobots((list) => list.map((x) => (x.id === r.id ? actualizado : x)));
     setAbDraft(null);
     setAbView(null);

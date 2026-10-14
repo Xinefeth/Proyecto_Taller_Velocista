@@ -73,6 +73,8 @@ export interface RobotDef {
   tipo: "velocista" | "minisumo";
   fw: string | null;
   ver: Version[];
+  /** ID en la BD de la versión actual (base para guardar la siguiente). null si no hay versión. */
+  verActualId?: number | null;
 }
 
 /** Reglas de una categoría, guardadas como datos (HU-10). `null` = libre. */

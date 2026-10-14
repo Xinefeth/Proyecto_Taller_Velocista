@@ -207,6 +207,25 @@ export function RegistroModal() {
       return;
     }
     const s = specVals();
+    if (c.apiMode) {
+      // Solo las specs llenas; la API rechaza cadenas vacías en campos numéricos.
+      const espec: Specs = {};
+      for (const [k, v] of Object.entries(s)) {
+        if (v !== "" && v !== null && v !== undefined) espec[k] = v;
+      }
+      void c.crearComponente({
+        tipo_id: valores.tipo,
+        nombre: nm,
+        precio: parsearNumero(valores.precio) ?? 0,
+        masa_g: parsearNumero(valores.masa) ?? 0,
+        tienda: valores.tienda.trim() || "—",
+        consumo_a: typeof espec.i === "number" ? espec.i : undefined,
+        especificaciones: espec,
+        stock: parsearNumero(valores.stock) ?? 0,
+      });
+      c.cerrarRegistro();
+      return;
+    }
     const id = siguienteIdComponente(c.catalog);
     c.setCatalog((list) => [
       ...list,
