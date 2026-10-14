@@ -1,0 +1,476 @@
+[
+  {
+    "id": "mcu",
+    "nombre": "Microcontrolador",
+    "color": "#FF5A78",
+    "campos": [
+      {
+        "clave": "mhz",
+        "etiqueta": "Frecuencia",
+        "tipo": "n",
+        "unidad": "MHz",
+        "obligatorio": false
+      },
+      {
+        "clave": "radio",
+        "etiqueta": "Radio",
+        "tipo": "t",
+        "unidad": "",
+        "obligatorio": false
+      },
+      {
+        "clave": "logica",
+        "etiqueta": "Lógica",
+        "tipo": "n",
+        "unidad": "V",
+        "obligatorio": false
+      },
+      {
+        "clave": "adc",
+        "etiqueta": "Entradas analógicas usables",
+        "tipo": "n",
+        "unidad": "",
+        "obligatorio": false
+      }
+    ],
+    "capacidades": [
+      {
+        "clave": "radio",
+        "campo": "radio",
+        "unidad": "",
+        "agregacion": "por_componente"
+      }
+    ]
+  },
+  {
+    "id": "exp",
+    "nombre": "Placa de expansión",
+    "color": "#A2A7B8",
+    "campos": [
+      {
+        "clave": "bornes",
+        "etiqueta": "Bornes",
+        "tipo": "n",
+        "unidad": "",
+        "obligatorio": false
+      },
+      {
+        "clave": "comercial",
+        "etiqueta": "PCB comercial",
+        "tipo": "t",
+        "unidad": "",
+        "obligatorio": false
+      }
+    ],
+    "capacidades": []
+  },
+  {
+    "id": "linea",
+    "nombre": "Sensor de línea",
+    "color": "#3DDC97",
+    "campos": [
+      {
+        "clave": "canales",
+        "etiqueta": "Canales",
+        "tipo": "n",
+        "unidad": "",
+        "obligatorio": false
+      },
+      {
+        "clave": "salida",
+        "etiqueta": "Salida",
+        "tipo": "t",
+        "unidad": "",
+        "obligatorio": false
+      },
+      {
+        "clave": "paso",
+        "etiqueta": "Paso",
+        "tipo": "n",
+        "unidad": "mm",
+        "obligatorio": false
+      },
+      {
+        "clave": "i",
+        "etiqueta": "Consumo",
+        "tipo": "n",
+        "unidad": "A",
+        "obligatorio": false
+      }
+    ],
+    "capacidades": [
+      {
+        "clave": "canales_linea",
+        "campo": "canales",
+        "unidad": "canales",
+        "agregacion": "suma_por_cantidad"
+      }
+    ]
+  },
+  {
+    "id": "mux",
+    "nombre": "Multiplexor",
+    "color": "#6CB6FF",
+    "campos": [
+      {
+        "clave": "canales",
+        "etiqueta": "Canales",
+        "tipo": "n",
+        "unidad": "",
+        "obligatorio": false
+      },
+      {
+        "clave": "tipo",
+        "etiqueta": "Tipo",
+        "tipo": "t",
+        "unidad": "",
+        "obligatorio": false
+      }
+    ],
+    "capacidades": []
+  },
+  {
+    "id": "motor",
+    "nombre": "Motor",
+    "color": "#B48CFF",
+    "campos": [
+      {
+        "clave": "v",
+        "etiqueta": "Voltaje nominal",
+        "tipo": "n",
+        "unidad": "V",
+        "obligatorio": false
+      },
+      {
+        "clave": "rpm",
+        "etiqueta": "RPM sin carga",
+        "tipo": "n",
+        "unidad": "rpm",
+        "obligatorio": false
+      },
+      {
+        "clave": "inom",
+        "etiqueta": "Corriente nominal",
+        "tipo": "n",
+        "unidad": "A",
+        "obligatorio": false
+      },
+      {
+        "clave": "ipico",
+        "etiqueta": "Corriente de arranque",
+        "tipo": "n",
+        "unidad": "A",
+        "obligatorio": false
+      },
+      {
+        "clave": "red",
+        "etiqueta": "Reducción",
+        "tipo": "t",
+        "unidad": "",
+        "obligatorio": false
+      },
+      {
+        "clave": "familia",
+        "etiqueta": "Familia",
+        "tipo": "t",
+        "unidad": "",
+        "obligatorio": false
+      }
+    ],
+    "capacidades": [
+      {
+        "clave": "pwm_pct",
+        "min": -100,
+        "max": 100,
+        "unidad": "%",
+        "agregacion": "por_componente"
+      }
+    ]
+  },
+  {
+    "id": "driver",
+    "nombre": "Driver",
+    "color": "#FFCB57",
+    "campos": [
+      {
+        "clave": "canales",
+        "etiqueta": "Canales",
+        "tipo": "n",
+        "unidad": "",
+        "obligatorio": false
+      },
+      {
+        "clave": "icont",
+        "etiqueta": "Corriente continua",
+        "tipo": "n",
+        "unidad": "A",
+        "obligatorio": false
+      },
+      {
+        "clave": "ipico",
+        "etiqueta": "Corriente pico",
+        "tipo": "n",
+        "unidad": "A",
+        "obligatorio": false
+      },
+      {
+        "clave": "vmin",
+        "etiqueta": "Voltaje mínimo",
+        "tipo": "n",
+        "unidad": "V",
+        "obligatorio": false
+      },
+      {
+        "clave": "vmax",
+        "etiqueta": "Voltaje máximo",
+        "tipo": "n",
+        "unidad": "V",
+        "obligatorio": false
+      }
+    ],
+    "capacidades": []
+  },
+  {
+    "id": "bat",
+    "nombre": "Batería",
+    "color": "#3DDC97",
+    "campos": [
+      {
+        "clave": "celdas",
+        "etiqueta": "Celdas",
+        "tipo": "n",
+        "unidad": "S",
+        "obligatorio": false
+      },
+      {
+        "clave": "mah",
+        "etiqueta": "Capacidad",
+        "tipo": "n",
+        "unidad": "mAh",
+        "obligatorio": false
+      },
+      {
+        "clave": "c",
+        "etiqueta": "Descarga",
+        "tipo": "n",
+        "unidad": "C",
+        "obligatorio": false
+      },
+      {
+        "clave": "vmax",
+        "etiqueta": "Voltaje a carga completa",
+        "tipo": "n",
+        "unidad": "V",
+        "obligatorio": false
+      }
+    ],
+    "capacidades": [
+      {
+        "clave": "bateria_v",
+        "campo": "vmax",
+        "unidad": "V",
+        "agregacion": "por_componente"
+      }
+    ]
+  },
+  {
+    "id": "reg",
+    "nombre": "Regulador",
+    "color": "#A2A7B8",
+    "campos": [
+      {
+        "clave": "vout",
+        "etiqueta": "Salida",
+        "tipo": "n",
+        "unidad": "V",
+        "obligatorio": false
+      },
+      {
+        "clave": "imax",
+        "etiqueta": "Corriente máxima",
+        "tipo": "n",
+        "unidad": "A",
+        "obligatorio": false
+      },
+      {
+        "clave": "tipo",
+        "etiqueta": "Tipo",
+        "tipo": "t",
+        "unidad": "",
+        "obligatorio": false
+      }
+    ],
+    "capacidades": []
+  },
+  {
+    "id": "rueda",
+    "nombre": "Rueda",
+    "color": "#A2A7B8",
+    "campos": [
+      {
+        "clave": "diam",
+        "etiqueta": "Diámetro",
+        "tipo": "n",
+        "unidad": "mm",
+        "obligatorio": false
+      },
+      {
+        "clave": "material",
+        "etiqueta": "Material",
+        "tipo": "t",
+        "unidad": "",
+        "obligatorio": false
+      }
+    ],
+    "capacidades": []
+  },
+  {
+    "id": "chasis",
+    "nombre": "Chasis",
+    "color": "#A2A7B8",
+    "campos": [
+      {
+        "clave": "ancho",
+        "etiqueta": "Ancho",
+        "tipo": "n",
+        "unidad": "mm",
+        "obligatorio": false
+      },
+      {
+        "clave": "largo",
+        "etiqueta": "Largo",
+        "tipo": "n",
+        "unidad": "mm",
+        "obligatorio": false
+      },
+      {
+        "clave": "material",
+        "etiqueta": "Material",
+        "tipo": "t",
+        "unidad": "",
+        "obligatorio": false
+      }
+    ],
+    "capacidades": []
+  },
+  {
+    "id": "sw",
+    "nombre": "Interruptor",
+    "color": "#5E6374",
+    "campos": [
+      {
+        "clave": "tipo",
+        "etiqueta": "Tipo",
+        "tipo": "t",
+        "unidad": "",
+        "obligatorio": false
+      }
+    ],
+    "capacidades": []
+  },
+  {
+    "id": "enc",
+    "nombre": "Encoder",
+    "color": "#6CB6FF",
+    "campos": [
+      {
+        "clave": "cpr",
+        "etiqueta": "Pulsos por vuelta (CPR)",
+        "tipo": "n",
+        "unidad": "pulsos/vuelta",
+        "obligatorio": false
+      },
+      {
+        "clave": "tipo",
+        "etiqueta": "Tipo",
+        "tipo": "t",
+        "unidad": "",
+        "obligatorio": false
+      }
+    ],
+    "capacidades": [
+      {
+        "clave": "pulsos_por_vuelta",
+        "campo": "cpr",
+        "unidad": "pulsos/vuelta",
+        "agregacion": "por_componente"
+      }
+    ]
+  },
+  {
+    "id": "imu",
+    "nombre": "IMU",
+    "color": "#6CB6FF",
+    "campos": [
+      {
+        "clave": "ejes",
+        "etiqueta": "Ejes",
+        "tipo": "n",
+        "unidad": "",
+        "obligatorio": false
+      },
+      {
+        "clave": "bus",
+        "etiqueta": "Bus",
+        "tipo": "t",
+        "unidad": "",
+        "obligatorio": false
+      }
+    ],
+    "capacidades": [
+      {
+        "clave": "ejes",
+        "campo": "ejes",
+        "unidad": "ejes",
+        "agregacion": "por_componente"
+      }
+    ]
+  },
+  {
+    "id": "turb",
+    "nombre": "Turbina",
+    "color": "#FF2D55",
+    "campos": [
+      {
+        "clave": "diam",
+        "etiqueta": "Diámetro",
+        "tipo": "n",
+        "unidad": "mm",
+        "obligatorio": false
+      },
+      {
+        "clave": "v",
+        "etiqueta": "Voltaje",
+        "tipo": "n",
+        "unidad": "V",
+        "obligatorio": false
+      },
+      {
+        "clave": "imax",
+        "etiqueta": "Corriente",
+        "tipo": "n",
+        "unidad": "A",
+        "obligatorio": false
+      }
+    ],
+    "capacidades": [
+      {
+        "clave": "potencia_electrica_max_w",
+        "campos": [
+          "v",
+          "imax"
+        ],
+        "operacion": "producto",
+        "unidad": "W",
+        "agregacion": "suma_por_cantidad"
+      },
+      {
+        "clave": "potencia_control_pct",
+        "min": 0,
+        "max": 100,
+        "unidad": "%",
+        "agregacion": "por_componente"
+      }
+    ]
+  }
+]

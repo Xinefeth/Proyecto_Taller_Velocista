@@ -134,9 +134,7 @@ export const api = {
       const records: ComponenteApi[] = [];
       let page: PaginaComponentes;
       do {
-        page = await pedir<PaginaComponentes>(
-          `/components?limite=200&offset=${records.length}`,
-        );
+        page = await pedir<PaginaComponentes>(`/components?limite=200&offset=${records.length}`);
         records.push(...page.items);
       } while (page.items.length > 0 && records.length < page.total);
       return records.map(aComponente);

@@ -1197,7 +1197,9 @@ export function ProveedorConsola({
         });
         setRobotsRequest((value) => value + 1);
         registrar("Armador", `Versión guardada en la base de datos · ${robotId}`, "good");
-        mostrarToast("Versión guardada en la base de datos. Las corridas nuevas usan esta versión.");
+        mostrarToast(
+          "Versión guardada en la base de datos. Las corridas nuevas usan esta versión.",
+        );
         return true;
       } catch (e) {
         mostrarToast(
