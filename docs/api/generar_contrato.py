@@ -153,6 +153,16 @@ SCHEMAS["Evento"] = objeto({**SCHEMAS["EventoCrear"]["properties"], "id": entero
 SCHEMAS["Salud"] = objeto({"api": enum("ok"), "base_de_datos": enum("ok", "sin conexión"), "entorno": texto(), "dispositivos": objeto({"velocista": BOOL, "cronometro": BOOL})})
 SCHEMAS["Comando"] = objeto({"tipo": texto(), "datos": {"type": "object"}}, ["tipo"], description="Comandos y datos se rigen por EN-02. La validación dinámica depende del dispositivo y su manifiesto.")
 SCHEMAS["ComandoEnviado"] = objeto({"seq": entero(), "mensaje": texto(200)})
+SCHEMAS["ComandoAceptado"] = objeto({"seq": entero(), "mensaje": texto(300)})
+SCHEMAS["ConfiguracionGuardada"] = objeto({"modo": nullable(enum("prueba", "competencia")), "linea": nullable(enum("negra", "blanca")), "actualizado_en": nullable(FECHA)})
+SCHEMAS["CambioModo"] = objeto({"modo": {}}, [], description="modo es libre a propósito: un valor inválido se rechaza con comando_invalido.")
+SCHEMAS["CambioLinea"] = objeto({"color": {}}, [], description="color es libre a propósito: un valor inválido se rechaza con comando_invalido.")
+SCHEMAS["PresetAplicar"] = objeto({"controlador_id": ID, "preset_id": texto(40, minLength=1)})
+SCHEMAS["ParametroReconciliado"] = objeto({**SCHEMAS["ParametroControlador"]["properties"], "valor": nullable({"type": "number"})}, SCHEMAS["ParametroControlador"]["required"])
+SCHEMAS["ControladorReconciliado"] = objeto({"id": ID, "nombre": texto(), "nombre_corto": texto(30), "descripcion": texto(500), "parametros": lista(ref("ParametroReconciliado"), minItems=1), "presets": {"type": "object", "additionalProperties": PARAMETROS}, "activo": BOOL})
+SCHEMAS["CatalogoReconciliado"] = objeto({"controlador_activo": nullable(ID), "controladores": lista(ref("ControladorReconciliado"))})
+SCHEMAS["ParametroVivo"] = objeto({"nombre": texto(), "valor": {"type": "number"}})
+SCHEMAS["ConfiguracionViva"] = objeto({"controlador_activo": ID, "parametros": lista(ref("ParametroVivo"))})
 
 # Reutiliza el esquema EN-02, trasladando referencias internas al documento OpenAPI.
 manifiesto = json.loads((RAIZ / "docs/contrato/schemas/velocista.manifiesto.schema.json").read_text(encoding="utf-8"))
@@ -196,6 +206,9 @@ PERFIL = {"id": "mr4s", "competencia": "Muchik Rumble 4", "etiqueta": "MR4", "ca
 VUELTA = {"id": 1, "corrida_id": 1, "numero": 1, "tiempo_s": 10.2, "duracion_s": 10.2, "tiempo_interno_ms": 10203, "error_acumulado": 0.8, "lineas_perdidas": 0, "bateria_v": 7.8, "termino": True, "fuente_tiempo": "meta", "motivo": "", "sectores_s": [3.4, 3.2, 3.6], "segmentos": [{"tipo": "recta", "duracion_s": 1.5, "angulo_grados": 0, "error_acumulado": 0.1}]}
 CORRIDA = {"id": 1, "numero": 1, "robot_id": "v001", "version_id": 1, "setup_id": 1, "perfil_id": "mr4s", "controlador_id": "pid", "parametros": P, "fecha": FECHA_EJEMPLO, "fuente": "robot", "modo": "prueba", "linea": "negra", "compensa_bateria": True, "potencia_turbina_pct": 0, "tiempo_s": 10.2, "termino": True, "error_acumulado": 0.8, "bateria_v": 7.8, "sectores_s": [3.4, 3.2, 3.6], "fuente_tiempo": "meta", "nota": "Batería cargada", "j": 11.8}
 EVENTO = {"id": 1, "fecha": FECHA_EJEMPLO, "sistema": "Armador", "nivel": "info", "mensaje": "Versión v0 registrada"}
+CMD_ACC = {"seq": 7, "mensaje": "Enviado. La confirmación del robot llega a la consola como ack."}
+CTRL_REC = {"controlador_activo": "pid", "controladores": [{**CTRL, "activo": True, "parametros": [{**p, "valor": CTRL["presets"]["Base"].get(p["clave"], p["min"])} for p in CTRL["parametros"]]}]}
+CONFIG_VIVA = {"controlador_activo": "pid", "parametros": [{"nombre": p["nombre"], "valor": CTRL["presets"]["Base"].get(p["clave"], p["min"])} for p in CTRL["parametros"]]}
 
 SPEC = {"openapi": "3.1.0", "info": {"title": "APAEC Lab · Contrato REST EN-01", "version": "1.0.0", "description": "Contrato de diseño para revisión (DO-03 / EN-01). x-estado distingue rutas existentes de propuestas. No reemplaza /openapi.json de la API ejecutable. Guardar un setup en BD no confirma su aplicación ni persistencia en el firmware."}, "servers": [{"url": "http://localhost:8000", "description": "Desarrollo"}, {"url": "http://192.168.50.10:8000", "description": "Red de pista"}], "paths": {}, "components": {"schemas": SCHEMAS}, "security": []}
 HTTP = ["# EN-01 · Ejemplos independientes, con datos de muestra precargados.", "# Rutas propuestas: consultar x-estado en openapi.json antes de ejecutar.", "@base = http://localhost:8000", ""]
