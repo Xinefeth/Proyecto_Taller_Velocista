@@ -10,15 +10,32 @@ from alembic.migration import MigrationContext
 from alembic.operations import Operations
 from sqlalchemy import func, inspect, select, text, update
 from sqlalchemy.exc import IntegrityError, OperationalError
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import Session
 
 from app.core.db import Base, engine, get_session
 from app.modulos.armador import service
 from app.modulos.armador.models import Ranura, Robot, Version, VersionComponente
 from app.modulos.catalogo.models import Componente, Inventario
-from app.semillas import main
+from tests.integration import _seed
 
 pytestmark = pytest.mark.integracion
+
+
+def _cargar_migracion(nombre):
+    archivo = Path(__file__).resolve().parents[2] / f"migrations/versions/{nombre}.py"
+    spec = importlib.util.spec_from_file_location(nombre, archivo)
+    modulo = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(modulo)
+    return modulo
+
+
+def sembrar_robot(session):
+    """Inserta solo la identificación de v001 (sin versiones), como el antiguo seed de robot."""
+    session.add(
+        Robot(id="v001", nombre="Velocista 001", codigo_corto="001", tipo="velocista",
+              firmware="0.3.1")
+    )
+    session.flush()
 
 
 @pytest.fixture()
@@ -30,10 +47,7 @@ def robot_bd(requiere_db):
         migraciones = []
         with Operations.context(MigrationContext.configure(conn)):
             for nombre in ["0002_catalogo", "0003_robot", "0004_versiones", "0005_operaciones"]:
-                archivo = Path(__file__).resolve().parents[2] / f"migrations/versions/{nombre}.py"
-                spec = importlib.util.spec_from_file_location(nombre, archivo)
-                modulo = importlib.util.module_from_spec(spec)
-                spec.loader.exec_module(modulo)
+                modulo = _cargar_migracion(nombre)
                 modulo.upgrade()
                 migraciones.append(modulo)
             yield conn, migraciones[-2]
@@ -66,10 +80,10 @@ def test_migracion_robot_coincide_con_modelos(robot_bd):
     assert compare_metadata(contexto, Base.metadata) == []
 
 
-def test_robot_semilla_repetida_conserva_cambios(robot_bd):
+def test_robot_sembrado_tiene_identificacion(robot_bd):
     conn, _ = robot_bd
     with Session(bind=conn, join_transaction_mode="create_savepoint") as session:
-        assert service.cargar_robot_inicial(session) == 1
+        sembrar_robot(session)
         session.commit()
         robot = session.get(Robot, "v001")
         assert (robot.nombre, robot.codigo_corto, robot.tipo, robot.firmware) == (
@@ -80,14 +94,6 @@ def test_robot_semilla_repetida_conserva_cambios(robot_bd):
         )
         assert robot.version_actual_id is None
         assert robot.archivado is False
-        robot.nombre = "Nombre editado"
-        robot.firmware = "0.4.0"
-        robot.archivado = True
-        session.commit()
-        assert service.cargar_robot_inicial(session) == 0
-        session.commit()
-        session.expire_all()
-        assert (robot.nombre, robot.firmware, robot.archivado) == ("Nombre editado", "0.4.0", True)
         assert service.contar_robots(session) == 1
 
 
@@ -118,21 +124,6 @@ def test_robot_rechaza_datos_invalidos(robot_bd, cambio):
                     )
                 )
         assert service.contar_robots(session) == 0
-
-
-def test_conflicto_codigo_revierte_lote_completo(robot_bd, monkeypatch, capsys):
-    conn, _ = robot_bd
-    with Session(bind=conn, join_transaction_mode="create_savepoint") as session:
-        session.add(Robot(id="otro", nombre="Existente", codigo_corto="001", tipo="minisumo"))
-        session.commit()
-    monkeypatch.setattr(
-        "app.semillas.SessionLocal",
-        sessionmaker(bind=conn, join_transaction_mode="create_savepoint"),
-    )
-    assert main() == 1
-    assert "Se revirtió la carga" in capsys.readouterr().err
-    assert conn.scalar(select(func.count()).select_from(Componente)) == 0
-    assert conn.scalar(select(func.count()).select_from(Robot)) == 1
 
 
 def test_downgrade_robot_conserva_catalogo(robot_bd):
@@ -171,7 +162,7 @@ def cliente_robot(cliente, robot_bd):
 def test_consultar_robot_semilla(cliente_robot, robot_bd):
     conn, _ = robot_bd
     with Session(bind=conn, join_transaction_mode="create_savepoint") as session:
-        service.cargar_robot_inicial(session)
+        sembrar_robot(session)
         session.commit()
     respuesta = cliente_robot.get("/api/robots/v001")
     assert respuesta.status_code == 200
@@ -250,17 +241,18 @@ def test_robots_base_caida(cliente, monkeypatch, url, funcion):
 
 
 @pytest.fixture()
-def historial_inicial(robot_bd, monkeypatch):
+def historial_inicial(robot_bd):
+    """Siembra el catálogo + v001 con su historial aplicando el dataset de prueba _seed.
+
+    El op-proxy de Alembic sigue activo (robot_bd cede dentro de su Operations.context), así que la
+    siembra de datos puede correr sobre el mismo esquema temporal.
+    """
     conn, _ = robot_bd
-    monkeypatch.setattr(
-        "app.semillas.SessionLocal",
-        sessionmaker(bind=conn, join_transaction_mode="create_savepoint"),
-    )
-    assert main() == 0
+    _seed.upgrade()
     return conn
 
 
-def test_historial_inicial_y_repeticion_conservan_instantaneas(historial_inicial):
+def test_historial_inicial_conserva_instantaneas(historial_inicial):
     with Session(bind=historial_inicial, join_transaction_mode="create_savepoint") as session:
         versiones = session.scalars(select(Version).order_by(Version.ordinal)).all()
         assert [(v.ordinal, v.estado) for v in versiones] == [(0, "Descartada"), (1, "Actual")]
@@ -268,21 +260,10 @@ def test_historial_inicial_y_repeticion_conservan_instantaneas(historial_inicial
         assert session.get(Robot, "v001").version_actual_id == versiones[1].id
         assert session.scalar(select(func.count()).select_from(Ranura)) == 14
         assert session.scalar(select(func.count()).select_from(VersionComponente)) == 19
-        actual_id = versiones[1].id
-        pieza = session.get(VersionComponente, (actual_id, "linea"))
+        pieza = session.get(VersionComponente, (versiones[1].id, "linea"))
         original = dict(pieza.componente_snapshot)
         assert pieza.cantidad == 2
         assert "stock" not in original and "archivado" not in original
-        session.get(Componente, "c05").precio = 80
-        session.get(Inventario, "c05").stock = 7
-        versiones[1].nota = "Nota editada"
-        session.commit()
-    assert main() == 0
-    with Session(bind=historial_inicial, join_transaction_mode="create_savepoint") as session:
-        assert session.scalar(select(func.count()).select_from(Version)) == 2
-        assert session.get(VersionComponente, (actual_id, "linea")).componente_snapshot == original
-        assert session.get(Version, actual_id).nota == "Nota editada"
-        assert session.get(Inventario, "c05").stock == 7
 
 
 def test_inventario_demanda_solo_version_vigente(cliente_robot, historial_inicial):
@@ -390,7 +371,7 @@ def test_version_de_otro_robot_no_es_accesible(cliente_robot, historial_inicial)
 def test_historial_robot_sin_versiones_y_no_existente(cliente_robot, robot_bd):
     conn, _ = robot_bd
     with Session(bind=conn, join_transaction_mode="create_savepoint") as session:
-        service.cargar_robot_inicial(session)
+        sembrar_robot(session)
         session.commit()
     respuesta = cliente_robot.get("/api/robots/v001/versions")
     assert respuesta.status_code == 200

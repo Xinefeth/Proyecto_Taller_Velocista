@@ -20,5 +20,20 @@ services:
       timeout: 3s
       retries: 10
 
+  # Interfaz web para ver/editar las tablas. Solo accesible desde esta maquina
+  # (127.0.0.1). Abrir http://localhost:8080 con los datos del .env.
+  adminer:
+    image: adminer:4
+    container_name: apaec-adminer
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: db
+      ADMINER_DESIGN: dracula
+
 volumes:
   apaec-pgdata:

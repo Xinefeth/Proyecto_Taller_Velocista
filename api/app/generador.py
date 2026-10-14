@@ -6,7 +6,7 @@ Desde api/:
     python -m app.generador --corridas 20 --semilla 7   # reproducible
 
 Escribe directamente en la base (no pasa por el gateway WebSocket): catálogo y
-robot deben existir, así que ejecuta antes `python -m app.semillas`.
+robot deben existir, así que aplica antes las migraciones (alembic upgrade head).
 
 Es idempotente por TOPE: cuenta las corridas que ya marcó este generador y solo
 crea las que falten hasta `--corridas`. Así un re-deploy en la nube no duplica.
@@ -171,7 +171,7 @@ def generar(session, objetivo: int, rng: random.Random) -> int:
     controlador = session.get(Controlador, "pid")
     perfil = session.get(PerfilReglamento, "club")
     if robot.version_actual_id is None or controlador is None or perfil is None:
-        raise ValueError("Ejecuta python -m app.semillas primero")
+        raise ValueError("Aplica las migraciones primero (alembic upgrade head)")
     ctrl = ControladorSalida.model_validate(controlador)
     setup = _setup_para_generador(session, robot, ctrl)
     for _ in range(faltan):
@@ -195,7 +195,7 @@ def crear_una_simulada(session, rng: random.Random | None = None) -> int:
     controlador = session.get(Controlador, "pid")
     perfil = session.get(PerfilReglamento, "club")
     if robot.version_actual_id is None or controlador is None or perfil is None:
-        raise ValueError("Ejecuta python -m app.semillas primero")
+        raise ValueError("Aplica las migraciones primero (alembic upgrade head)")
     ctrl = ControladorSalida.model_validate(controlador)
     setup = _setup_para_generador(session, robot, ctrl)
     return _crear_corrida(
@@ -217,7 +217,7 @@ def main() -> int:
             creadas = generar(session, a.corridas, rng)
     except (SQLAlchemyError, ErrorDeNegocio, ValueError) as exc:
         print(
-            f"No se pudo generar datos ({exc}). Verifica migraciones, semillas y que v001 esté "
+            f"No se pudo generar datos ({exc}). Verifica las migraciones y que v001 esté "
             "activo y detenido. Se revirtió la carga.",
             file=sys.stderr,
         )

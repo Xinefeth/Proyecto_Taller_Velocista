@@ -4,7 +4,6 @@ from datetime import UTC, datetime
 from uuid import uuid4
 
 from sqlalchemy import func, select, update
-from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
 from app.core import actividad
@@ -29,27 +28,6 @@ def crear_robot(session: Session, datos: RobotCrear) -> RobotSalida:
     except Exception:
         session.rollback()
         raise
-
-
-def cargar_robot_inicial(session: Session) -> int:
-    """Carga la identificación de v001 sin versiones ni modificación de existentes.
-
-    Datos de consola/src/datos/robots.ts. El llamador confirma la transacción.
-    Un código 001 ocupado por otro ID produce conflicto y revierte toda la carga.
-    """
-    nuevo = session.scalar(
-        insert(Robot)
-        .values(
-            id="v001",
-            nombre="Velocista 001",
-            codigo_corto="001",
-            tipo="velocista",
-            firmware="0.3.1",
-        )
-        .on_conflict_do_nothing(index_elements=[Robot.id])
-        .returning(Robot.id)
-    )
-    return int(nuevo is not None)
 
 
 def contar_robots(session: Session) -> int:
@@ -124,66 +102,6 @@ def obtener_version(session: Session, robot_id: str, version_id: int) -> dict:
     if version is None:
         raise ErrorDeNegocio(404, "version_no_encontrada", "La versión no existe para ese robot")
     return _serializar_versiones(session, [version])[0]
-
-
-def cargar_versiones_iniciales(session: Session, datos: dict) -> tuple[int, int]:
-    """Carga v0/v1 solo si v001 no tiene historial; nunca reconstruye uno existente.
-
-    El llamador confirma todo el lote. Las instantáneas provienen de las fichas
-    persistidas al cargar; las fechas del prototipo tienen precisión de día.
-    """
-    nuevas_ranuras = session.scalars(
-        insert(Ranura)
-        .values(datos["ranuras"])
-        .on_conflict_do_nothing(index_elements=[Ranura.id])
-        .returning(Ranura.id)
-    ).all()
-    robot = session.get(Robot, "v001", with_for_update=True)
-    if robot is None:
-        raise ValueError("Debe existir Velocista 001 antes de cargar sus versiones")
-    if robot.version_actual_id is not None or session.scalar(
-        select(func.count()).select_from(Version).where(Version.robot_id == robot.id)
-    ):
-        return len(nuevas_ranuras), 0
-    ranuras = {r.id: r for r in session.scalars(select(Ranura))}
-    for v in datos["versiones"]:
-        version = Version(
-            robot_id=robot.id,
-            ordinal=v["ordinal"],
-            fecha=datetime.fromisoformat(v["fecha"]),
-            nota=v["nota"],
-            estado=v["estado"],
-        )
-        session.add(version)
-        session.flush()
-        for clave, pieza in v["piezas"].items():
-            ficha = catalogo.obtener_componente(session, pieza["componente_id"])
-            ranura = ranuras[clave]
-            if ficha["tipo_id"] != ranura.tipo_id:
-                raise ValueError(f"Tipo incompatible en la ranura {clave}")
-            if pieza["cantidad"] < 1 or (not ranura.cantidad_editable and pieza["cantidad"] != 1):
-                raise ValueError(f"Cantidad incompatible en la ranura {clave}")
-            snapshot = {k: val for k, val in ficha.items() if k not in {"stock", "archivado"}}
-            for campo in ("precio", "masa_g", "consumo_a"):
-                if snapshot[campo] is not None:
-                    snapshot[campo] = float(snapshot[campo])
-            session.add(
-                VersionComponente(
-                    version_id=version.id,
-                    ranura_id=clave,
-                    componente_id=ficha["id"],
-                    cantidad=pieza["cantidad"],
-                    componente_snapshot=snapshot,
-                )
-            )
-        if v["estado"] == "Actual" and any(
-            r.obligatoria and r.id not in v["piezas"] for r in ranuras.values()
-        ):
-            raise ValueError("La versión Actual necesita todas las ranuras obligatorias")
-        session.flush()
-        robot.version_actual_id = version.id
-    session.flush()
-    return len(nuevas_ranuras), len(datos["versiones"])
 
 
 def listar_ranuras(session):

@@ -9,16 +9,19 @@ from app.core.config import RAIZ_REPO, settings
 from app.core.db import db_disponible
 from app.core.errores import registrar_manejadores
 from app.core.registro import configurar_logging, registrar_middleware
-from app.gateway import aplicacion, comandos, configuracion, ws
+from app.gateway import aplicacion, comandos, ws
 from app.modulos.armador.router import router as armador
 from app.modulos.auth.router import router as auth
 from app.modulos.catalogo.router import router as catalogo
+from app.modulos.configuracion.router import router as configuracion
 from app.modulos.corridas.router import router as corridas
 from app.modulos.eventos.router import router as eventos
 from app.modulos.optimizacion.router import router as optimizacion
 from app.modulos.reglamento.router import router as reglamento
 
-ROUTERS_MODULOS = [auth, catalogo, armador, reglamento, corridas, optimizacion, eventos]
+ROUTERS_MODULOS = [
+    auth, catalogo, armador, reglamento, corridas, optimizacion, configuracion, eventos
+]
 
 OPENAPI_TAGS = [
     {"name": "system", "description": "Salud de la API, la base de datos y los dispositivos conectados."},
@@ -68,6 +71,7 @@ def create_app() -> FastAPI:
     actividad.robot_running = ws.robot_running
     actividad.manifiesto_velocista = aplicacion.manifiesto_velocista
     actividad.aplicar_setup_velocista = aplicacion.aplicar_setup_velocista
+    actividad.enviar_config_velocista = aplicacion.aplicar_config_velocista
     configurar_logging(settings.log_level)
     app = FastAPI(
         title="APAEC Lab API",
@@ -106,7 +110,6 @@ def create_app() -> FastAPI:
     # Canales de entrada
     app.include_router(ws.router)
     app.include_router(comandos.router)
-    app.include_router(configuracion.router)
     # Módulos del monolito modular
     for router in ROUTERS_MODULOS:
         app.include_router(router)

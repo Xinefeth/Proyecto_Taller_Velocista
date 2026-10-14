@@ -11,6 +11,7 @@ from app.core.db import Base
 # Importa aquí los models.py de cada módulo para que autogenerate los vea.
 from app.modulos.armador import models as _armador  # noqa: F401, E402
 from app.modulos.catalogo import models as _catalogo  # noqa: F401, E402
+from app.modulos.configuracion import models as _configuracion  # noqa: F401, E402
 from app.modulos.corridas import models as _corridas  # noqa: F401, E402
 from app.modulos.eventos import models as _eventos  # noqa: F401, E402
 from app.modulos.optimizacion import models as _optimizacion  # noqa: F401, E402

@@ -7,6 +7,7 @@ completitud específica de aplicar (check_setup_completo) y el manejo de caída 
 """
 
 from app.contract import Manifest
+from app.contract.robot import Status
 from app.contract.validation import check_setup_completo
 from app.core.errores import ErrorDeNegocio
 from app.gateway import ws
@@ -46,6 +47,41 @@ async def aplicar_setup_velocista(
         return await ws.send("velocista", "setup", modelo.model_dump(exclude_none=True))
     except (KeyError, RuntimeError, OSError) as e:
         # El enlace se cayó entre la validación y el envío: el dispositivo ya no recibe.
+        raise ErrorDeNegocio(
+            503,
+            "dispositivo_no_disponible",
+            "No se pudo entregar el comando: el dispositivo dejó de responder",
+        ) from e
+
+
+def validar_cambio_config(ultimo_estado: Status | None) -> None:
+    """Guarda de HU-18: rechazar cambios de modo/linea durante una carrera en modo prueba.
+
+    validar_comando ya bloquea competencia+running con bloqueado_competencia; esta guarda extiende
+    el bloqueo a prueba+running, que la vía cruda permite. Es específica de modo/linea.
+    """
+    e = ultimo_estado
+    if e and e.estado == "running" and e.modo == "prueba":
+        raise ErrorDeNegocio(
+            409,
+            "ocupado",
+            "El robot está corriendo en prueba; detén la carrera para cambiar modo o línea",
+        )
+
+
+async def aplicar_config_velocista(robot_id: str, tipo: str, datos: dict) -> int:
+    """Valida un cambio de modo/linea contra el manifiesto + estado vivos del robot pedido y lo
+    envía. Devuelve el seq. Guardas, en orden: comando_invalido → sin_manifiesto →
+    comando_desconocido → bloqueado_competencia → ocupado → dispositivo_no_disponible."""
+    conexion = ws.connections.get("velocista")
+    coincide = conexion is not None and conexion.manifest is not None and conexion.manifest.id == robot_id
+    manifiesto = conexion.manifest if coincide else None
+    ultimo_estado = conexion.last_status if coincide else None
+    modelo = validar_comando("velocista", tipo, datos, manifiesto, ultimo_estado)
+    validar_cambio_config(ultimo_estado)  # guarda más estricta de HU-18 (ocupado)
+    try:
+        return await ws.send("velocista", tipo, modelo.model_dump(exclude_none=True))
+    except (KeyError, RuntimeError, OSError) as e:
         raise ErrorDeNegocio(
             503,
             "dispositivo_no_disponible",

@@ -28,3 +28,12 @@ async def aplicar_setup_velocista(
     raise ErrorDeNegocio(
         409, "sin_manifiesto", "El robot no está conectado o aún no envió su manifiesto"
     )
+
+
+async def enviar_config_velocista(robot_id: str, tipo: str, datos: dict) -> int:
+    """Valida un cambio de modo/linea contra el manifiesto vivo y lo envía. Cableado en app.main."""
+    from app.core.errores import ErrorDeNegocio
+
+    raise ErrorDeNegocio(
+        409, "sin_manifiesto", "El robot no está conectado o aún no envió su manifiesto"
+    )

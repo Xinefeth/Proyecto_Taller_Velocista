@@ -1,6 +1,6 @@
 """Carga opcional y repetible de una corrida SIMULADA para probar el CRUD.
 
-Desde api/: python -m app.demo. Requiere migraciones y semillas aplicadas.
+Desde api/: python -m app.demo. Requiere las migraciones aplicadas (alembic upgrade head).
 No envía comandos ni representa mediciones del robot físico.
 """
 
@@ -33,7 +33,7 @@ def cargar_demo(session):
     controlador = session.get(Controlador, "pid")
     perfil = session.get(PerfilReglamento, "club")
     if robot.version_actual_id is None or controlador is None or perfil is None:
-        raise ValueError("Ejecuta python -m app.semillas primero")
+        raise ValueError("Aplica las migraciones primero (alembic upgrade head)")
     ctrl = ControladorSalida.model_validate(controlador)
     parametros = ctrl.presets["Base"]
     validar_parametros(ctrl.parametros, parametros)
@@ -108,7 +108,7 @@ def main():
             corrida_id, nueva = cargar_demo(session)
     except (SQLAlchemyError, ErrorDeNegocio, ValueError):
         print(
-            "No se pudo cargar la demo. Verifica migraciones, semillas y que v001 esté activo y detenido. Se revirtió la carga.",
+            "No se pudo cargar la demo. Verifica las migraciones y que v001 esté activo y detenido. Se revirtió la carga.",
             file=sys.stderr,
         )
         return 1

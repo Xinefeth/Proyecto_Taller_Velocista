@@ -3,7 +3,6 @@
 from decimal import Decimal
 
 from sqlalchemy import func, select
-from sqlalchemy.dialects.postgresql import insert
 
 from app.core import actividad
 from app.core.errores import ErrorDeNegocio
@@ -24,21 +23,6 @@ from app.modulos.optimizacion.schemas import (
 
 def listar_controladores(session):
     return list(session.scalars(select(Controlador).order_by(Controlador.id)))
-
-
-def cargar_controladores(session, datos):
-    for dato in datos:
-        modelo = ControladorSalida.model_validate(dato)
-        for preset in modelo.presets.values():
-            validar_parametros(modelo.parametros, preset)
-    return len(
-        session.scalars(
-            insert(Controlador)
-            .values(datos)
-            .on_conflict_do_nothing(index_elements=[Controlador.id])
-            .returning(Controlador.id)
-        ).all()
-    )
 
 
 def validar_parametros(definiciones, parametros):

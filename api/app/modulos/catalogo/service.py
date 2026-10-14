@@ -4,7 +4,6 @@ from typing import Any
 from uuid import uuid4
 
 from sqlalchemy import String, cast, func, or_, select, update
-from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
 from app.core.errores import ErrorDeNegocio
@@ -124,52 +123,8 @@ def archivar_componente(session: Session, componente_id: str) -> None:
         raise
 
 
-def cargar_tipos_iniciales(session: Session, tipos: list[dict[str, Any]]) -> int:
-    """Inserta solo IDs ausentes; el llamador confirma o revierte la transacción.
-
-    ON CONFLICT protege también frente a dos cargas simultáneas. Los datos de
-    un tipo existente se conservan, aunque difieran del archivo de semillas.
-    """
-    if not tipos:
-        return 0
-    consulta = (
-        insert(TipoComponente)
-        .values(tipos)
-        .on_conflict_do_nothing(index_elements=[TipoComponente.id])
-        .returning(TipoComponente.id)
-    )
-    return len(session.scalars(consulta).all())
-
-
 def listar_tipos(session: Session) -> list[TipoComponente]:
     return list(session.scalars(select(TipoComponente).order_by(TipoComponente.id)))
-
-
-def cargar_componentes_iniciales(
-    session: Session, componentes: list[dict[str, Any]]
-) -> tuple[int, int]:
-    """Completa catálogo e inventario sin cambiar fichas ni stocks existentes.
-
-    El llamador confirma la transacción de ambas tablas. Si una ficha ya existe
-    pero no tiene inventario, se crea únicamente su inventario inicial.
-    """
-    if not componentes:
-        return 0, 0
-    fichas = [{k: v for k, v in c.items() if k != "stock"} for c in componentes]
-    nuevos = session.scalars(
-        insert(Componente)
-        .values(fichas)
-        .on_conflict_do_nothing(index_elements=[Componente.id])
-        .returning(Componente.id)
-    ).all()
-    existencias = [{"componente_id": c["id"], "stock": c["stock"]} for c in componentes]
-    inventarios = session.scalars(
-        insert(Inventario)
-        .values(existencias)
-        .on_conflict_do_nothing(index_elements=[Inventario.componente_id])
-        .returning(Inventario.componente_id)
-    ).all()
-    return len(nuevos), len(inventarios)
 
 
 def listar_inventario(session: Session, *, limite: int = 50, offset: int = 0) -> dict[str, Any]:

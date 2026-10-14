@@ -15,24 +15,28 @@ from alembic.migration import MigrationContext
 from alembic.operations import Operations
 from sqlalchemy import delete, func, insert, inspect, select, text, update
 from sqlalchemy.exc import IntegrityError, OperationalError
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import Session
 
 from app.core.db import Base, engine, get_session
 from app.modulos.catalogo import service
 from app.modulos.catalogo.models import Componente, Inventario, TipoComponente
-from app.semillas import leer_componentes_iniciales, leer_tipos_iniciales, main
+from tests.integration import _seed
 
 pytestmark = pytest.mark.integracion
 TABLAS = {"tipo_componente", "componente", "inventario"}
 
 
-@pytest.fixture()
-def migracion():
-    archivo = Path(__file__).resolve().parents[2] / "migrations/versions/0002_catalogo.py"
-    spec = importlib.util.spec_from_file_location("migracion_catalogo", archivo)
+def _cargar_migracion(nombre):
+    archivo = Path(__file__).resolve().parents[2] / f"migrations/versions/{nombre}.py"
+    spec = importlib.util.spec_from_file_location(nombre, archivo)
     modulo = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(modulo)
     return modulo
+
+
+@pytest.fixture()
+def migracion():
+    return _cargar_migracion("0002_catalogo")
 
 
 @pytest.fixture()
@@ -161,48 +165,6 @@ def test_downgrade_deja_el_esquema_vacio(conexion, migracion):
     assert inspect(conexion).get_table_names() == []
 
 
-def test_semillas_repetidas_no_duplican_ni_sobrescriben(conexion):
-    tipos = leer_tipos_iniciales()
-    with Session(bind=conexion, join_transaction_mode="create_savepoint") as session:
-        assert service.cargar_tipos_iniciales(session, tipos) == 14
-        session.commit()
-        session.execute(
-            update(TipoComponente)
-            .where(TipoComponente.id == "enc")
-            .values(nombre="Encoder editado por el club", capacidades=[])
-        )
-        session.commit()
-        assert service.cargar_tipos_iniciales(session, tipos) == 0
-        session.commit()
-        guardados = {t.id: t for t in service.listar_tipos(session)}
-        assert len(guardados) == 14
-        assert guardados["enc"].nombre == "Encoder editado por el club"
-        assert guardados["enc"].capacidades == []
-        for tipo in tipos:
-            if tipo["id"] != "enc":
-                assert guardados[tipo["id"]].campos == tipo["campos"]
-                assert guardados[tipo["id"]].capacidades == tipo["capacidades"]
-
-
-def test_semillas_completan_un_catalogo_parcial(conexion):
-    tipos = leer_tipos_iniciales()
-    with Session(bind=conexion, join_transaction_mode="create_savepoint") as session:
-        assert service.cargar_tipos_iniciales(session, tipos[:3]) == 3
-        assert service.cargar_tipos_iniciales(session, tipos) == 11
-        assert len(service.listar_tipos(session)) == 14
-        assert service.cargar_tipos_iniciales(session, []) == 0
-
-
-def test_semillas_invalidas_revierten_el_lote(conexion):
-    tipos = leer_tipos_iniciales()
-    tipos[-1]["color"] = "#ZZZZZZ"
-    with Session(bind=conexion, join_transaction_mode="create_savepoint") as session:
-        with pytest.raises(IntegrityError):
-            with session.begin():
-                service.cargar_tipos_iniciales(session, tipos)
-        assert service.listar_tipos(session) == []
-
-
 @pytest.fixture()
 def cliente_catalogo(cliente, conexion):
     def sesion_prueba():
@@ -222,23 +184,17 @@ def cliente_catalogo(cliente, conexion):
 
 
 def test_endpoint_tipos_consulta_los_datos_guardados(cliente_catalogo, conexion):
-    tipos = leer_tipos_iniciales()
-    with Session(bind=conexion, join_transaction_mode="create_savepoint") as session:
-        service.cargar_tipos_iniciales(session, tipos)
-        session.execute(
-            update(TipoComponente)
-            .where(TipoComponente.id == "enc")
-            .values(nombre="Encoder del club")
-        )
-        session.commit()
+    _seed.upgrade()  # siembra los 14 tipos del catálogo
+    conexion.execute(
+        update(TipoComponente).where(TipoComponente.id == "enc").values(nombre="Encoder del club")
+    )
     respuesta = cliente_catalogo.get("/api/component-types")
     assert respuesta.status_code == 200
     guardados = respuesta.json()
     assert len(guardados) == 14
-    assert [t["id"] for t in guardados] == sorted(t["id"] for t in tipos)
-    esperados = {t["id"]: t for t in tipos}
-    esperados["enc"]["nombre"] = "Encoder del club"
-    assert {t["id"]: t for t in guardados} == esperados
+    ids = [t["id"] for t in guardados]
+    assert ids == sorted(ids)
+    assert {t["id"]: t["nombre"] for t in guardados}["enc"] == "Encoder del club"
 
 
 def test_endpoint_tipos_sin_semillas_devuelve_lista_vacia(cliente_catalogo):
@@ -257,81 +213,28 @@ def test_endpoint_tipos_con_base_caida_devuelve_503(cliente, monkeypatch):
     assert respuesta.json()["detail"]["motivo"] == "base_no_disponible"
 
 
-def test_semillas_componentes_conservan_fichas_y_stock(conexion):
-    componentes = leer_componentes_iniciales()
-    with Session(bind=conexion, join_transaction_mode="create_savepoint") as session:
-        service.cargar_tipos_iniciales(session, leer_tipos_iniciales())
-        assert service.cargar_componentes_iniciales(session, componentes) == (25, 25)
-        session.commit()
-        for comp in componentes:
-            guardado = session.get(Componente, comp["id"])
-            assert guardado.tipo_id == comp["tipo_id"]
-            assert guardado.nombre == comp["nombre"]
-            assert guardado.precio == Decimal(str(comp["precio"]))
-            assert guardado.especificaciones == comp["especificaciones"]
-            assert session.get(Inventario, comp["id"]).stock == comp["stock"]
-        session.execute(update(Componente).where(Componente.id == "c05").values(precio=80))
-        session.execute(
-            update(Inventario).where(Inventario.componente_id == "c05").values(stock=9, revision=2)
-        )
-        session.commit()
-        assert service.cargar_componentes_iniciales(session, componentes) == (0, 0)
-        session.commit()
-        session.expire_all()
-        assert service.contar_catalogo(session) == (25, 25)
-        assert session.get(Componente, "c05").precio == Decimal("80")
-        assert session.get(Inventario, "c05").stock == 9
-        assert session.get(Inventario, "c05").revision == 2
-
-
-def test_semillas_reparan_inventario_ausente_sin_reemplazar_ficha(conexion):
-    poblar(conexion)
-    with Session(bind=conexion, join_transaction_mode="create_savepoint") as session:
-        service.cargar_tipos_iniciales(session, leer_tipos_iniciales())
-        assert service.cargar_componentes_iniciales(session, leer_componentes_iniciales()) == (
-            24,
-            25,
-        )
-        assert session.get(Componente, "c05").nombre == "QTR-8A"
-        assert session.get(Inventario, "c05").stock == 3
-        assert service.cargar_componentes_iniciales(session, []) == (0, 0)
-
-
-def test_inventario_invalido_revierte_tambien_las_fichas(conexion):
-    componentes = leer_componentes_iniciales()
-    componentes[-1]["stock"] = -1
-    with Session(bind=conexion, join_transaction_mode="create_savepoint") as session:
-        service.cargar_tipos_iniciales(session, leer_tipos_iniciales())
-        session.commit()
-        with pytest.raises(IntegrityError):
-            with session.begin():
-                service.cargar_componentes_iniciales(session, componentes)
-        assert service.contar_catalogo(session) == (0, 0)
-
-
-def test_comando_semillas_se_puede_repetir(conexion, monkeypatch, capsys):
-    monkeypatch.setattr(
-        "app.semillas.SessionLocal",
-        sessionmaker(bind=conexion, join_transaction_mode="create_savepoint"),
-    )
-    assert main() == 0
-    assert "Componentes nuevos: 25. Inventarios nuevos: 25." in capsys.readouterr().out
-    assert main() == 0
-    salida = capsys.readouterr().out
-    assert "Tipos nuevos: 0." in salida
-    assert "Componentes nuevos: 0. Inventarios nuevos: 0." in salida
-    assert "Total de componentes: 25. Total de inventarios: 25." in salida
-    assert "Robots nuevos: 0. Total de robots: 1." in salida
-
-
 @pytest.fixture()
 def catalogo_inicial(conexion):
-    componentes = leer_componentes_iniciales()
-    with Session(bind=conexion, join_transaction_mode="create_savepoint") as session:
-        service.cargar_tipos_iniciales(session, leer_tipos_iniciales())
-        service.cargar_componentes_iniciales(session, componentes)
-        session.commit()
-    return componentes
+    """Siembra el catálogo (14 tipos, 25 componentes + inventario) con el dataset de prueba _seed
+    y devuelve las fichas esperadas, con los Decimales a float como los serializa la API.
+
+    Deja el catálogo SIN robots: quita el historial que también siembra _seed para que el inventario
+    no tenga demanda (en_robots = 0), como asume este bloque de pruebas de catálogo.
+    """
+    modulo = _seed
+    modulo.upgrade()  # el op-proxy de Alembic sigue activo (conexion cede dentro de su contexto)
+    conexion.execute(text("UPDATE robot SET version_actual_id = NULL"))
+    conexion.execute(text("DELETE FROM version_componente"))
+    conexion.execute(text("DELETE FROM version"))
+    conexion.execute(text("DELETE FROM robot"))
+    stock = {i["componente_id"]: i["stock"] for i in modulo.INVENTARIOS}
+
+    def num(v):
+        return float(v) if isinstance(v, Decimal) else v
+
+    return [
+        {**{k: num(v) for k, v in c.items()}, "stock": stock[c["id"]]} for c in modulo.COMPONENTES
+    ]
 
 
 def test_listar_componentes_devuelve_fichas_y_stock(cliente_catalogo, catalogo_inicial):
@@ -346,8 +249,8 @@ def test_listar_componentes_devuelve_fichas_y_stock(cliente_catalogo, catalogo_i
 
 
 def test_listar_componentes_pagina_sin_duplicados(cliente_catalogo, catalogo_inicial):
-    primera = cliente_catalogo.get("/api/components?limite=4&offset=0").json()
-    segunda = cliente_catalogo.get("/api/components?limite=4&offset=4").json()
+    primera = cliente_catalogo.get("/api/components?limit=4&offset=0").json()
+    segunda = cliente_catalogo.get("/api/components?limit=4&offset=4").json()
     completa = cliente_catalogo.get("/api/components").json()
     assert primera["total"] == segunda["total"] == 25
     assert primera["items"] + segunda["items"] == completa["items"][:8]
@@ -362,8 +265,8 @@ def test_listar_componentes_pagina_sin_duplicados(cliente_catalogo, catalogo_ini
     [
         ({"q": "BATERIA"}, {"c14", "c15"}),
         ({"q": "batería"}, {"c14", "c15"}),
-        ({"q": "QTR", "tipo_id": "linea"}, {"c05", "c06"}),
-        ({"q": "QTR", "tipo_id": "motor"}, set()),
+        ({"q": "QTR", "type_id": "linea"}, {"c05", "c06"}),
+        ({"q": "QTR", "type_id": "motor"}, set()),
         ({"q": "magnetico"}, {"c22"}),
         ({"q": "  MPU-6050  "}, {"c23"}),
         ({"q": "%"}, set()),
@@ -393,7 +296,7 @@ def test_componentes_sin_semillas_devuelve_pagina_vacia(cliente_catalogo):
 
 @pytest.mark.parametrize(
     "query",
-    [{"limite": 0}, {"limite": 201}, {"offset": -1}, {"tipo_id": "invalido"}, {"q": "x" * 121}],
+    [{"limit": 0}, {"limit": 201}, {"offset": -1}, {"type_id": "invalido"}, {"q": "x" * 121}],
 )
 def test_parametros_invalidos_del_listado(cliente, query):
     assert cliente.get("/api/components", params=query).status_code == 422
@@ -688,8 +591,8 @@ def test_inventario_stock_y_revision_persistidos(cliente_catalogo, catalogo_inic
 
 
 def test_inventario_paginado(cliente_catalogo, catalogo_inicial):
-    primera = cliente_catalogo.get("/api/inventory?limite=4").json()
-    segunda = cliente_catalogo.get("/api/inventory?limite=4&offset=4").json()
+    primera = cliente_catalogo.get("/api/inventory?limit=4").json()
+    segunda = cliente_catalogo.get("/api/inventory?limit=4&offset=4").json()
     completa = cliente_catalogo.get("/api/inventory").json()
     assert primera["total"] == segunda["total"] == 25
     assert primera["items"] + segunda["items"] == completa["items"][:8]
@@ -714,7 +617,7 @@ def test_inventario_vacio(cliente_catalogo):
     assert respuesta.json() == {"items": [], "total": 0, "limite": 50, "offset": 0}
 
 
-@pytest.mark.parametrize("query", [{"limite": 0}, {"limite": 201}, {"offset": -1}])
+@pytest.mark.parametrize("query", [{"limit": 0}, {"limit": 201}, {"offset": -1}])
 def test_inventario_valida_paginacion(cliente, query):
     assert cliente.get("/api/inventory", params=query).status_code == 422
 

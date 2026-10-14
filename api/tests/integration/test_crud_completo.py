@@ -26,14 +26,14 @@ from app.modulos.catalogo import service as catalogo
 from app.modulos.catalogo.schemas import InventarioActualizar
 from app.modulos.corridas.models import Corrida, SectorVuelta, SegmentoVuelta, Vuelta
 from app.modulos.optimizacion.models import Setup
-from app.semillas import main
+from tests.integration import _seed
 
 pytestmark = pytest.mark.integracion
 P = {"kp": 0.6, "ki": 0, "kd": 2.5, "base": 45, "max": 86}
 
 
 @pytest.fixture()
-def entorno(requiere_db, monkeypatch):
+def entorno(requiere_db):
     esquema = f"prueba_crud_{uuid4().hex}"
     try:
         with engine.begin() as conn:
@@ -46,18 +46,19 @@ def entorno(requiere_db, monkeypatch):
                     "0003_robot",
                     "0004_versiones",
                     "0005_operaciones",
+                    "0007_configuracion",
                 ]:
                     ruta = Path(__file__).resolve().parents[2] / f"migrations/versions/{nombre}.py"
                     spec = importlib.util.spec_from_file_location(nombre, ruta)
                     modulo = importlib.util.module_from_spec(spec)
                     spec.loader.exec_module(modulo)
                     modulo.upgrade()
+                # La BD de produccion arranca vacia; aqui sembramos el dataset solo para la prueba.
+                _seed.upgrade()
         factory = sessionmaker(
             bind=engine.execution_options(schema_translate_map={None: esquema}),
             expire_on_commit=False,
         )
-        monkeypatch.setattr("app.semillas.SessionLocal", factory)
-        assert main() == 0
 
         def sesion():
             with factory() as session:
@@ -290,14 +291,14 @@ def test_corridas_resumen_filtros_nota_vueltas_y_bloqueos(entorno):
     r = c.get(f"/api/runs/{cid}")
     assert r.status_code == 200, r.text
     assert r.json()["j"] == 12 and r.json()["tiempo_s"] == 10
-    assert c.get("/api/runs?fuente=robot").json()["total"] == 0
-    assert c.get("/api/runs?fuente=sim&robot_id=v001&controlador_id=pid").json()["total"] == 1
+    assert c.get("/api/runs?source=robot").json()["total"] == 0
+    assert c.get("/api/runs?source=sim&robot_id=v001&controller_id=pid").json()["total"] == 1
     assert c.get("/api/runs?offset=99").json()["items"] == []
     assert (
         c.patch(f"/api/runs/{cid}", json={"nota": "Buen agarre"}).json()["nota"]
         == "Buen agarre"
     )
-    vueltas = c.get(f"/api/runs/{cid}/laps?limite=2").json()
+    vueltas = c.get(f"/api/runs/{cid}/laps?limit=2").json()
     assert vueltas["total"] == 3 and len(vueltas["items"]) == 2
     assert vueltas["items"][0]["sectores_s"] == [3]
     assert vueltas["items"][0]["segmentos"][0]["tipo"] == "recta"
