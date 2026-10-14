@@ -46,7 +46,12 @@ class BusinessError(BaseModel):
 
     model_config = ConfigDict(
         json_schema_extra={
-            "example": {"detail": {"motivo": "no_calibrado", "detalle": "Calibra el robot antes de arrancar"}}
+            "example": {
+                "detail": {
+                    "motivo": "no_calibrado",
+                    "detalle": "Calibra el robot antes de arrancar",
+                }
+            }
         }
     )
 

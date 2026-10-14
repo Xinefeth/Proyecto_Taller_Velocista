@@ -21,7 +21,10 @@ from app.modulos.reglamento.router import router as reglamento
 ROUTERS_MODULOS = [auth, catalogo, armador, reglamento, corridas, optimizacion, eventos]
 
 OPENAPI_TAGS = [
-    {"name": "system", "description": "Salud de la API, la base de datos y los dispositivos conectados."},
+    {
+        "name": "system",
+        "description": "Salud de la API, la base de datos y los dispositivos conectados.",
+    },
     {
         "name": "devices",
         "description": (

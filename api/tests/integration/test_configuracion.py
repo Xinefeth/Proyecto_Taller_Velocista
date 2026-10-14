@@ -116,7 +116,11 @@ def test_cambiar_linea_aceptado_si_no_corre(cliente, robot, estado_):
     [
         (None, 409, "sin_manifiesto"),
         (ConexionFalsa(None, None), 409, "sin_manifiesto"),
-        (ConexionFalsa(MANIFIESTO, status(estado="running", modo="competencia")), 409, "bloqueado_competencia"),
+        (
+            ConexionFalsa(MANIFIESTO, status(estado="running", modo="competencia")),
+            409,
+            "bloqueado_competencia",
+        ),
         (ConexionFalsa(MANIFIESTO, status(estado="running", modo="prueba")), 409, "ocupado"),
     ],
 )

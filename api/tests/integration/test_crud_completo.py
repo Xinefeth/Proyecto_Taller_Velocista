@@ -293,10 +293,7 @@ def test_corridas_resumen_filtros_nota_vueltas_y_bloqueos(entorno):
     assert c.get("/api/runs?fuente=robot").json()["total"] == 0
     assert c.get("/api/runs?fuente=sim&robot_id=v001&controlador_id=pid").json()["total"] == 1
     assert c.get("/api/runs?offset=99").json()["items"] == []
-    assert (
-        c.patch(f"/api/runs/{cid}", json={"nota": "Buen agarre"}).json()["nota"]
-        == "Buen agarre"
-    )
+    assert c.patch(f"/api/runs/{cid}", json={"nota": "Buen agarre"}).json()["nota"] == "Buen agarre"
     vueltas = c.get(f"/api/runs/{cid}/laps?limite=2").json()
     assert vueltas["total"] == 3 and len(vueltas["items"]) == 2
     assert vueltas["items"][0]["sectores_s"] == [3]

@@ -2011,7 +2011,7 @@ GET {{base}}/api/dispositivos/velocista/manifiesto
 
 # Respuesta: 200
 # {
-#   "contrato": "1.0",
+#   "contrato": "2.0",
 #   "id": "v001",
 #   "tipo_robot": "velocista",
 #   "firmware": "0.2.0",
@@ -2233,9 +2233,9 @@ GET {{base}}/api/dispositivos/velocista/manifiesto
 #   ],
 #   "controlador_activo": "pid",
 #   "comandos": [
-#     "calibrar",
-#     "arrancar",
-#     "detener",
+#     "calibrate",
+#     "start",
+#     "stop",
 #     "setup",
 #     "modo",
 #     "linea",
