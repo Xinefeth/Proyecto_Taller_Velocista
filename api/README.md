@@ -43,22 +43,16 @@ Desde `api/`, en PowerShell:
 ```powershell
 .\.venv\Scripts\alembic.exe upgrade head
 .\.venv\Scripts\alembic.exe current
-.\.venv\Scripts\python.exe -m app.semillas
 ```
 
-Head esperado: `0005_operaciones`. Las semillas agregan lo ausente y conservan
-precios, stock, revisiones, robots e historial existentes. Incluyen 14 tipos,
-25 componentes, 14 ranuras, Velocista 001 con v0/v1, 3 controladores y 4 perfiles.
-Las fechas del prototipo tienen precisión de día y se cargan a medianoche de Lima;
-las instantáneas iniciales usan las fichas persistidas al cargar, no precios históricos comprobados.
+Head esperado: `0007_configuracion`. Las migraciones solo crean/actualizan el
+esquema: la base **arranca vacía**, sin catálogo ni robots precargados. Todo el
+estado se carga a mano por la API/consola (así se comprueba que la persistencia
+funciona).
 
-Para disponer de una corrida **simulada** y un setup de ejemplo (opcional y repetible):
-
-```powershell
-.\.venv\Scripts\python.exe -m app.demo
-```
-
-La demo informa el ID para consultar corrida y vueltas; no envía comandos físicos.
+La corrida **simulada** de ejemplo (`python -m app.demo`) requiere que ya existan
+en la base un robot `v001` con versión activa, controladores y perfiles; sobre una
+base vacía no tiene datos sobre los que trabajar.
 La guía [pruebas-crud.md](../docs/api/pruebas-crud.md) permite probar el conjunto en Swagger.
 
 ### Verificación

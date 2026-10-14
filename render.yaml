@@ -34,6 +34,3 @@ services:
         generateValue: true
       - key: DEVICE_TOKEN_CRONOMETRO
         generateValue: true
-      # Cuántas corridas simuladas asegura el generador en cada arranque.
-      - key: SEED_CORRIDAS
-        value: "40"

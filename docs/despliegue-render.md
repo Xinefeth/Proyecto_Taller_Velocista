@@ -1,11 +1,12 @@
 # Despliegue en la nube (Render)
 
-El sistema funcionando por internet, poblado con **datos simulados**, sin
-depender del hardware físico. Esto convive con el [despliegue en pista](despliegue-pista.md):
-el mismo código corre en ambos; solo cambia a qué host apuntan los dispositivos.
+El sistema funcionando por internet, sin depender del hardware físico. Arranca con
+la **base de datos vacía**: los datos (catálogo, robots, etc.) se cargan a mano por
+la consola/API. Esto convive con el [despliegue en pista](despliegue-pista.md): el
+mismo código corre en ambos; solo cambia a qué host apuntan los dispositivos.
 
 > Para una competencia real sin internet, usa el despliegue en pista. La nube es
-> para acceso remoto, pruebas y mostrar el sistema con datos generados.
+> para acceso remoto y para mostrar el sistema.
 
 ## Qué se despliega
 
@@ -17,22 +18,20 @@ Un **único servicio web** (imagen Docker) que sirve, bajo la misma URL:
 
 Más una base **PostgreSQL** gestionada por Render.
 
-## Datos simulados (en lugar del robot físico)
+## Arranque: solo el esquema (BD vacía)
 
-En cada arranque, el contenedor ejecuta de forma idempotente:
+En cada arranque, el contenedor ejecuta:
 
-1. `alembic upgrade head` — crea/actualiza las tablas.
-2. `python -m app.semillas` — catálogo, inventario y robot `v001`.
-3. `python -m app.generador --corridas $SEED_CORRIDAS` — asegura N corridas
-   simuladas con sus vueltas, sectores y segmentos.
+1. `alembic upgrade head` — crea/actualiza las tablas (solo esquema, sin sembrar
+   ningún dato).
+2. `uvicorn app.main:app` — levanta la API, los WebSocket y la consola.
 
-Todas las corridas generadas quedan con `fuente="sim"` y
-`contexto_snapshot["generador"] = "generador-v1"`, así nunca se confunden con
-corridas reales. El generador trabaja **por tope**: si ya existen N, no crea más
-(los re-deploys no duplican).
+La base queda **vacía**: no se precarga catálogo, robots ni corridas. Todo lo que
+aparezca en la consola es lo que cargues tú por la API/consola, que es la forma de
+comprobar que la persistencia funciona de verdad.
 
-Para datos **en vivo** por el camino real (gateway WS), ejecuta el robot falso
-apuntando a la nube:
+Si quieres telemetría **en vivo** por el camino real (gateway WS), primero crea un
+robot en la consola y luego ejecuta el robot falso apuntando a la nube:
 
 ```bash
 python api/herramientas/robot_falso.py --url wss://TU-APP.onrender.com/ws/robot --token <DEVICE_TOKEN_VELOCISTA>
@@ -64,7 +63,6 @@ Con `render.yaml` en la raíz, Render crea servicio + base de un tirón:
 | `CORS_ORIGINS` | vacío (la consola se sirve del mismo origen) |
 | `DEVICE_TOKEN_VELOCISTA` | token del robot (si usarás el robot falso) |
 | `DEVICE_TOKEN_CRONOMETRO` | token del cronómetro |
-| `SEED_CORRIDAS` | nº de corridas simuladas a asegurar (ej. `40`) |
 
 `config.py` acepta `DATABASE_URL` (formato `postgres://` o `postgresql://`) y la
 normaliza al driver `postgresql+psycopg://`. En local se siguen usando las

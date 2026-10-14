@@ -27,12 +27,12 @@ RUN pip install -r requirements.lock
 
 # Código de la API. RAIZ_REPO = parents[3] de app/core/config.py = /app
 COPY api/ /app/api/
-# Datos iniciales que leen las semillas (RAIZ_REPO/docs/datos/*.json).
+# docs/ es necesario en runtime: el gateway lee docs/contrato/ejemplos/velocista.manifiesto.json.
 COPY docs/ /app/docs/
 # La consola compilada va donde main.py la monta: /app/consola/dist
 COPY --from=consola /repo/consola/dist /app/consola/dist
 
 EXPOSE 8000
-# Al arrancar: migra, carga datos base, asegura datos simulados y levanta uvicorn.
-# Todo es idempotente, así que reinicios y re-deploys no duplican nada.
-CMD ["sh", "-c", "alembic upgrade head && python -m app.semillas && python -m app.generador --corridas ${SEED_CORRIDAS:-40} && exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+# Al arrancar: aplica las migraciones (solo esquema; la BD arranca VACIA, sin seed) y
+# levanta uvicorn. Todo lo persistente se carga a mano por la API/consola.
+CMD ["sh", "-c", "alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
