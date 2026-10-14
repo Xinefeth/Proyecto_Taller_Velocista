@@ -93,7 +93,7 @@ def list_reconciled_controllers(robot_id: RobotId, session: DbSession):
 @router.get(
     "/robots/{robot_id}/configuracion",
     response_model=ConfiguracionViva,
-    operation_id="getRobotConfig",
+    operation_id="getRobotControllerConfig",
     summary="Configuración cargada ahora en el robot",
     description=(
         "Proyecta el manifiesto vivo sobre el controlador activo: devuelve `controlador_activo` y "
