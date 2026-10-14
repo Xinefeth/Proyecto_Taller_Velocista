@@ -75,3 +75,53 @@ export interface RobotVersionApi {
   estado: string;
   piezas: Record<string, { componente_id: string; cantidad: number }>;
 }
+
+/** Componente del catálogo devuelto por la API (GET /api/components · ComponenteSalida). */
+export interface ApiComponent {
+  id: string;
+  tipo_id: string;
+  nombre: string;
+  precio: number;
+  masa_g: number;
+  tienda: string;
+  consumo_a: number | null;
+  especificaciones: Record<string, string | number>;
+  stock: number;
+  archivado: boolean;
+}
+
+/** Cuerpo de POST /api/components (ComponenteCrear). */
+export interface ApiComponentCreate {
+  tipo_id: string;
+  nombre: string;
+  precio: number;
+  masa_g: number;
+  tienda: string;
+  consumo_a: number | null;
+  especificaciones: Record<string, string | number>;
+  stock: number;
+}
+
+export interface ApiComponentPage {
+  items: ApiComponent[];
+  total: number;
+  limite: number;
+  offset: number;
+}
+
+/** Existencias de un componente devueltas por la API (GET /api/inventory · InventarioSalida). */
+export interface ApiInventory {
+  componente_id: string;
+  stock: number;
+  en_robots: number;
+  disponible: number;
+  faltante: number;
+  revision: number;
+}
+
+export interface ApiInventoryPage {
+  items: ApiInventory[];
+  total: number;
+  limite: number;
+  offset: number;
+}

@@ -6,6 +6,9 @@ import { api, ErrorApi } from "../services/api";
 beforeEach(() => {
   vi.stubGlobal("requestAnimationFrame", () => 0);
   vi.stubGlobal("cancelAnimationFrame", () => {});
+  // El catálogo (EN-25) se prueba aparte: aquí responde vacío para aislar la selección de robots.
+  vi.spyOn(api.catalog, "loadAll").mockResolvedValue([]);
+  vi.spyOn(api.catalog, "loadInventory").mockResolvedValue({});
 });
 afterEach(() => {
   cleanup();

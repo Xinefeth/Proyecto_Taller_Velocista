@@ -51,12 +51,16 @@ export function Catalogo() {
         return p ? { r, q: p.q } : null;
       })
       .filter((x): x is { r: RobotDef; q: number } => x != null);
-  const usedQty = (id: string) => usedIn(id).reduce((a, x) => a + x.q, 0);
+  // Con la API, "en robots" lo calcula el servidor (EN-25); con datos de ejemplo, se suma de los robots locales.
+  const usedQty = (id: string) =>
+    c.apiMode ? (c.inventory[id]?.en_robots ?? 0) : usedIn(id).reduce((a, x) => a + x.q, 0);
+  const availableOf = (x: Componente) =>
+    c.apiMode ? (c.inventory[x.id]?.disponible ?? x.stock) : x.stock - usedQty(x.id);
   const sinUso = <span className="dimt">—</span>;
 
   let miss = 0;
   c.catalog.forEach((x) => {
-    if (x.stock - usedQty(x.id) < 0) miss++;
+    if (availableOf(x) < 0) miss++;
   });
 
   const columnasLista: Columna<Componente>[] = [
@@ -106,6 +110,30 @@ export function Catalogo() {
         return u.length ? u.map((z) => z.r.nm).join(", ") : sinUso;
       },
     },
+    ...(c.apiMode
+      ? [
+          {
+            id: "acciones",
+            encabezado: "Acciones",
+            derecha: true,
+            celda: (x: Componente) => (
+              <button
+                type="button"
+                className="sb"
+                aria-label={`Archivar ${x.nm}`}
+                onClick={() => {
+                  if (window.confirm(`¿Archivar "${x.nm}"? Dejará de aparecer en el catálogo.`))
+                    void c.archiveComponent(x.id).then((ok) => {
+                      if (ok) c.mostrarToast(`${x.nm} fue archivado.`);
+                    });
+                }}
+              >
+                Archivar
+              </button>
+            ),
+          },
+        ]
+      : []),
   ];
 
   const columnasInventario: Columna<Componente>[] = [
@@ -130,7 +158,7 @@ export function Catalogo() {
       clase: "m",
       derecha: true,
       celda: (x) => {
-        const d = x.stock - usedQty(x.id);
+        const d = availableOf(x);
         return <span style={{ color: d < 0 ? "var(--red-hi)" : "" }}>{d}</span>;
       },
     },
@@ -139,7 +167,7 @@ export function Catalogo() {
       encabezado: "Estado",
       celda: (x) => {
         const u = usedQty(x.id);
-        const d = x.stock - u;
+        const d = availableOf(x);
         return d < 0 ? (
           <span className="badge bad">Faltan {-d}</span>
         ) : d === 0 && u ? (
@@ -219,21 +247,23 @@ export function Catalogo() {
           }}
         >
           <p className="note">{`${lista.length} de ${c.catalog.length} componentes · precios en soles, por unidad`}</p>
-          <button
-            type="button"
-            className="sb ghost"
-            title="Borra lo que registraste a mano y vuelve a los datos de ejemplo"
-            onClick={() => {
-              if (
-                window.confirm(
-                  "Se borrarán los componentes y robots que registraste y se volverá a los datos de ejemplo. ¿Continuar?",
+          {!c.apiMode && (
+            <button
+              type="button"
+              className="sb ghost"
+              title="Borra lo que registraste a mano y vuelve a los datos de ejemplo"
+              onClick={() => {
+                if (
+                  window.confirm(
+                    "Se borrarán los componentes y robots que registraste y se volverá a los datos de ejemplo. ¿Continuar?",
+                  )
                 )
-              )
-                c.restablecerDatos();
-            }}
-          >
-            Restablecer datos de ejemplo
-          </button>
+                  c.restablecerDatos();
+              }}
+            >
+              Restablecer datos de ejemplo
+            </button>
+          )}
         </div>
       </Card>
 
@@ -257,7 +287,9 @@ export function Catalogo() {
           alHacerClic={(x) => c.abrirFicha(x.id)}
         />
         <p className="note">
-          Las cantidades “en robots” salen de la versión actual de cada robot del armador.
+          {c.apiMode
+            ? "Las cantidades “en robots” las calcula el servidor con la versión actual de cada robot guardado en la API; no incluyen los robots simulados de la consola."
+            : "Las cantidades “en robots” salen de la versión actual de cada robot del armador."}
         </p>
       </Card>
     </section>
