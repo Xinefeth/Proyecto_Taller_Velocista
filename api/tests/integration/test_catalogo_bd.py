@@ -346,8 +346,8 @@ def test_listar_componentes_devuelve_fichas_y_stock(cliente_catalogo, catalogo_i
 
 
 def test_listar_componentes_pagina_sin_duplicados(cliente_catalogo, catalogo_inicial):
-    primera = cliente_catalogo.get("/api/components?limite=4&offset=0").json()
-    segunda = cliente_catalogo.get("/api/components?limite=4&offset=4").json()
+    primera = cliente_catalogo.get("/api/components?limit=4&offset=0").json()
+    segunda = cliente_catalogo.get("/api/components?limit=4&offset=4").json()
     completa = cliente_catalogo.get("/api/components").json()
     assert primera["total"] == segunda["total"] == 25
     assert primera["items"] + segunda["items"] == completa["items"][:8]
@@ -362,8 +362,8 @@ def test_listar_componentes_pagina_sin_duplicados(cliente_catalogo, catalogo_ini
     [
         ({"q": "BATERIA"}, {"c14", "c15"}),
         ({"q": "batería"}, {"c14", "c15"}),
-        ({"q": "QTR", "tipo_id": "linea"}, {"c05", "c06"}),
-        ({"q": "QTR", "tipo_id": "motor"}, set()),
+        ({"q": "QTR", "type_id": "linea"}, {"c05", "c06"}),
+        ({"q": "QTR", "type_id": "motor"}, set()),
         ({"q": "magnetico"}, {"c22"}),
         ({"q": "  MPU-6050  "}, {"c23"}),
         ({"q": "%"}, set()),
@@ -393,7 +393,7 @@ def test_componentes_sin_semillas_devuelve_pagina_vacia(cliente_catalogo):
 
 @pytest.mark.parametrize(
     "query",
-    [{"limite": 0}, {"limite": 201}, {"offset": -1}, {"tipo_id": "invalido"}, {"q": "x" * 121}],
+    [{"limit": 0}, {"limit": 201}, {"offset": -1}, {"type_id": "invalido"}, {"q": "x" * 121}],
 )
 def test_parametros_invalidos_del_listado(cliente, query):
     assert cliente.get("/api/components", params=query).status_code == 422
@@ -686,8 +686,8 @@ def test_inventario_stock_y_revision_persistidos(cliente_catalogo, catalogo_inic
 
 
 def test_inventario_paginado(cliente_catalogo, catalogo_inicial):
-    primera = cliente_catalogo.get("/api/inventory?limite=4").json()
-    segunda = cliente_catalogo.get("/api/inventory?limite=4&offset=4").json()
+    primera = cliente_catalogo.get("/api/inventory?limit=4").json()
+    segunda = cliente_catalogo.get("/api/inventory?limit=4&offset=4").json()
     completa = cliente_catalogo.get("/api/inventory").json()
     assert primera["total"] == segunda["total"] == 25
     assert primera["items"] + segunda["items"] == completa["items"][:8]
@@ -712,7 +712,7 @@ def test_inventario_vacio(cliente_catalogo):
     assert respuesta.json() == {"items": [], "total": 0, "limite": 50, "offset": 0}
 
 
-@pytest.mark.parametrize("query", [{"limite": 0}, {"limite": 201}, {"offset": -1}])
+@pytest.mark.parametrize("query", [{"limit": 0}, {"limit": 201}, {"offset": -1}])
 def test_inventario_valida_paginacion(cliente, query):
     assert cliente.get("/api/inventory", params=query).status_code == 422
 

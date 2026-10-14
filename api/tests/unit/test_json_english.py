@@ -1,4 +1,4 @@
-"""Public English fields, legacy input compatibility and stable stored data."""
+"""Current REST contract: English routes and the Spanish JSON consumed by the console."""
 
 import pytest
 from pydantic import ValidationError
@@ -10,63 +10,64 @@ from app.modulos.reglamento.schemas import PerfilSalida
 from app.semillas import leer_tipos_iniciales
 
 
-def test_english_input_preserves_spanish_orm_and_specification_keys():
+def test_public_input_preserves_orm_and_specification_keys():
     model = ComponenteCrear.model_validate(
         {
-            "type_id": "enc",
-            "name": "Encoder",
-            "price": 35,
-            "mass_g": 2,
+            "tipo_id": "enc",
+            "nombre": "Encoder",
+            "precio": 35,
+            "masa_g": 2,
             "stock": 1,
-            "specifications": {"cpr": 12, "type": "Magnético"},
+            "especificaciones": {"cpr": 12, "tipo": "Magnético"},
         }
     )
     assert model.nombre == "Encoder"
     assert model.especificaciones == {"cpr": 12, "tipo": "Magnético"}
     assert model.model_dump()["especificaciones"]["tipo"] == "Magnético"
-    assert model.model_dump(by_alias=True)["specifications"] == {"cpr": 12, "type": "Magnético"}
+    assert model.model_dump(by_alias=True)["especificaciones"] == {"cpr": 12, "tipo": "Magnético"}
 
 
 def test_partial_patch_tracks_internal_fields_and_explicit_null():
-    model = ComponenteEditar.model_validate({"price": 40, "current_a": None})
+    model = ComponenteEditar.model_validate({"precio": 40, "consumo_a": None})
     assert model.model_fields_set == {"precio", "consumo_a"}
     assert model.model_dump(exclude_unset=True) == {"precio": 40, "consumo_a": None}
     assert ComponenteEditar(precio=40).model_dump(by_alias=True, exclude_unset=True) == {
-        "price": 40
+        "precio": 40
     }
 
 
-def test_ambiguous_input_is_rejected():
+def test_unsupported_aliases_are_rejected():
+    # The active API has not adopted the experimental translation helper.
     with pytest.raises(ValidationError):
         ComponenteEditar.model_validate({"price": 40, "precio": 50})
     with pytest.raises(ValidationError):
-        ComponenteEditar.model_validate({"specifications": {"type": "a", "tipo": "b"}})
+        ComponenteEditar.model_validate({"specifications": {"type": "a"}})
 
 
 def test_nested_pieces_keep_slot_identifiers():
     model = VersionCrear.model_validate(
         {
-            "base_version_id": None,
-            "note": "",
-            "status": "Concepto",
-            "parts": {"linea": {"component_id": "c05", "quantity": 2}},
+            "version_base_id": None,
+            "nota": "",
+            "estado": "Concepto",
+            "piezas": {"linea": {"componente_id": "c05", "cantidad": 2}},
         }
     )
     assert model.model_dump()["piezas"]["linea"] == {"componente_id": "c05", "cantidad": 2}
-    assert model.model_dump(by_alias=True)["parts"] == {
-        "linea": {"component_id": "c05", "quantity": 2}
+    assert model.model_dump(by_alias=True)["piezas"] == {
+        "linea": {"componente_id": "c05", "cantidad": 2}
     }
 
 
 def test_catalogue_describes_public_specification_keys():
     types = {t["id"]: TipoComponenteSalida.model_validate(t) for t in leer_tipos_iniciales()}
     public = types["linea"].model_dump(by_alias=True)
-    assert {f["key"] for f in public["fields"]} == {"channels", "output", "pitch", "i"}
-    assert public["capabilities"][0]["field"] == "channels"
+    assert {f["clave"] for f in public["campos"]} == {"canales", "salida", "paso", "i"}
+    assert public["capacidades"][0]["campo"] == "canales"
     assert types["linea"].model_dump()["capacidades"][0]["campo"] == "canales"
 
 
-def test_rules_translate_keys_without_changing_labels_or_nulls():
+def test_rules_preserve_keys_labels_and_nulls():
     model = PerfilSalida(
         id="test",
         competencia="Competencia",
@@ -74,20 +75,41 @@ def test_rules_translate_keys_without_changing_labels_or_nulls():
         categoria="Amateur",
         reglas={"sensMax": None, "motores": 2, "chasis": "MDF"},
     )
-    assert model.model_dump(by_alias=True)["rules"] == {
-        "max_sensors": None,
-        "motors": 2,
-        "chassis": "MDF",
+    assert model.model_dump(by_alias=True)["reglas"] == {
+        "sensMax": None,
+        "motores": 2,
+        "chasis": "MDF",
     }
 
 
-def test_swagger_uses_english_fields_and_queries_but_keeps_en02():
+def test_swagger_uses_current_routes_and_fields():
     spec = app.openapi()
     component = spec["components"]["schemas"]["ComponenteCrear"]["properties"]
-    assert {"name", "type_id", "price", "mass_g", "specifications"} <= component.keys()
-    assert "nombre" not in component
-    for path in ("/api/componentes", "/api/corridas", "/api/robots/v001/setups"):
+    assert {"nombre", "tipo_id", "precio", "masa_g", "especificaciones"} <= component.keys()
+    assert "name" not in component
+    for path in ("/api/components", "/api/runs", "/api/robots/v001/setups"):
         path = path.replace("v001", "{robot_id}")
         params = {p["name"] for p in spec["paths"][path]["get"]["parameters"]}
         assert "limit" in params and "limite" not in params
-    assert "tipo" in spec["components"]["schemas"]["Comando"]["properties"]
+    assert "tipo" in spec["components"]["schemas"]["Command"]["properties"]
+
+
+def test_documented_routes_operations_and_parameters_match_runtime():
+    import json
+    from pathlib import Path
+
+    documented = json.loads(
+        (Path(__file__).resolve().parents[3] / "docs/api/openapi.json").read_text(encoding="utf-8")
+    )["paths"]
+    runtime = app.openapi()["paths"]
+    methods = {"get", "post", "put", "patch", "delete"}
+    assert {(p, m) for p, ops in documented.items() for m in ops if m in methods} == {
+        (p, m) for p, ops in runtime.items() for m in ops if m in methods
+    }
+    for path, ops in documented.items():
+        for method, operation in ops.items():
+            actual = runtime[path][method]
+            assert operation["operationId"] == actual["operationId"], (path, method)
+            assert {(p["name"], p["in"]) for p in operation.get("parameters", [])} == {
+                (p["name"], p["in"]) for p in actual.get("parameters", [])
+            }, (path, method)
