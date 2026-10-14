@@ -6,7 +6,6 @@ import { Cerrar, ICO } from "./IconosUI";
 import { TIPOS } from "../datos/tipos";
 import type { Specs } from "../types/dominio";
 import { PbiChip } from "./Card";
-import { siguienteIdComponente } from "../logica/dominio";
 import {
   FormularioDinamico,
   Pestanas,
@@ -207,11 +206,8 @@ export function RegistroModal() {
       return;
     }
     const s = specVals();
-    const id = siguienteIdComponente(c.catalog);
-    c.setCatalog((list) => [
-      ...list,
-      {
-        id,
+    void c
+      .addComponent({
         t: valores.tipo,
         nm,
         precio: parsearNumero(valores.precio) ?? 0,
@@ -220,11 +216,13 @@ export function RegistroModal() {
         stock: parsearNumero(valores.stock) ?? 0,
         s,
         i: Number(s.i) || 0,
-      },
-    ]);
-    c.cerrarRegistro();
-    c.registrar("Catálogo", `Registrado: ${nm}`, "good");
-    c.mostrarToast(`${nm} quedó en el catálogo.`);
+      })
+      .then((saved) => {
+        if (!saved) return;
+        c.cerrarRegistro();
+        c.registrar("Catálogo", `Registrado: ${nm}`, "good");
+        c.mostrarToast(`${nm} quedó en el catálogo.`);
+      });
   };
 
   if (!c.regOpen)

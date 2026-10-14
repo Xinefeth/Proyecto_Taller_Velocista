@@ -13,10 +13,11 @@ import {
 } from "react";
 import type { Componente, Perfil, RobotDef, Setup } from "../types/dominio";
 import type { Corrida, Vuelta } from "../types/corridas";
+import type { ApiInventory } from "../types/api";
 import { CAT, RANURAS } from "../datos/catalogo";
 import { PERFILES } from "../datos/reglamento";
 import { CTRL, PDEF, psum } from "../datos/controladores";
-import { curVer, facts, profById, robotById } from "../logica/dominio";
+import { curVer, facts, profById, robotById, siguienteIdComponente } from "../logica/dominio";
 import { clamp, clone, fmt } from "../logica/formato";
 import {
   borrarRegistrados,
@@ -38,6 +39,17 @@ import {
 } from "../logica/simulador";
 import { HIST, NB, RATE, resetEncuadre, robotOn } from "../logica/lienzos";
 import { api, ErrorApi } from "../services/api";
+
+/** Pone en cada componente el stock que reporta el inventario de la API (si existe). */
+function mergeStock(
+  componentes: Componente[],
+  existencias: Record<string, ApiInventory>,
+): Componente[] {
+  return componentes.map((comp) => {
+    const inv = existencias[comp.id];
+    return inv ? { ...comp, stock: inv.stock } : comp;
+  });
+}
 
 export type Tab =
   | "control"
@@ -106,6 +118,10 @@ export interface Consola {
   goTab: (t: Tab) => void;
   // datos
   catalog: Componente[];
+  /** Existencias del servidor por componente (vacío si la consola usa datos de ejemplo). */
+  inventory: Record<string, ApiInventory>;
+  /** true cuando el catálogo y el inventario salen de la API; false con datos de ejemplo inyectados. */
+  apiMode: boolean;
   robots: RobotDef[];
   perfiles: Perfil[];
   robot: RobotDef;
@@ -174,6 +190,10 @@ export interface Consola {
   toggleSenal: (s: "err" | "pl" | "pr") => void;
   // catálogo / armador
   setCatalog: (f: (c: Componente[]) => Componente[]) => void;
+  /** Registra un componente: en modo API lo guarda en la base de datos. Devuelve false si falló. */
+  addComponent: (draft: Omit<Componente, "id">) => Promise<boolean>;
+  /** Archiva un componente (modo API: DELETE /api/components/{id}). Devuelve false si falló. */
+  archiveComponent: (id: string) => Promise<boolean>;
   setRobots: (f: (r: RobotDef[]) => RobotDef[]) => void;
   // log
   log: EventoLog[];
@@ -225,15 +245,25 @@ export function ProveedorConsola({
   const bump = useCallback(() => setTick((t) => (t + 1) % 1_000_000), []);
 
   const [tab, setTab] = useState<Tab>("control");
-  // Lo registrado a mano se conserva en el navegador hasta que exista la API (HU-02, HU-06).
-  const [catalog, setCatalogState] = useState<Componente[]>(() => cargarComponentes(CAT));
+  // Con `initialRobots` (pruebas) la consola usa datos de ejemplo; sin él, el catálogo viene de la API (EN-25).
+  const apiMode = !initialRobots;
+  // En modo ejemplo, lo registrado a mano se conserva en el navegador (HU-02, HU-06).
+  const [catalog, setCatalogState] = useState<Componente[]>(() =>
+    apiMode ? [] : cargarComponentes(CAT),
+  );
+  const [inventory, setInventory] = useState<Record<string, ApiInventory>>({});
+  const [catalogLoading, setCatalogLoading] = useState(apiMode);
+  const [catalogError, setCatalogError] = useState<string | null>(null);
+  const [catalogRequest, setCatalogRequest] = useState(0);
   const [robots, setRobotsState] = useState<RobotDef[]>(() =>
     initialRobots ? cargarRobots(initialRobots) : [],
   );
   const [robotsLoading, setRobotsLoading] = useState(!initialRobots);
   const [robotsError, setRobotsError] = useState<string | null>(null);
   const [robotsRequest, setRobotsRequest] = useState(0);
-  useEffect(() => guardarComponentes(catalog, CAT), [catalog]);
+  useEffect(() => {
+    if (!apiMode) guardarComponentes(catalog, CAT);
+  }, [catalog, apiMode]);
   useEffect(() => {
     if (initialRobots) guardarRobots(robots, initialRobots);
   }, [robots, initialRobots]);
@@ -387,6 +417,83 @@ export function ProveedorConsola({
       vivo = false;
     };
   }, [registrar, initialRobots, robotsRequest]);
+
+  /** Vuelve a pedir catálogo e inventario sin bloquear la pantalla (después de guardar o archivar). */
+  const refreshCatalog = useCallback(async () => {
+    const [componentes, existencias] = await Promise.all([
+      api.catalog.loadAll(),
+      api.catalog.loadInventory(),
+    ]);
+    setInventory(existencias);
+    setCatalogState(mergeStock(componentes, existencias));
+  }, []);
+
+  const addComponent = useCallback(
+    async (draft: Omit<Componente, "id">) => {
+      if (!apiMode) {
+        setCatalogState((list) => [...list, { ...draft, id: siguienteIdComponente(list) }]);
+        return true;
+      }
+      try {
+        await api.catalog.create(draft);
+        await refreshCatalog();
+        return true;
+      } catch (e) {
+        mostrarToast(
+          `No se pudo guardar: ${e instanceof ErrorApi ? e.message : "sin conexión con la API"}`,
+        );
+        return false;
+      }
+    },
+    [apiMode, refreshCatalog, mostrarToast],
+  );
+
+  const archiveComponent = useCallback(
+    async (id: string) => {
+      if (!apiMode) {
+        setCatalogState((list) => list.filter((x) => x.id !== id));
+        return true;
+      }
+      try {
+        await api.catalog.archive(id);
+        await refreshCatalog();
+        return true;
+      } catch (e) {
+        mostrarToast(
+          `No se pudo archivar: ${e instanceof ErrorApi ? e.message : "sin conexión con la API"}`,
+        );
+        return false;
+      }
+    },
+    [apiMode, refreshCatalog, mostrarToast],
+  );
+
+  // Catálogo e inventario desde la API, en una sola carga (EN-25).
+  useEffect(() => {
+    if (!apiMode) return;
+    let vivo = true;
+    setCatalogLoading(true);
+    setCatalogError(null);
+    Promise.all([api.catalog.loadAll(), api.catalog.loadInventory()])
+      .then(([componentes, existencias]) => {
+        if (!vivo) return;
+        setInventory(existencias);
+        setCatalogState(mergeStock(componentes, existencias));
+        registrar("Catálogo", `Sincronizado con la API · ${componentes.length} componentes`);
+      })
+      .catch((e) => {
+        if (vivo)
+          setCatalogError(
+            `No se pudo cargar el catálogo: ${e instanceof ErrorApi ? e.message : "sin conexión con la API"}`,
+          );
+      })
+      .finally(() => {
+        if (vivo) setCatalogLoading(false);
+      });
+    return () => {
+      vivo = false;
+    };
+  }, [registrar, apiMode, catalogRequest]);
 
   // --- Corridas ---
   const registrarCorrida = useCallback(
@@ -1015,6 +1122,13 @@ export function ProveedorConsola({
   const abrirRegistro = useCallback(() => setRegOpen(true), []);
   const cerrarRegistro = useCallback(() => setRegOpen(false), []);
   const restablecerDatos = useCallback(() => {
+    if (apiMode) {
+      // EN-25: el catálogo vive en la API; aquí solo se vuelve a pedir la lista de robots.
+      setRobotsRequest((value) => value + 1);
+      setFichaId(null);
+      mostrarToast("Datos recargados desde la API.");
+      return;
+    }
     borrarRegistrados();
     setCatalogState(clone(CAT));
     setRobotsState(initialRobots ? clone(initialRobots) : []);
@@ -1022,7 +1136,7 @@ export function ProveedorConsola({
     setRobotId("v001");
     setFichaId(null);
     mostrarToast("Datos de ejemplo restablecidos.");
-  }, [mostrarToast, initialRobots]);
+  }, [mostrarToast, initialRobots, apiMode]);
   const abrirManifiesto = useCallback((id: string) => setManifiestoId(id), []);
   const cerrarManifiesto = useCallback(() => setManifiestoId(null), []);
   const abrirEnArmador = useCallback(
@@ -1057,6 +1171,8 @@ export function ProveedorConsola({
     tab,
     goTab,
     catalog,
+    inventory,
+    apiMode,
     robots,
     perfiles,
     robot,
@@ -1116,6 +1232,8 @@ export function ProveedorConsola({
     show,
     toggleSenal,
     setCatalog,
+    addComponent,
+    archiveComponent,
     setRobots,
     log: logRef.current,
     registrar,
@@ -1149,11 +1267,21 @@ export function ProveedorConsola({
   };
 
   if (robotsLoading) return <p role="status">Cargando robots…</p>;
+  if (catalogLoading) return <p role="status">Cargando catálogo…</p>;
   if (robotsError)
     return (
       <div role="alert">
         {robotsError}
         <button type="button" onClick={() => setRobotsRequest((value) => value + 1)}>
+          Reintentar
+        </button>
+      </div>
+    );
+  if (catalogError)
+    return (
+      <div role="alert">
+        {catalogError}
+        <button type="button" onClick={() => setCatalogRequest((value) => value + 1)}>
           Reintentar
         </button>
       </div>

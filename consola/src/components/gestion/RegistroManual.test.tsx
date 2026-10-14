@@ -1,5 +1,5 @@
 // Registro manual de un componente (HU-02) y búsqueda en el catálogo (HU-01), de punta a punta.
-import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import App from "../../App";
 import { ROBOTS as TEST_ROBOTS } from "../../datos/robots";
@@ -46,7 +46,7 @@ describe("Catálogo", () => {
 });
 
 describe("Registrar componente a mano (HU-02)", () => {
-  it("valida lo obligatorio, cambia los campos según el tipo y guarda", () => {
+  it("valida lo obligatorio, cambia los campos según el tipo y guarda", async () => {
     abrirCatalogo();
     fireEvent.click(screen.getByRole("button", { name: "Registrar componente" }));
     const dialogo = screen.getByRole("dialog", { name: "Registrar componente" });
@@ -86,7 +86,9 @@ describe("Registrar componente a mano (HU-02)", () => {
     fireEvent.change(modal.getByLabelText("Pulsos por vuelta (CPR)"), { target: { value: "20" } });
     fireEvent.click(modal.getByRole("button", { name: "Guardar en el catálogo" }));
     // Cerrado, el modal queda oculto (aria-hidden) y ya no se encuentra por rol.
-    expect(screen.queryByRole("dialog", { name: "Registrar componente" })).toBeNull();
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog", { name: "Registrar componente" })).toBeNull(),
+    );
     expect(screen.getByText(/26 de 26 componentes/)).toBeTruthy();
     expect(screen.getAllByText("Encoder óptico de prueba").length).toBeGreaterThan(0);
     expect(screen.getByText("S/ 30.50")).toBeTruthy();
